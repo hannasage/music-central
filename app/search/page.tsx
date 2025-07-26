@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import SearchInterface from '@/app/components/SearchInterface'
 import SearchResults from '@/app/components/SearchResults'
 import SearchFilters from '@/app/components/SearchFilters'
+import Header from '@/app/components/Header'
 import { Album } from '@/lib/types'
 import { Filter, X } from 'lucide-react'
 
@@ -171,6 +172,7 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+      <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Header */}
         <div className="mb-8">
