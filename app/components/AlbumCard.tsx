@@ -10,10 +10,16 @@ interface AlbumCardProps {
 }
 
 export default function AlbumCard({ album, size = 'medium', className = '' }: AlbumCardProps) {
-  const sizeClasses = {
+  const artworkSizes = {
     small: 'w-40 h-40',
     medium: 'w-48 h-48',
     large: 'w-56 h-56'
+  }
+
+  const cardWidths = {
+    small: 'w-40',
+    medium: 'w-48',
+    large: 'w-56'
   }
 
   const textSizeClasses = {
@@ -29,9 +35,9 @@ export default function AlbumCard({ album, size = 'medium', className = '' }: Al
       href={`/albums/${album.id}`}
       className={`group block transition-transform duration-300 hover:scale-105 ${className}`}
     >
-      <div className="bg-zinc-900/50 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-zinc-800/50 hover:border-zinc-700/50">
-        {/* Album Artwork */}
-        <div className={`relative ${sizeClasses[size]} bg-zinc-800/50 overflow-hidden`}>
+      <div className={`${cardWidths[size]} bg-zinc-900/50 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-zinc-800/50 hover:border-zinc-700/50`}>
+        {/* Album Artwork - Edge to Edge Square */}
+        <div className={`relative ${artworkSizes[size]} bg-zinc-800/50 overflow-hidden`}>
           {album.cover_art_url ? (
             <Image
               src={album.cover_art_url}
@@ -63,7 +69,7 @@ export default function AlbumCard({ album, size = 'medium', className = '' }: Al
           <div className="flex items-center justify-between text-xs text-zinc-500">
             <span>{album.year}</span>
             {primaryGenre && (
-              <span className="bg-zinc-800/50 px-2 py-1 rounded-full text-xs border border-zinc-700/50">
+              <span className="bg-zinc-800/50 px-2 py-1 rounded-full text-xs border border-zinc-700/50 truncate">
                 {primaryGenre}
               </span>
             )}
