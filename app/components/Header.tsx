@@ -64,11 +64,11 @@ export default function Header() {
             </Link>
           </nav>
 
-          {/* Search Bar */}
+          {/* Search Bar & Actions */}
           <div className="flex items-center space-x-4">
             <form onSubmit={handleSearch} className="relative">
               <div className={`flex items-center space-x-2 transition-all duration-300 ${
-                isSearchFocused ? 'w-80' : 'w-64'
+                isSearchFocused ? 'w-80' : 'w-48 sm:w-64'
               }`}>
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -85,10 +85,10 @@ export default function Header() {
               </div>
             </form>
 
-            {/* Random Shuffle Button */}
+            {/* Random Shuffle Button - Desktop Only */}
             <button
               onClick={handleRandomShuffle}
-              className="p-2 bg-zinc-800/50 hover:bg-zinc-700/50 border border-zinc-700/50 hover:border-zinc-600/50 rounded-lg text-zinc-300 hover:text-white transition-all duration-200 group"
+              className="hidden md:block p-2 bg-zinc-800/50 hover:bg-zinc-700/50 border border-zinc-700/50 hover:border-zinc-600/50 rounded-lg text-zinc-300 hover:text-white transition-all duration-200 group"
               title="Random Album"
             >
               <Shuffle className="w-5 h-5 group-hover:rotate-12 transition-transform duration-200" />
@@ -110,7 +110,7 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-zinc-800/50 py-4 space-y-4">
+          <div className="md:hidden border-t border-zinc-800/50 py-4 space-y-2">
             <Link 
               href="/"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -139,6 +139,18 @@ export default function Header() {
             >
               Artists
             </Link>
+            
+            {/* Mobile Shuffle Button */}
+            <button
+              onClick={() => {
+                handleRandomShuffle()
+                setIsMobileMenuOpen(false)
+              }}
+              className="flex items-center space-x-3 w-full px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 group"
+            >
+              <Shuffle className="w-5 h-5 group-hover:rotate-12 transition-transform duration-200" />
+              <span>Random Album</span>
+            </button>
           </div>
         )}
       </div>
