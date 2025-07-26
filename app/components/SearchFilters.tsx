@@ -2,64 +2,94 @@
 
 import { useState, useEffect } from 'react'
 import { Filter, X, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
+import { createClientSideClient } from '@/lib/supabase-client'
 
 interface SearchFilters {
   genres?: string[]
   yearMin?: number
   yearMax?: number
   vibes?: string[]
-  energyMin?: number
-  energyMax?: number
-  danceabilityMin?: number
-  danceabilityMax?: number
-  valenceMin?: number
-  valenceMax?: number
 }
 
 interface SearchFiltersProps {
   filters: SearchFilters
   onFiltersChange: (filters: SearchFilters) => void
-  availableGenres?: string[]
-  availableVibes?: string[]
   className?: string
-}
-
-interface FilterSection {
-  id: string
-  title: string
-  isOpen: boolean
 }
 
 export default function SearchFiltersComponent({
   filters,
   onFiltersChange,
-  availableGenres = [],
-  availableVibes = [],
   className = ''
 }: SearchFiltersProps) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     genres: true,
     years: true,
-    vibes: false,
-    audioFeatures: false
+    vibes: false
   })
+  
+  const [availableGenres, setAvailableGenres] = useState<string[]>([])
+  const [availableVibes, setAvailableVibes] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Common genres if none provided
-  const defaultGenres = [
-    'Rock', 'Pop', 'Hip Hop', 'Electronic', 'Jazz', 'Classical', 'Folk', 'Country',
-    'R&B', 'Soul', 'Funk', 'Reggae', 'Blues', 'Punk', 'Metal', 'Alternative',
-    'Indie', 'Ambient', 'House', 'Techno', 'Drum & Bass', 'Dubstep'
-  ]
+  // Fetch available genres and vibes from database
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      setIsLoading(true)
+      const supabase = createClientSideClient()
+      
+      try {
+        // Fetch all albums to get unique genres and vibes
+        const { data: albums, error } = await supabase
+          .from('albums')
+          .select('genres, personal_vibes')
+        
+        if (error) {
+          console.error('Error fetching filter options:', error)
+          return
+        }
 
-  const genres = availableGenres.length > 0 ? availableGenres : defaultGenres
+        // Extract unique genres
+        const genreSet = new Set<string>()
+        const vibeSet = new Set<string>()
+        
+        albums?.forEach(album => {
+          // Add genres
+          if (album.genres && Array.isArray(album.genres)) {
+            album.genres.forEach((genre: string) => {
+              if (genre?.trim()) {
+                // Capitalize only the first letter
+                const formatted = genre.trim().charAt(0).toUpperCase() + genre.trim().slice(1).toLowerCase()
+                genreSet.add(formatted)
+              }
+            })
+          }
+          
+          // Add personal vibes
+          if (album.personal_vibes && Array.isArray(album.personal_vibes)) {
+            album.personal_vibes.forEach((vibe: string) => {
+              if (vibe?.trim()) {
+                // Capitalize only the first letter
+                const formatted = vibe.trim().charAt(0).toUpperCase() + vibe.trim().slice(1).toLowerCase()
+                vibeSet.add(formatted)
+              }
+            })
+          }
+        })
 
-  // Common vibes if none provided
-  const defaultVibes = [
-    'Chill', 'Energetic', 'Melancholic', 'Uplifting', 'Nostalgic', 'Romantic',
-    'Party', 'Study', 'Workout', 'Road Trip', 'Late Night', 'Morning'
-  ]
+        // Sort alphabetically
+        setAvailableGenres(Array.from(genreSet).sort())
+        setAvailableVibes(Array.from(vibeSet).sort())
+        
+      } catch (error) {
+        console.error('Error fetching filter options:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-  const vibes = availableVibes.length > 0 ? availableVibes : defaultVibes
+    fetchFilterOptions()
+  }, [])
 
   // Toggle section
   const toggleSection = (sectionId: string) => {
@@ -103,17 +133,6 @@ export default function SearchFiltersComponent({
     })
   }
 
-  // Handle audio feature range change
-  const handleAudioFeatureChange = (
-    field: 'energyMin' | 'energyMax' | 'danceabilityMin' | 'danceabilityMax' | 'valenceMin' | 'valenceMax',
-    value: number
-  ) => {
-    onFiltersChange({
-      ...filters,
-      [field]: value / 100 // Convert percentage to decimal
-    })
-  }
-
   // Reset all filters
   const resetFilters = () => {
     onFiltersChange({})
@@ -131,9 +150,6 @@ export default function SearchFiltersComponent({
     if (filters.genres?.length) count++
     if (filters.yearMin !== undefined || filters.yearMax !== undefined) count++
     if (filters.vibes?.length) count++
-    if (filters.energyMin !== undefined || filters.energyMax !== undefined) count++
-    if (filters.danceabilityMin !== undefined || filters.danceabilityMax !== undefined) count++
-    if (filters.valenceMin !== undefined || filters.valenceMax !== undefined) count++
     return count
   }
 
@@ -178,22 +194,35 @@ export default function SearchFiltersComponent({
           
           {openSections.genres && (
             <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-              {genres.map((genre) => (
-                <label
-                  key={genre}
-                  className="flex items-center space-x-2 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.genres?.includes(genre) || false}
-                    onChange={() => handleGenreChange(genre)}
-                    className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                    {genre}
-                  </span>
-                </label>
-              ))}
+              {isLoading ? (
+                <div className="col-span-2 text-center py-4">
+                  <div className="inline-flex items-center space-x-2 text-zinc-400">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm">Loading genres...</span>
+                  </div>
+                </div>
+              ) : availableGenres.length > 0 ? (
+                availableGenres.map((genre) => (
+                  <label
+                    key={genre}
+                    className="flex items-center space-x-2 cursor-pointer group"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.genres?.includes(genre) || false}
+                      onChange={() => handleGenreChange(genre)}
+                      className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
+                      {genre}
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-4 text-sm text-zinc-500">
+                  No genres found
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -260,128 +289,39 @@ export default function SearchFiltersComponent({
           
           {openSections.vibes && (
             <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
-              {vibes.map((vibe) => (
-                <label
-                  key={vibe}
-                  className="flex items-center space-x-2 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    checked={filters.vibes?.includes(vibe) || false}
-                    onChange={() => handleVibeChange(vibe)}
-                    className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                    {vibe}
-                  </span>
-                </label>
-              ))}
+              {isLoading ? (
+                <div className="col-span-2 text-center py-4">
+                  <div className="inline-flex items-center space-x-2 text-zinc-400">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm">Loading vibes...</span>
+                  </div>
+                </div>
+              ) : availableVibes.length > 0 ? (
+                availableVibes.map((vibe) => (
+                  <label
+                    key={vibe}
+                    className="flex items-center space-x-2 cursor-pointer group"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.vibes?.includes(vibe) || false}
+                      onChange={() => handleVibeChange(vibe)}
+                      className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
+                      {vibe}
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-4 text-sm text-zinc-500">
+                  No personal vibes found
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Audio Features */}
-        <div>
-          <button
-            onClick={() => toggleSection('audioFeatures')}
-            className="flex items-center justify-between w-full mb-3 text-left"
-          >
-            <h4 className="font-medium text-zinc-300">Audio Features</h4>
-            {openSections.audioFeatures ? (
-              <ChevronUp className="w-4 h-4 text-zinc-400" />
-            ) : (
-              <ChevronDown className="w-4 h-4 text-zinc-400" />
-            )}
-          </button>
-          
-          {openSections.audioFeatures && (
-            <div className="space-y-4">
-              {/* Energy */}
-              <div>
-                <label className="flex items-center justify-between text-sm text-zinc-400 mb-2">
-                  <span>Energy</span>
-                  <span>
-                    {Math.round((filters.energyMin || 0) * 100)}% - {Math.round((filters.energyMax || 1) * 100)}%
-                  </span>
-                </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={Math.round((filters.energyMin || 0) * 100)}
-                    onChange={(e) => handleAudioFeatureChange('energyMin', parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={Math.round((filters.energyMax || 1) * 100)}
-                    onChange={(e) => handleAudioFeatureChange('energyMax', parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                </div>
-              </div>
-
-              {/* Danceability */}
-              <div>
-                <label className="flex items-center justify-between text-sm text-zinc-400 mb-2">
-                  <span>Danceability</span>
-                  <span>
-                    {Math.round((filters.danceabilityMin || 0) * 100)}% - {Math.round((filters.danceabilityMax || 1) * 100)}%
-                  </span>
-                </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={Math.round((filters.danceabilityMin || 0) * 100)}
-                    onChange={(e) => handleAudioFeatureChange('danceabilityMin', parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={Math.round((filters.danceabilityMax || 1) * 100)}
-                    onChange={(e) => handleAudioFeatureChange('danceabilityMax', parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                </div>
-              </div>
-
-              {/* Valence (Positivity) */}
-              <div>
-                <label className="flex items-center justify-between text-sm text-zinc-400 mb-2">
-                  <span>Positivity</span>
-                  <span>
-                    {Math.round((filters.valenceMin || 0) * 100)}% - {Math.round((filters.valenceMax || 1) * 100)}%
-                  </span>
-                </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={Math.round((filters.valenceMin || 0) * 100)}
-                    onChange={(e) => handleAudioFeatureChange('valenceMin', parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={Math.round((filters.valenceMax || 1) * 100)}
-                    onChange={(e) => handleAudioFeatureChange('valenceMax', parseInt(e.target.value))}
-                    className="flex-1 h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   )

@@ -7,12 +7,6 @@ interface SearchFilters {
   yearMin?: number
   yearMax?: number
   vibes?: string[]
-  energyMin?: number
-  energyMax?: number
-  danceabilityMin?: number
-  danceabilityMax?: number
-  valenceMin?: number
-  valenceMax?: number
 }
 
 interface SearchParams {
@@ -90,28 +84,6 @@ export async function GET(request: NextRequest) {
       // Personal vibes filter
       if (filters.vibes && filters.vibes.length > 0) {
         query = query.overlaps('personal_vibes', filters.vibes)
-      }
-
-      // Audio features filters
-      if (filters.energyMin !== undefined) {
-        query = query.gte('audio_features->energy', filters.energyMin)
-      }
-      if (filters.energyMax !== undefined) {
-        query = query.lte('audio_features->energy', filters.energyMax)
-      }
-
-      if (filters.danceabilityMin !== undefined) {
-        query = query.gte('audio_features->danceability', filters.danceabilityMin)
-      }
-      if (filters.danceabilityMax !== undefined) {
-        query = query.lte('audio_features->danceability', filters.danceabilityMax)
-      }
-
-      if (filters.valenceMin !== undefined) {
-        query = query.gte('audio_features->valence', filters.valenceMin)
-      }
-      if (filters.valenceMax !== undefined) {
-        query = query.lte('audio_features->valence', filters.valenceMax)
       }
     }
 

@@ -13,12 +13,6 @@ interface SearchFilters {
   yearMin?: number
   yearMax?: number
   vibes?: string[]
-  energyMin?: number
-  energyMax?: number
-  danceabilityMin?: number
-  danceabilityMax?: number
-  valenceMin?: number
-  valenceMax?: number
 }
 
 interface SearchResponse {
@@ -190,7 +184,7 @@ export default function SearchPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Desktop Filters Sidebar */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-8">
@@ -244,7 +238,7 @@ export default function SearchPage() {
           )}
 
           {/* Search Results */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
             <SearchResults
               results={results}
               query={query}
