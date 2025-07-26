@@ -51,6 +51,12 @@ export default function Header() {
               Albums
             </Link>
             <Link 
+              href="/recommendations" 
+              className="text-zinc-300 hover:text-white transition-colors duration-200"
+            >
+              AI Curator
+            </Link>
+            <Link 
               href="/genres" 
               className="text-zinc-300 hover:text-white transition-colors duration-200"
             >
@@ -124,6 +130,13 @@ export default function Header() {
               className="block px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
             >
               Albums
+            </Link>
+            <Link 
+              href="/recommendations"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="block px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+            >
+              AI Curator
             </Link>
             <Link 
               href="/genres"
