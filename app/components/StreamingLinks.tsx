@@ -13,20 +13,22 @@ function SpotifyIcon({ className = "w-5 h-5" }: { className?: string }) {
   )
 }
 
-// Apple Music Icon Component
+// Apple Music Icon Component - Double Eighth Note
 function AppleMusicIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M7.12 0C5.57 0 4.31 1.26 4.31 2.81v18.38C4.31 22.74 5.57 24 7.12 24h9.76c1.55 0 2.81-1.26 2.81-2.81V2.81C19.69 1.26 18.43 0 16.88 0H7.12zm7.53 10.94l-3.44.55v6.41c-.28-.15-.64-.24-1.03-.24-1.14 0-2.06.67-2.06 1.5s.92 1.5 2.06 1.5 2.06-.67 2.06-1.5V9.89l2.41-.39v-.56z"/>
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M9 18V5l12-2v13"/>
+      <circle cx="6" cy="18" r="3"/>
+      <circle cx="18" cy="16" r="3"/>
     </svg>
   )
 }
 
-// YouTube Music Icon Component
+// YouTube Music Icon Component - Play Button
 function YouTubeMusicIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.5 6L10 12.5v7l5.5-3.25L10 12.5V5l5.5 3.25z"/>
+      <path d="M6.8 4.2v15.6l13.2-7.8z" fill="#ffffff"/>
     </svg>
   )
 }
@@ -135,7 +137,7 @@ export default function StreamingLinksComponent({ album, showLabels = true, clas
             href={streamingLinks.apple_music}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center space-x-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg"
+            className="flex items-center justify-center space-x-3 bg-gradient-to-r from-[#fa5a72] to-[#fa253e] hover:from-[#fb6b7f] hover:to-[#fb3651] text-white px-4 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg"
           >
             <AppleMusicIcon className="w-5 h-5" />
             {showLabels && <span>Apple Music</span>}
@@ -160,7 +162,7 @@ export default function StreamingLinksComponent({ album, showLabels = true, clas
           )}
         </div>
 
-        {/* YouTube Music */}
+        {/* YouTube */}
         <div className="flex flex-col space-y-2">
           <a
             href={streamingLinks.youtube_music}
@@ -169,7 +171,7 @@ export default function StreamingLinksComponent({ album, showLabels = true, clas
             className="flex items-center justify-center space-x-3 bg-red-500 hover:bg-red-400 text-white px-4 py-3 rounded-lg font-medium transition-colors duration-200 shadow-lg"
           >
             <YouTubeMusicIcon className="w-5 h-5" />
-            {showLabels && <span>YouTube Music</span>}
+            {showLabels && <span>YouTube</span>}
           </a>
           {showLabels && (
             <button
