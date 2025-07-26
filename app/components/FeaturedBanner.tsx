@@ -130,11 +130,11 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
       {/* Content */}
       <div className="relative h-full flex items-center py-4 sm:py-6 lg:py-8">
         <div className="max-w-7xl mx-auto px-12 sm:px-6 lg:px-16 w-full">
-          <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-center min-h-[18rem] lg:min-h-[20rem] transition-all duration-500 ${
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 items-center min-h-[18rem] lg:min-h-[20rem] transition-all duration-500 ${
             isTransitioning ? 'opacity-80 transform translate-x-2' : 'opacity-100 transform translate-x-0'
           }`}>
             {/* Album Artwork */}
-            <div className="flex justify-center lg:justify-start order-1 lg:order-1">
+            <div className="flex justify-center order-1 lg:order-1">
               <div className={`relative w-40 h-40 sm:w-48 sm:h-48 lg:w-64 lg:h-64 rounded-lg lg:rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ${
                 isTransitioning ? 'scale-95' : 'scale-100'
               }`}>
