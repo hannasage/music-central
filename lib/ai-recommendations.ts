@@ -31,7 +31,7 @@ export class AIRecommendationService {
     })
     
     this.albums = albums
-    this.recommendationEngine = new RecommendationEngine(albums)
+    this.recommendationEngine = new RecommendationEngine(albums, this.openai)
   }
 
   // Parse user preferences from natural language
@@ -41,6 +41,7 @@ export class AIRecommendationService {
     audioFeatures: any
     keywords: string[]
     yearRange?: { min?: number; max?: number }
+    temporalPreference?: 'older' | 'newer' | 'classic' | 'vintage' | 'retro'
   }> {
     const context = conversationHistory
       .slice(-3) // Last 3 messages for context
@@ -68,8 +69,20 @@ Extract and return a JSON object with:
     "valence": 0.8 // 0-1 if mentioned (happy = 0.7+, sad = 0.3-)
   },
   "keywords": ["word1", "word2"], // Other descriptive words
-  "yearRange": {"min": 1990, "max": 2000} // If specific era mentioned
+  "yearRange": {"min": 1990, "max": 2000}, // If specific era mentioned
+  "temporalPreference": "older" | "newer" | "classic" | "vintage" | "retro" // Temporal bias if implied
 }
+
+IMPORTANT: Extract temporal preferences from context clues:
+- "nostalgic", "classic", "vintage", "old school", "throwback" → "older" preference + earlier year ranges
+- "retro", "80s vibe", "90s feel" → "retro" preference + specific decades  
+- "modern", "contemporary", "recent", "current" → "newer" preference + recent years
+- "timeless", "from my youth", "reminds me of..." → consider age context and bias older
+
+For "nostalgic" specifically:
+- Set temporalPreference to "older"
+- Bias yearRange toward 1960-2000 unless other context suggests otherwise
+- Consider what would evoke nostalgia based on conversation context
 
 Only include fields that are clearly mentioned or implied. Return valid JSON only.`
 
@@ -95,7 +108,8 @@ Only include fields that are clearly mentioned or implied. Return valid JSON onl
         genres: [],
         vibes: [],
         audioFeatures: {},
-        keywords: userMessage.toLowerCase().split(/\s+/).filter(word => word.length > 3)
+        keywords: userMessage.toLowerCase().split(/\s+/).filter(word => word.length > 3),
+        temporalPreference: userMessage.toLowerCase().includes('nostalgic') ? 'older' : undefined
       }
     }
   }
@@ -110,9 +124,9 @@ Only include fields that are clearly mentioned or implied. Return valid JSON onl
       const preferences = await this.parseUserPreferences(userMessage, conversationHistory)
       
       // Get recommendations using the engine
-      const recommendationScores = this.recommendationEngine.getRecommendationsByPreferences(
+      const recommendationScores = await this.recommendationEngine.getRecommendationsByPreferences(
         preferences,
-        { count: 3, diversityFactor: 0.3 }
+        { count: 3, diversityFactor: 0.3, userMessage }
       )
 
       let recommendations = recommendationScores.map(r => r.album)
