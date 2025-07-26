@@ -70,3 +70,20 @@ export async function searchAlbums(query: string, limit = 20): Promise<Album[]> 
 
   return albums || []
 }
+
+export async function getAlbumById(id: string): Promise<Album | null> {
+  const supabase = createClient()
+  
+  const { data: album, error } = await supabase
+    .from('albums')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching album:', error)
+    return null
+  }
+
+  return album
+}
