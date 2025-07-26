@@ -137,8 +137,9 @@ class SpotifyAPI {
     try {
       return await this.makeRequest<{ audio_features: SpotifyAudioFeatures[] }>(endpoint)
     } catch (error) {
-      console.error(`Failed to get audio features for tracks:`, error)
-      throw error
+      // Audio features require special permissions - return empty array instead of throwing
+      console.warn(`Audio features not available (requires premium API access)`)
+      return { audio_features: [] }
     }
   }
 
@@ -214,23 +215,13 @@ class SpotifyAPI {
         this.getAlbumTracks(albumId)
       ])
 
-      // Get audio features for all tracks
-      const trackIds = tracks.items.map(track => track.id).filter(Boolean)
-      let audioFeatures: SpotifyAudioFeatures[] = []
-      
-      if (trackIds.length > 0) {
-        try {
-          const featuresResult = await this.getAudioFeatures(trackIds)
-          audioFeatures = featuresResult.audio_features.filter(Boolean)
-        } catch (error) {
-          console.warn(`Could not get audio features for album ${albumId}:`, error)
-        }
-      }
+      // Skip audio features - endpoint is deprecated by Spotify
+      console.log(`   Note: Audio features skipped (deprecated API)`)
 
       return {
         ...album,
         tracks,
-        audio_features: audioFeatures
+        audio_features: [] // Always empty due to deprecated API
       }
     } catch (error) {
       console.error(`Failed to get complete album details for ID ${albumId}:`, error)
