@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Search, Shuffle, Menu, X, Disc3 } from 'lucide-react'
+import { Search, Menu, X, Disc3 } from 'lucide-react'
+import RandomButton from './RandomButton'
 
 export default function Header() {
   const [isSearchFocused, setIsSearchFocused] = useState(false)
@@ -17,10 +18,6 @@ export default function Header() {
     }
   }
 
-  const handleRandomShuffle = () => {
-    // Navigate to random album
-    window.location.href = '/random'
-  }
 
   return (
     <header className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/50">
@@ -91,14 +88,10 @@ export default function Header() {
               </div>
             </form>
 
-            {/* Random Shuffle Button - Desktop Only */}
-            <button
-              onClick={handleRandomShuffle}
-              className="hidden md:block p-2 bg-zinc-800/50 hover:bg-zinc-700/50 border border-zinc-700/50 hover:border-zinc-600/50 rounded-lg text-zinc-300 hover:text-white transition-all duration-200 group"
-              title="Random Album"
-            >
-              <Shuffle className="w-5 h-5 group-hover:rotate-12 transition-transform duration-200" />
-            </button>
+            {/* Random Button - Desktop Only */}
+            <div className="hidden md:block">
+              <RandomButton />
+            </div>
 
             {/* Mobile Menu Button */}
             <button
@@ -153,17 +146,13 @@ export default function Header() {
               Artists
             </Link>
             
-            {/* Mobile Shuffle Button */}
-            <button
-              onClick={() => {
-                handleRandomShuffle()
-                setIsMobileMenuOpen(false)
-              }}
-              className="flex items-center space-x-3 w-full px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 group"
-            >
-              <Shuffle className="w-5 h-5 group-hover:rotate-12 transition-transform duration-200" />
-              <span>Random Album</span>
-            </button>
+            {/* Mobile Random Button */}
+            <div className="px-4 py-2">
+              <RandomButton 
+                variant="button" 
+                className="w-full justify-center"
+              />
+            </div>
           </div>
         )}
       </div>
