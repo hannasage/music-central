@@ -136,7 +136,7 @@ class SpotifyAPI {
     
     try {
       return await this.makeRequest<{ audio_features: SpotifyAudioFeatures[] }>(endpoint)
-    } catch (error) {
+    } catch {
       // Audio features require special permissions - return empty array instead of throwing
       console.warn(`Audio features not available (requires premium API access)`)
       return { audio_features: [] }

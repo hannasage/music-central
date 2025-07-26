@@ -5,6 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a00a1f57-089b-4931-8f0c-721033821d0a" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/lib/migration.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/validation.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/debug-album.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/export-vinyl-data.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/import-and-enrich.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/migrate-data.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/test-migration.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/test-spotify.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/supabase/seed.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/spotify.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/spotify.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
@@ -62,7 +72,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1753544588445</updated>
-      <workItem from="1753544589851" duration="4637000" />
+      <workItem from="1753544589851" duration="4948000" />
     </task>
     <servers />
   </component>

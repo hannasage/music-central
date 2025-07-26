@@ -55,7 +55,7 @@ export interface SpotifySearchResult {
 export interface SpotifyAlbum {
   id: string
   name: string
-  artists: Array<{ name: string }>
+  artists: Array<{ id: string; name: string }>
   release_date: string
   images: Array<{ url: string; width: number; height: number }>
   genres: string[]
