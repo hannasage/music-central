@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Album } from '@/lib/types'
-import { ChevronLeft, ChevronRight, Music, ExternalLink } from 'lucide-react'
+import { Music, ExternalLink } from 'lucide-react'
 
 // Spotify Icon Component
 function SpotifyIcon({ className = "w-5 h-5" }: { className?: string }) {
@@ -27,6 +27,7 @@ interface FeaturedBannerProps {
 export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [isTransitioning, setIsTransitioning] = useState(false)
 
   // Auto-advance every 8 seconds
   useEffect(() => {
@@ -40,23 +41,17 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
   }, [isAutoPlaying, albums.length])
 
   const goToSlide = (index: number) => {
+    if (index === currentIndex || isTransitioning) return
+    
+    setIsTransitioning(true)
     setCurrentIndex(index)
     setIsAutoPlaying(false)
+    
     // Resume auto-play after 15 seconds of manual control
     setTimeout(() => setIsAutoPlaying(true), 15000)
+    setTimeout(() => setIsTransitioning(false), 500)
   }
 
-  const goToPrevious = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + albums.length) % albums.length)
-    setIsAutoPlaying(false)
-    setTimeout(() => setIsAutoPlaying(true), 15000)
-  }
-
-  const goToNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % albums.length)
-    setIsAutoPlaying(false)
-    setTimeout(() => setIsAutoPlaying(true), 15000)
-  }
 
   if (!albums || albums.length === 0) {
     return (
@@ -83,7 +78,9 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
             src={currentAlbum.cover_art_url}
             alt={`${currentAlbum.title} by ${currentAlbum.artist}`}
             fill
-            className="object-cover blur-sm scale-110 opacity-60"
+            className={`object-cover blur-sm scale-110 opacity-60 transition-opacity duration-500 ${
+              isTransitioning ? 'opacity-40' : 'opacity-60'
+            }`}
             priority={currentIndex === 0}
           />
         ) : (
@@ -92,13 +89,36 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-black/60" />
       </div>
 
+      {/* Vertical Pagination */}
+      {albums.length > 1 && (
+        <div className="absolute left-6 top-1/2 transform -translate-y-1/2 z-10">
+          <div className="flex flex-col space-y-2 bg-black/20 backdrop-blur-sm px-2 py-3 rounded-full border border-white/10">
+            {albums.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentIndex
+                    ? 'bg-white shadow-sm scale-125'
+                    : 'bg-white/40 hover:bg-white/60'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="relative h-full flex items-center py-8">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[20rem]">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-16 w-full">
+          <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[20rem] transition-all duration-500 ${
+            isTransitioning ? 'opacity-80 transform translate-x-2' : 'opacity-100 transform translate-x-0'
+          }`}>
             {/* Album Artwork */}
             <div className="flex justify-center lg:justify-start">
-              <div className="relative w-56 h-56 lg:w-64 lg:h-64 rounded-xl overflow-hidden shadow-2xl">
+              <div className={`relative w-56 h-56 lg:w-64 lg:h-64 rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ${
+                isTransitioning ? 'scale-95' : 'scale-100'
+              }`}>
                 {currentAlbum.cover_art_url ? (
                   <Image
                     src={currentAlbum.cover_art_url}
@@ -116,7 +136,9 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
             </div>
 
             {/* Album Info */}
-            <div className="text-center lg:text-left space-y-4 max-w-lg mx-auto lg:mx-0">
+            <div className={`text-center lg:text-left space-y-4 max-w-lg mx-auto lg:mx-0 transition-all duration-500 delay-100 ${
+              isTransitioning ? 'opacity-60 transform translate-y-2' : 'opacity-100 transform translate-y-0'
+            }`}>
               <div className="space-y-3">
                 <p className="text-blue-400 font-medium text-sm uppercase tracking-wider">
                   Featured Album
@@ -167,43 +189,7 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
         </div>
       </div>
 
-      {/* Navigation Arrows */}
-      {albums.length > 1 && (
-        <>
-          <button
-            onClick={goToPrevious}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/20 hover:bg-black/40 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          
-          <button
-            onClick={goToNext}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/20 hover:bg-black/40 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </>
-      )}
 
-      {/* Dots Indicator */}
-      {albums.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-          <div className="flex space-x-1.5 bg-black/20 backdrop-blur-sm px-3 py-2 rounded-full border border-white/10">
-            {albums.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? 'bg-white shadow-sm scale-125'
-                    : 'bg-white/40 hover:bg-white/60'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
