@@ -6,8 +6,6 @@ import { getAllAlbums } from '@/lib/albums'
 
 interface SearchParams {
   page?: string
-  sort?: string
-  order?: string
 }
 
 interface AlbumsPageProps {
@@ -17,10 +15,8 @@ interface AlbumsPageProps {
 export default async function AlbumsPage({ searchParams }: AlbumsPageProps) {
   const resolvedSearchParams = await searchParams
   const page = parseInt(resolvedSearchParams.page || '1')
-  const sortBy = resolvedSearchParams.sort || 'created_at'
-  const sortOrder = (resolvedSearchParams.order as 'asc' | 'desc') || 'desc'
 
-  const result = await getAllAlbums(page, 24, sortBy, sortOrder)
+  const result = await getAllAlbums(page, 24)
   
   const pagination = {
     page,
@@ -49,8 +45,6 @@ export default async function AlbumsPage({ searchParams }: AlbumsPageProps) {
           <AlbumsPageClient
             initialAlbums={result.albums}
             initialPagination={pagination}
-            initialSortBy={sortBy}
-            initialSortOrder={sortOrder}
           />
         </Suspense>
       </main>

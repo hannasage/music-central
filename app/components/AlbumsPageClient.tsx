@@ -21,15 +21,11 @@ interface PaginationInfo {
 interface AlbumsPageClientProps {
   initialAlbums: Album[]
   initialPagination: PaginationInfo
-  initialSortBy: string
-  initialSortOrder: 'asc' | 'desc'
 }
 
 export default function AlbumsPageClient({
   initialAlbums,
-  initialPagination,
-  initialSortBy,
-  initialSortOrder
+  initialPagination
 }: AlbumsPageClientProps) {
   const router = useRouter()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -37,23 +33,21 @@ export default function AlbumsPageClient({
   const handlePageChange = useCallback((page: number) => {
     const params = new URLSearchParams()
     if (page > 1) params.set('page', page.toString())
-    if (initialSortBy !== 'created_at') params.set('sort', initialSortBy)
-    if (initialSortOrder !== 'desc') params.set('order', initialSortOrder)
 
     const newURL = `/albums${params.toString() ? `?${params.toString()}` : ''}`
     router.push(newURL)
     window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [initialSortBy, initialSortOrder, router])
+  }, [router])
 
   return (
     <>
       {/* Controls */}
-      <AlbumsControls
-        sortBy={initialSortBy}
-        sortOrder={initialSortOrder}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-      />
+      <div className="flex justify-end mb-6">
+        <AlbumsControls
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+      </div>
 
       {/* Albums Grid/List */}
       {initialAlbums.length > 0 ? (

@@ -26,14 +26,6 @@ async function AlbumContent({ id }: { id: string }) {
       <ScrollToTop />
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-        {/* Back Button */}
-        <Link
-          href="/"
-          className="inline-flex items-center space-x-2 text-zinc-400 hover:text-white transition-colors duration-200 mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Albums</span>
-        </Link>
 
         {/* Main Layout: Desktop 2-column, Mobile stacked */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">

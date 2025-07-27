@@ -73,9 +73,7 @@ export async function searchAlbums(query: string, limit = 20): Promise<Album[]> 
 
 export async function getAllAlbums(
   page: number = 1,
-  limit: number = 24,
-  sortBy: string = 'created_at',
-  sortOrder: 'asc' | 'desc' = 'desc'
+  limit: number = 24
 ): Promise<{ albums: Album[]; total: number; totalPages: number }> {
   const supabase = await createServerComponentClient()
   
@@ -84,7 +82,8 @@ export async function getAllAlbums(
   const { data: albums, error, count } = await supabase
     .from('albums')
     .select('*', { count: 'exact' })
-    .order(sortBy, { ascending: sortOrder === 'asc' })
+    .order('artist', { ascending: true })
+    .order('year', { ascending: true })
     .range(offset, offset + limit - 1)
 
   if (error) {
