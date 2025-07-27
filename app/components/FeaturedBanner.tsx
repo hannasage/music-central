@@ -89,43 +89,6 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-black/60" />
       </div>
 
-      {/* Vertical Pagination - Desktop Only */}
-      {albums.length > 1 && (
-        <div className="hidden lg:block absolute left-6 top-1/2 transform -translate-y-1/2 z-10">
-          <div className="flex flex-col space-y-2 bg-black/20 backdrop-blur-sm px-2 py-3 rounded-full border border-white/10">
-            {albums.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? 'bg-white shadow-sm scale-125'
-                    : 'bg-white/40 hover:bg-white/60'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Pagination - Left Side */}
-      {albums.length > 1 && (
-        <div className="lg:hidden absolute left-4 top-1/2 transform -translate-y-1/2 z-10">
-          <div className="flex flex-col space-y-2 bg-black/30 backdrop-blur-sm px-2 py-3 rounded-full border border-white/20">
-            {albums.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentIndex
-                    ? 'bg-white shadow-sm scale-125'
-                    : 'bg-white/50 hover:bg-white/70'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Content */}
       <div className="relative h-full flex items-center py-4 sm:py-6 lg:py-8">

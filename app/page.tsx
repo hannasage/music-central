@@ -40,7 +40,7 @@ async function RecentlyAddedSection() {
         </Link>
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 px-2 sm:px-0">
         {recentAlbums.map((album) => (
           <AlbumCard key={album.id} album={album} size="small" />
         ))}

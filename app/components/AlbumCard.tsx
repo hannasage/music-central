@@ -11,15 +11,9 @@ interface AlbumCardProps {
 
 export default function AlbumCard({ album, size = 'medium', className = '' }: AlbumCardProps) {
   const artworkSizes = {
-    small: 'w-40 h-40',
-    medium: 'w-48 h-48',
-    large: 'w-56 h-56'
-  }
-
-  const cardWidths = {
-    small: 'w-40',
-    medium: 'w-48',
-    large: 'w-56'
+    small: 'aspect-square w-full',
+    medium: 'aspect-square w-full',
+    large: 'aspect-square w-full'
   }
 
   const textSizeClasses = {
@@ -35,7 +29,7 @@ export default function AlbumCard({ album, size = 'medium', className = '' }: Al
       href={`/albums/${album.id}`}
       className={`group block transition-transform duration-300 hover:scale-105 ${className}`}
     >
-      <div className={`${cardWidths[size]} bg-zinc-900/50 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-zinc-800/50 hover:border-zinc-700/50`}>
+      <div className="w-full bg-zinc-900/50 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-zinc-800/50 hover:border-zinc-700/50">
         {/* Album Artwork - Edge to Edge Square */}
         <div className={`relative ${artworkSizes[size]} bg-zinc-800/50 overflow-hidden`}>
           {album.cover_art_url ? (

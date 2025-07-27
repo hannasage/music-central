@@ -171,6 +171,14 @@ select:focus-visible {
     min-height: 44px;
     min-width: 44px;
   }
+  
+  /* Exception for pagination dots - they can be smaller */
+  button.pagination-dot {
+    min-height: unset !important;
+    min-width: unset !important;
+    width: auto !important;
+    height: auto !important;
+  }
 }
 
 /* Error states */

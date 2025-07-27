@@ -127,7 +127,6 @@ export default function ChatInterface({ className = '' }: ChatInterfaceProps) {
   const clearConversation = () => {
     setMessages([])
     setShowStarters(true)
-    inputRef.current?.focus()
   }
 
   return (

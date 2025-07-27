@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Search, Menu, X, Disc3 } from 'lucide-react'
+import { Search, Menu, X, Disc3, Sparkles } from 'lucide-react'
 import RandomButton from './RandomButton'
 
 export default function Header() {
@@ -29,8 +29,8 @@ export default function Header() {
             className="flex items-center space-x-2 text-white hover:text-blue-400 transition-colors duration-200"
           >
             <Disc3 className="w-8 h-8" />
-            <span className="font-bold text-xl hidden sm:block">Music Central</span>
-            <span className="font-bold text-xl sm:hidden">MC</span>
+            <span className="font-bold text-xl hidden md:block">Music Central</span>
+            <span className="font-bold text-xl md:hidden">MC</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -49,21 +49,10 @@ export default function Header() {
             </Link>
             <Link 
               href="/recommendations" 
-              className="text-zinc-300 hover:text-white transition-colors duration-200"
+              className="text-zinc-300 hover:text-white transition-colors duration-200 flex items-center space-x-1"
             >
-              AI Curator
-            </Link>
-            <Link 
-              href="/genres" 
-              className="text-zinc-300 hover:text-white transition-colors duration-200"
-            >
-              Genres
-            </Link>
-            <Link 
-              href="/artists" 
-              className="text-zinc-300 hover:text-white transition-colors duration-200"
-            >
-              Artists
+              <Sparkles className="w-4 h-4" />
+              <span>AI Curator</span>
             </Link>
           </nav>
 
@@ -71,7 +60,7 @@ export default function Header() {
           <div className="flex items-center space-x-4">
             <form onSubmit={handleSearch} className="relative">
               <div className={`flex items-center space-x-2 transition-all duration-300 ${
-                isSearchFocused ? 'w-80' : 'w-48 sm:w-64'
+                isSearchFocused ? 'w-64 md:w-80' : 'w-40 sm:w-48 md:w-64'
               }`}>
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -104,6 +93,7 @@ export default function Header() {
                 <Menu className="w-6 h-6" />
               )}
             </button>
+
           </div>
         </div>
 
@@ -127,23 +117,10 @@ export default function Header() {
             <Link 
               href="/recommendations"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="block px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+              className="flex items-center space-x-2 px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
             >
-              AI Curator
-            </Link>
-            <Link 
-              href="/genres"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            >
-              Genres
-            </Link>
-            <Link 
-              href="/artists"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            >
-              Artists
+              <Sparkles className="w-4 h-4" />
+              <span>AI Curator</span>
             </Link>
             
             {/* Mobile Random Button */}
@@ -155,6 +132,7 @@ export default function Header() {
             </div>
           </div>
         )}
+
       </div>
     </header>
   )

@@ -6,6 +6,8 @@ import { getAlbumById } from '@/lib/albums'
 import StreamingLinks from '@/app/components/StreamingLinks'
 import AudioFeatures from '@/app/components/AudioFeatures'
 import TrackList from '@/app/components/TrackList'
+import Header from '@/app/components/Header'
+import ScrollToTop from '@/app/components/ScrollToTop'
 import { ArrowLeft, Calendar, Tag, Heart, MessageSquare, Music } from 'lucide-react'
 
 interface AlbumPageProps {
@@ -21,6 +23,8 @@ async function AlbumContent({ id }: { id: string }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+      <ScrollToTop />
+      <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         {/* Back Button */}
         <Link

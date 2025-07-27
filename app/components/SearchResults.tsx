@@ -31,11 +31,17 @@ export default function SearchResults({
   pagination,
   onPageChange,
   onSortChange,
-  sortBy = 'relevance',
+  sortBy = 'year',
   sortOrder = 'desc',
   className = ''
 }: SearchResultsProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    // Default to list view on mobile
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return 'list'
+    }
+    return 'grid'
+  })
 
   // Highlight search terms in text
   const highlightText = (text: string, searchTerm: string): JSX.Element => {
@@ -205,7 +211,7 @@ export default function SearchResults({
 
           {/* Sort Options */}
           <div className="flex space-x-2">
-            {['relevance', 'year', 'artist', 'title'].map((option) => (
+            {['year', 'artist', 'title'].map((option) => (
               <button
                 key={option}
                 onClick={() => handleSortChange(option)}
@@ -258,14 +264,6 @@ export default function SearchResults({
                     <>
                       <span>•</span>
                       <span>{highlightText(album.genres[0], query)}</span>
-                    </>
-                  )}
-                  {album._searchScore && album._searchScore > 0 && (
-                    <>
-                      <span>•</span>
-                      <span className="text-blue-400">
-                        {Math.round(album._searchScore * 10)}% match
-                      </span>
                     </>
                   )}
                 </div>

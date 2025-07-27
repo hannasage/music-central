@@ -239,7 +239,7 @@ Write a warm, conversational response (2-3 sentences) explaining why these album
       "I'm in the mood for something melancholic",
       "Surprise me with something upbeat",
       "What would be good for studying?",
-      "Recommend albums similar to my jazz collection"
+      "Recommend albums similar to my pop collection"
     ]
 
     // Add genre-specific starters if collection has those genres

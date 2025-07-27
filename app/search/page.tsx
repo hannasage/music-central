@@ -42,7 +42,7 @@ export default function SearchPage() {
     total: 0,
     totalPages: 0
   })
-  const [sortBy, setSortBy] = useState('relevance')
+  const [sortBy, setSortBy] = useState('year')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [showMobileFilters, setShowMobileFilters] = useState(false)
 
@@ -51,7 +51,7 @@ export default function SearchPage() {
     searchQuery: string,
     searchFilters: SearchFilters = {},
     page: number = 1,
-    sort: string = 'relevance',
+    sort: string = 'year',
     order: 'asc' | 'desc' = 'desc'
   ) => {
     if (!searchQuery.trim() && Object.keys(searchFilters).length === 0) {
