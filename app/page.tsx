@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import Header from './components/Header'
 import FeaturedBanner from './components/FeaturedBanner'
 import AlbumCard from './components/AlbumCard'
-import { FeaturedBannerSkeleton, AlbumGridSkeleton } from './components/LoadingSkeleton'
+import { FeaturedAlbumsSkeleton, AlbumGridSkeleton } from './components/LoadingSkeleton'
 import { getFeaturedAlbums, getRecentlyAddedAlbums } from '@/lib/albums'
 import Link from 'next/link'
 import { ArrowRight, Clock, Sparkles } from 'lucide-react'
@@ -123,7 +123,7 @@ export default function HomePage() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
         {/* Featured Albums Section */}
-        <Suspense fallback={<FeaturedBannerSkeleton />}>
+        <Suspense fallback={<FeaturedAlbumsSkeleton />}>
           <FeaturedSection />
         </Suspense>
 
