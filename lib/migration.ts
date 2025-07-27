@@ -28,8 +28,8 @@ interface SourceAlbumWithArtist extends SourceAlbum {
 }
 
 class VinylMigrationService {
-  private sourceClient: any
-  private targetClient: any
+  private sourceClient: unknown
+  private targetClient: unknown
   private batchSize = 10
   private delayBetweenBatches = 2000 // 2 seconds
 
@@ -108,9 +108,9 @@ class VinylMigrationService {
       // 2. Get enhanced data if Spotify match found
       let genres: string[] = []
       let audioFeatures: SpotifyAudioFeatures | undefined
-      let tracks: any[] = []
+      let tracks: unknown[] = []
       let coverArtUrl = sourceAlbum.artwork_url
-      let streamingLinks: any = {}
+      const streamingLinks: Record<string, unknown> = {}
 
       if (spotifyAlbum) {
         try {

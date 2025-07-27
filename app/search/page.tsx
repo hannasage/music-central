@@ -168,7 +168,7 @@ export default function SearchPage() {
     if (urlQuery || Object.keys(parsedFilters).length > 0) {
       performSearch(urlQuery, parsedFilters, urlPage, sortBy, sortOrder)
     }
-  }, []) // Only run on mount
+  }, [performSearch, sortBy, sortOrder, searchParams]) // Dependencies added
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">

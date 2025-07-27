@@ -1,14 +1,13 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import Link from 'next/link'
 import { getAlbumById } from '@/lib/albums'
 import StreamingLinks from '@/app/components/StreamingLinks'
 import AudioFeatures from '@/app/components/AudioFeatures'
 import TrackList from '@/app/components/TrackList'
 import Header from '@/app/components/Header'
 import ScrollToTop from '@/app/components/ScrollToTop'
-import { ArrowLeft, Calendar, Tag, Heart, MessageSquare, Music } from 'lucide-react'
+import { Calendar, Tag, Heart, MessageSquare, Music } from 'lucide-react'
 
 interface AlbumPageProps {
   params: { id: string }

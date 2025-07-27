@@ -12,10 +12,6 @@ interface SearchInterfaceProps {
   className?: string
 }
 
-interface Suggestion {
-  text: string
-  type: 'history' | 'suggestion' | 'trending'
-}
 
 export default function SearchInterface({ 
   initialQuery = '', 

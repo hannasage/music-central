@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import { Album } from './types'
-import { RecommendationEngine, RecommendationScore } from './recommendation-engine'
+import { RecommendationEngine } from './recommendation-engine'
 
 export interface ChatMessage {
   id: string
@@ -38,7 +38,7 @@ export class AIRecommendationService {
   private async parseUserPreferences(userMessage: string, conversationHistory: ChatMessage[] = []): Promise<{
     genres: string[]
     vibes: string[]
-    audioFeatures: any
+    audioFeatures: Record<string, unknown>
     keywords: string[]
     yearRange?: { min?: number; max?: number }
     temporalPreference?: 'older' | 'newer' | 'classic' | 'vintage' | 'retro'

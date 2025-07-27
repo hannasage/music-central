@@ -137,7 +137,7 @@ export class DailyFeaturesService {
     if (albums.length <= count) return [...albums]
 
     const selected: Album[] = []
-    let candidates = [...albums]
+    const candidates = [...albums]
 
     // Sort candidates to give some preference to recent additions if requested
     if (favorRecent) {

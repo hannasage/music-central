@@ -31,7 +31,7 @@ export interface CustomMetric {
   name: string
   value: number
   timestamp: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 // Performance data collector
@@ -101,8 +101,8 @@ class PerformanceCollector {
       ...metric,
       timestamp: Date.now(),
       userAgent: navigator.userAgent,
-      connection: (navigator as any).connection?.effectiveType,
-      deviceMemory: (navigator as any).deviceMemory
+      connection: (navigator as typeof navigator & { connection?: { effectiveType?: string } }).connection?.effectiveType,
+      deviceMemory: (navigator as typeof navigator & { deviceMemory?: number }).deviceMemory
     }
 
     this.metrics.push(performanceMetric)
@@ -154,7 +154,7 @@ class PerformanceCollector {
     }
   }
 
-  recordCustomMetric(name: string, value: number, metadata?: Record<string, any>): void {
+  recordCustomMetric(name: string, value: number, metadata?: Record<string, unknown>): void {
     if (!this.isEnabled) return
 
     const metric: CustomMetric = {
@@ -351,7 +351,7 @@ export const performanceOptimization = {
   /**
    * Debounce function for expensive operations
    */
-  debounce<T extends (...args: any[]) => any>(
+  debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
     delay: number
   ): (...args: Parameters<T>) => void {
@@ -366,7 +366,7 @@ export const performanceOptimization = {
   /**
    * Throttle function for high-frequency events
    */
-  throttle<T extends (...args: any[]) => any>(
+  throttle<T extends (...args: unknown[]) => unknown>(
     func: T,
     limit: number
   ): (...args: Parameters<T>) => void {

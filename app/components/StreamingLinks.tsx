@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Album, StreamingLinks } from '@/lib/types'
-import { ExternalLink, Copy, Check, Share2 } from 'lucide-react'
+import { Copy, Check, Share2 } from 'lucide-react'
 
 // Spotify Icon Component
 function SpotifyIcon({ className = "w-5 h-5" }: { className?: string }) {

@@ -134,7 +134,7 @@ export class AlbumValidator {
     return { isValid: errors.length === 0, errors, warnings }
   }
 
-  private static validateTracks(tracks: any[]): ValidationResult {
+  private static validateTracks(tracks: unknown[]): ValidationResult {
     const errors: string[] = []
     const warnings: string[] = []
 

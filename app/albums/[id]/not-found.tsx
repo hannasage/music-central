@@ -20,7 +20,7 @@ export default function NotFound() {
               Album Not Found
             </h1>
             <p className="text-xl text-zinc-400">
-              We couldn't find the album you're looking for.
+              We couldn&apos;t find the album you&apos;re looking for.
             </p>
           </div>
 

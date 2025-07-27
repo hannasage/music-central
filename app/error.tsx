@@ -40,7 +40,7 @@ export default function Error({
             
             <p className="text-zinc-400 mb-6 leading-relaxed">
               We encountered an unexpected error while playing your music collection. 
-              Don't worry, your albums are safe and sound.
+              Don&apos;t worry, your albums are safe and sound.
             </p>
 
             {/* Error Details (development only) */}

@@ -103,7 +103,7 @@ export default function TrackList({ tracks, className = '' }: TrackListProps) {
       </div>
 
       <div className="space-y-1">
-        {tracks.map((track, index) => (
+        {tracks.map((track) => (
           <div
             key={track.id}
             className="group flex items-center space-x-4 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors duration-200"

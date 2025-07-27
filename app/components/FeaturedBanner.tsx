@@ -26,8 +26,8 @@ interface FeaturedBannerProps {
 
 export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
-  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isAutoPlaying] = useState(true)
+  const [isTransitioning] = useState(false)
 
   // Auto-advance every 8 seconds
   useEffect(() => {
@@ -40,17 +40,6 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
     return () => clearInterval(interval)
   }, [isAutoPlaying, albums.length])
 
-  const goToSlide = (index: number) => {
-    if (index === currentIndex || isTransitioning) return
-    
-    setIsTransitioning(true)
-    setCurrentIndex(index)
-    setIsAutoPlaying(false)
-    
-    // Resume auto-play after 15 seconds of manual control
-    setTimeout(() => setIsAutoPlaying(true), 15000)
-    setTimeout(() => setIsTransitioning(false), 500)
-  }
 
 
   if (!albums || albums.length === 0) {

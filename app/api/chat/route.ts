@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
-import { AIRecommendationService, ChatMessage } from '@/lib/ai-recommendations'
+import { AIRecommendationService } from '@/lib/ai-recommendations'
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Get conversation starters
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get albums to initialize AI service
     const supabase = createClient()

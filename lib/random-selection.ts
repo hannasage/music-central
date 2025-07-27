@@ -46,8 +46,7 @@ export class RandomSelectionService {
   // Calculate weight for an album (higher weight = more likely to be selected)
   private static calculateWeight(
     album: Album, 
-    options: RandomSelectionOptions,
-    totalAlbums: number
+    options: RandomSelectionOptions
   ): number {
     let weight = 1.0
 
@@ -124,7 +123,7 @@ export class RandomSelectionService {
     if (options.favorLessPopular) {
       const weightedCandidates: WeightedAlbum[] = candidates.map(album => ({
         ...album,
-        weight: this.calculateWeight(album, options, albums.length)
+        weight: this.calculateWeight(album, options)
       }))
 
       const selected = this.weightedRandomSelection(weightedCandidates)

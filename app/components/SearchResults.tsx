@@ -172,7 +172,7 @@ export default function SearchResults({
                 {pagination.total.toLocaleString()} result{pagination.total !== 1 ? 's' : ''}
                 {query && (
                   <span className="text-zinc-400 font-normal">
-                    {' '}for "{highlightText(query, query)}"
+                    {' '}for &quot;{highlightText(query, query)}&quot;
                   </span>
                 )}
               </>

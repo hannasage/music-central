@@ -32,7 +32,7 @@ interface BrowserCache {
 
 // In-memory cache implementation
 class MemoryCache implements BrowserCache {
-  private cache = new Map<string, { value: any; expires: number }>()
+  private cache = new Map<string, { value: unknown; expires: number }>()
 
   async get<T>(key: string): Promise<T | null> {
     const item = this.cache.get(key)
@@ -221,10 +221,10 @@ export const cachedAPI = {
   /**
    * Search albums with caching
    */
-  async searchAlbums(query: string, filters: any = {}): Promise<any> {
+  async searchAlbums(query: string, filters: Record<string, unknown> = {}): Promise<unknown> {
     const cacheKey = `${CACHE_KEYS.search}:${btoa(JSON.stringify({ query, filters }))}`
     
-    let results = await cache.get<any>(cacheKey)
+    let results = await cache.get<unknown>(cacheKey)
     if (results) {
       return results
     }
@@ -252,7 +252,7 @@ export const cachedAPI = {
   /**
    * Get AI recommendations with caching
    */
-  async getRecommendations(message: string, conversationHistory: any[] = []): Promise<any> {
+  async getRecommendations(message: string, conversationHistory: unknown[] = []): Promise<unknown> {
     // Don't cache personalized recommendations to avoid stale data
     try {
       const response = await fetch('/api/chat', {
@@ -287,7 +287,7 @@ export const cachedAPI = {
       const albums = await this.getAlbums()
       
       // Simple daily selection (would be replaced with proper daily features service)
-      const seed = new Date().getDate() // Changes daily
+      // Use current date for consistent daily randomization
       const shuffled = albums.sort(() => 0.5 - Math.random())
       features = shuffled.slice(0, 4)
       

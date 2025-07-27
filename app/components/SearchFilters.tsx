@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Filter, X, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
+import { Filter, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
 import { createClientSideClient } from '@/lib/supabase-client'
 
 interface SearchFilters {

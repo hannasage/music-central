@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Header from './components/Header'
-import { Home, Search, Shuffle, ArrowLeft } from 'lucide-react'
+import { Home, Shuffle } from 'lucide-react'
 
 export default function NotFound() {
   return (
@@ -25,7 +25,7 @@ export default function NotFound() {
           {/* Error Message */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-white mb-4">
-              This Track Doesn't Exist
+              This Track Doesn&apos;t Exist
             </h1>
             <p className="text-zinc-400 leading-relaxed">
               Looks like this page hit a wrong note and wandered off the playlist. 

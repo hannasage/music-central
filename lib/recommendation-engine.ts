@@ -16,9 +16,9 @@ export interface RecommendationFilters {
 
 export class RecommendationEngine {
   private albums: Album[]
-  private openaiInstance?: any
+  private openaiInstance?: unknown
 
-  constructor(albums: Album[], openaiInstance?: any) {
+  constructor(albums: Album[], openaiInstance?: unknown) {
     this.albums = albums
     this.openaiInstance = openaiInstance
   }
@@ -80,7 +80,7 @@ export class RecommendationEngine {
     albumYear: number, 
     temporalPreference: string,
     userMessage: string,
-    openaiInstance?: any
+    openaiInstance?: unknown
   ): Promise<{ score: number; reasoning: string | null }> {
     
     // Fallback to simple scoring if no OpenAI available

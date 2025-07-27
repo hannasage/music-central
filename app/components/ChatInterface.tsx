@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Album } from '@/lib/types'
 import AlbumCard from './AlbumCard'
-import { Send, Bot, User, Sparkles, RefreshCw, MessageSquare } from 'lucide-react'
+import { Send, Bot, User, RefreshCw } from 'lucide-react'
 
 interface ChatMessage {
   id: string

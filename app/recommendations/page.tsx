@@ -48,7 +48,7 @@ export default function RecommendationsPage() {
                   <h4 className="font-medium text-white">Natural Conversation</h4>
                 </div>
                 <p className="text-zinc-400 text-sm">
-                  Ask in plain English - "something upbeat" or "chill music for studying"
+                  Ask in plain English - &quot;something upbeat&quot; or &quot;chill music for studying&quot;
                 </p>
               </div>
             </div>
@@ -57,12 +57,12 @@ export default function RecommendationsPage() {
             <div className="bg-zinc-900/30 backdrop-blur-sm rounded-xl p-4 border border-zinc-800/30">
               <h4 className="font-medium text-white mb-3">Tips for better results:</h4>
               <div className="space-y-2 text-sm text-zinc-400">
-                <p>• Describe my mood: "I'm feeling nostalgic"</p>
-                <p>• Mention activities: "good for working out"</p>
-                <p>• Reference genres: "something like jazz but more upbeat"</p>
-                <p>• Be specific about energy: "low-key and mellow"</p>
-                <p>• Ask for discovery: "something I might have overlooked"</p>
-                <p>• Reference other albums: "similar to [album name]"</p>
+                <p>• Describe my mood: &quot;I&apos;m feeling nostalgic&quot;</p>
+                <p>• Mention activities: &quot;good for working out&quot;</p>
+                <p>• Reference genres: &quot;something like jazz but more upbeat&quot;</p>
+                <p>• Be specific about energy: &quot;low-key and mellow&quot;</p>
+                <p>• Ask for discovery: &quot;something I might have overlooked&quot;</p>
+                <p>• Reference other albums: &quot;similar to [album name]&quot;</p>
               </div>
             </div>
           </div>

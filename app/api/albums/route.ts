@@ -18,7 +18,12 @@ export async function GET(request: NextRequest) {
       .select('*')
 
     // Apply ordering
-    query = query.order(orderBy as any, { ascending: orderDirection === 'asc' })
+    const validOrderFields = ['created_at', 'title', 'artist', 'year'] as const
+    const orderField = validOrderFields.includes(orderBy as typeof validOrderFields[number]) 
+      ? orderBy as typeof validOrderFields[number] 
+      : 'created_at'
+    
+    query = query.order(orderField, { ascending: orderDirection === 'asc' })
 
     // Apply pagination if specified
     if (limit) {

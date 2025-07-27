@@ -86,7 +86,8 @@ export function getOptimizedImageUrl(
     transformations.push(CDN_CONFIG.transformations.webp)
   }
 
-  const transformString = transformations.join(',')
+  // const transformString = transformations.join(',')
+  // TODO: Apply transformations when CDN is configured
   
   // For now, return original URL until CDN is set up
   return originalUrl

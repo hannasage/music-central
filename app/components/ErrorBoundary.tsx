@@ -99,7 +99,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
             {/* Error Description */}
             <p className="text-zinc-400 mb-6">
-              We encountered an unexpected error. Don't worry, your music collection is safe.
+              We encountered an unexpected error. Don&apos;t worry, your music collection is safe.
             </p>
 
             {/* Error Details (only in development or if showDetails is true) */}
