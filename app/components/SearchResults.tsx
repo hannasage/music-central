@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Album } from '@/lib/types'
 import AlbumCard from './AlbumCard'
 import { Search, SortAsc, SortDesc, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -44,7 +44,7 @@ export default function SearchResults({
   })
 
   // Highlight search terms in text
-  const highlightText = (text: string, searchTerm: string): JSX.Element => {
+  const highlightText = (text: string, searchTerm: string): React.JSX.Element => {
     if (!searchTerm.trim()) return <span>{text}</span>
 
     const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')

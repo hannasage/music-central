@@ -10,7 +10,7 @@ import ScrollToTop from '@/app/components/ScrollToTop'
 import { Calendar, Tag, Heart, MessageSquare, Music } from 'lucide-react'
 
 interface AlbumPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 async function AlbumContent({ id }: { id: string }) {
@@ -223,10 +223,12 @@ function AlbumPageSkeleton() {
   )
 }
 
-export default function AlbumPage({ params }: AlbumPageProps) {
+export default async function AlbumPage({ params }: AlbumPageProps) {
+  const resolvedParams = await params
+  
   return (
     <Suspense fallback={<AlbumPageSkeleton />}>
-      <AlbumContent id={params.id} />
+      <AlbumContent id={resolvedParams.id} />
     </Suspense>
   )
 }

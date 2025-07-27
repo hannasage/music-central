@@ -211,7 +211,7 @@ export const cachedAPI = {
       albums = data.albums || []
       
       await cache.set(cacheKey, albums, CACHE_TTL.albums)
-      return albums
+      return albums || []
     } catch (error) {
       console.error('Error fetching albums:', error)
       return []

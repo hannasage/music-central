@@ -29,7 +29,7 @@ export default function SearchInterface({
   
   const inputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
-  const debounceRef = useRef<NodeJS.Timeout>()
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter()
 
   // Load search history from localStorage

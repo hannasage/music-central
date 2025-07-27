@@ -77,7 +77,7 @@ export async function GET() {
     const supabase = createClient()
     const { data: albums, error } = await supabase
       .from('albums')
-      .select('id, title, artist, genres, personal_vibes')
+      .select('*')
       .limit(100) // Just need a sample for starters
 
     if (error) {

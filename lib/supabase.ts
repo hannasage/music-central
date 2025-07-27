@@ -32,8 +32,8 @@ export async function createServerComponentClient() {
   })
 }
 
-export function createServerActionClient() {
-  const cookieStore = cookies()
+export async function createServerActionClient() {
+  const cookieStore = await cookies()
   
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {

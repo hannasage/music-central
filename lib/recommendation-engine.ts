@@ -1,4 +1,5 @@
 import { Album, SpotifyAudioFeatures } from './types'
+import OpenAI from 'openai'
 
 export interface RecommendationScore {
   album: Album
@@ -16,9 +17,9 @@ export interface RecommendationFilters {
 
 export class RecommendationEngine {
   private albums: Album[]
-  private openaiInstance?: unknown
+  private openaiInstance?: OpenAI
 
-  constructor(albums: Album[], openaiInstance?: unknown) {
+  constructor(albums: Album[], openaiInstance?: OpenAI) {
     this.albums = albums
     this.openaiInstance = openaiInstance
   }
@@ -80,7 +81,7 @@ export class RecommendationEngine {
     albumYear: number, 
     temporalPreference: string,
     userMessage: string,
-    openaiInstance?: unknown
+    openaiInstance?: OpenAI
   ): Promise<{ score: number; reasoning: string | null }> {
     
     // Fallback to simple scoring if no OpenAI available

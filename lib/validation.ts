@@ -139,25 +139,26 @@ export class AlbumValidator {
     const warnings: string[] = []
 
     tracks.forEach((track, index) => {
-      if (!track.name || track.name.trim().length === 0) {
+      const typedTrack = track as { name?: string; duration?: number }
+      if (!typedTrack.name || typedTrack.name.trim().length === 0) {
         errors.push(`Track ${index + 1}: Name is required`)
       }
 
-      if (typeof track.track_number !== 'number' || track.track_number < 1) {
+      if (typeof (typedTrack as { track_number?: number }).track_number !== 'number' || (typedTrack as { track_number?: number }).track_number! < 1) {
         errors.push(`Track ${index + 1}: Invalid track number`)
       }
 
-      if (typeof track.duration_ms !== 'number' || track.duration_ms < 1000) {
+      if (typeof (typedTrack as { duration_ms?: number }).duration_ms !== 'number' || (typedTrack as { duration_ms?: number }).duration_ms! < 1000) {
         warnings.push(`Track ${index + 1}: Duration seems unusually short`)
       }
 
-      if (track.duration_ms > 1800000) { // 30 minutes
+      if ((typedTrack as { duration_ms?: number }).duration_ms! > 1800000) { // 30 minutes
         warnings.push(`Track ${index + 1}: Duration seems unusually long`)
       }
     })
 
     // Check for duplicate track numbers (only warn since we fix them automatically)
-    const trackNumbers = tracks.map(t => t.track_number).filter(n => typeof n === 'number')
+    const trackNumbers = tracks.map(t => (t as { track_number?: number }).track_number).filter(n => typeof n === 'number')
     const duplicateNumbers = trackNumbers.filter((n, i) => trackNumbers.indexOf(n) !== i)
     if (duplicateNumbers.length > 0) {
       warnings.push(`Track numbers were automatically resequenced (original had duplicates)`)
