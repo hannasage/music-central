@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { Album } from '@/lib/types'
 import AlbumCard from './AlbumCard'
 import { Search, SortAsc, SortDesc, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LoadingWithText } from '@/app/components/ui'
 
 interface SearchResultsProps {
   results: (Album & { _searchScore?: number })[]
@@ -109,10 +110,11 @@ export default function SearchResults({
     return (
       <div className={`space-y-6 ${className}`}>
         <div className="flex items-center justify-center py-12">
-          <div className="flex items-center space-x-3 text-zinc-400">
-            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            <span className="text-lg">Searching...</span>
-          </div>
+          <LoadingWithText 
+            text="Searching..." 
+            size="lg"
+            textClassName="text-zinc-400 text-lg"
+          />
         </div>
       </div>
     )

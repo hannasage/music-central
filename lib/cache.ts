@@ -1,5 +1,25 @@
 import { Album } from './types'
 
+// Define search result types for better typing
+export interface SearchResult {
+  results: (Album & { _searchScore?: number })[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+  query: string
+  filters?: SearchFilters
+}
+
+export interface SearchFilters {
+  genres?: string[]
+  yearMin?: number
+  yearMax?: number
+  vibes?: string[]
+}
+
 // Cache TTL configurations (in seconds)
 export const CACHE_TTL = {
   albums: 3600,        // 1 hour - albums don't change frequently
@@ -30,43 +50,122 @@ interface BrowserCache {
   clear(): Promise<void>
 }
 
+// Cache entry interface
+interface CacheEntry<T = unknown> {
+  value: T
+  expires: number
+}
+
 // In-memory cache implementation
 class MemoryCache implements BrowserCache {
-  private cache = new Map<string, { value: unknown; expires: number }>()
-
+  private cache = new Map<string, CacheEntry>()
+  private maxSize = 1000 // Prevent memory leaks
+  
   async get<T>(key: string): Promise<T | null> {
-    const item = this.cache.get(key)
-    
-    if (!item) return null
-    
-    if (Date.now() > item.expires) {
-      this.cache.delete(key)
+    try {
+      if (!key || typeof key !== 'string') {
+        console.warn('Invalid cache key provided:', key)
+        return null
+      }
+
+      const item = this.cache.get(key)
+      
+      if (!item) return null
+      
+      if (Date.now() > item.expires) {
+        this.cache.delete(key)
+        return null
+      }
+      
+      return item.value as T
+    } catch (error) {
+      console.error('Error getting cache item:', error)
       return null
     }
-    
-    return item.value as T
   }
 
   async set<T>(key: string, value: T, ttl: number = 3600): Promise<void> {
-    const expires = Date.now() + (ttl * 1000)
-    this.cache.set(key, { value, expires })
+    try {
+      if (!key || typeof key !== 'string') {
+        console.warn('Invalid cache key provided:', key)
+        return
+      }
+
+      if (ttl <= 0) {
+        console.warn('Invalid TTL provided:', ttl)
+        return
+      }
+
+      // Enforce cache size limit
+      if (this.cache.size >= this.maxSize) {
+        this.cleanup()
+        // If still at max size, remove oldest entries
+        if (this.cache.size >= this.maxSize) {
+          const oldestKey = this.cache.keys().next().value
+          if (oldestKey) {
+            this.cache.delete(oldestKey)
+          }
+        }
+      }
+
+      const expires = Date.now() + (ttl * 1000)
+      this.cache.set(key, { value, expires })
+    } catch (error) {
+      console.error('Error setting cache item:', error)
+    }
   }
 
   async delete(key: string): Promise<void> {
-    this.cache.delete(key)
+    try {
+      if (key && typeof key === 'string') {
+        this.cache.delete(key)
+      }
+    } catch (error) {
+      console.error('Error deleting cache item:', error)
+    }
   }
 
   async clear(): Promise<void> {
-    this.cache.clear()
+    try {
+      this.cache.clear()
+    } catch (error) {
+      console.error('Error clearing cache:', error)
+    }
   }
 
   // Cleanup expired entries
   cleanup(): void {
-    const now = Date.now()
-    for (const [key, item] of this.cache.entries()) {
-      if (now > item.expires) {
-        this.cache.delete(key)
+    try {
+      const now = Date.now()
+      for (const [key, item] of this.cache.entries()) {
+        if (now > item.expires) {
+          this.cache.delete(key)
+        }
       }
+    } catch (error) {
+      console.error('Error during cache cleanup:', error)
+    }
+  }
+
+  // Get cache statistics
+  getStats() {
+    const now = Date.now()
+    let validEntries = 0
+    let expiredEntries = 0
+    
+    for (const [, item] of this.cache.entries()) {
+      if (now > item.expires) {
+        expiredEntries++
+      } else {
+        validEntries++
+      }
+    }
+    
+    return {
+      totalEntries: this.cache.size,
+      validEntries,
+      expiredEntries,
+      maxSize: this.maxSize
     }
   }
 }
@@ -221,10 +320,10 @@ export const cachedAPI = {
   /**
    * Search albums with caching
    */
-  async searchAlbums(query: string, filters: Record<string, unknown> = {}): Promise<unknown> {
+  async searchAlbums(query: string, filters: SearchFilters = {}): Promise<SearchResult> {
     const cacheKey = `${CACHE_KEYS.search}:${btoa(JSON.stringify({ query, filters }))}`
     
-    let results = await cache.get<unknown>(cacheKey)
+    let results = await cache.get<SearchResult>(cacheKey)
     if (results) {
       return results
     }
@@ -239,13 +338,18 @@ export const cachedAPI = {
       const response = await fetch(`/api/search?${params.toString()}`)
       if (!response.ok) throw new Error('Search failed')
       
-      results = await response.json()
+      results = await response.json() as SearchResult
       
       await cache.set(cacheKey, results, CACHE_TTL.search)
       return results
     } catch (error) {
       console.error('Error searching albums:', error)
-      return { results: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }
+      return { 
+        results: [], 
+        pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
+        query,
+        filters
+      }
     }
   },
 

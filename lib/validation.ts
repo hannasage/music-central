@@ -6,6 +6,16 @@ export interface ValidationResult {
   warnings: string[]
 }
 
+// Interface for track validation (handles partial/unknown data)
+interface TrackValidationInput {
+  name?: string
+  track_number?: number
+  duration_ms?: number
+  id?: string
+  preview_url?: string
+  spotify_id?: string
+}
+
 export interface DataQualityReport {
   total_albums: number
   valid_albums: number
@@ -138,27 +148,44 @@ export class AlbumValidator {
     const errors: string[] = []
     const warnings: string[] = []
 
+    // Type guard function to safely check track properties
+    const isValidTrackInput = (track: unknown): track is TrackValidationInput => {
+      return track !== null && typeof track === 'object'
+    }
+
     tracks.forEach((track, index) => {
-      const typedTrack = track as { name?: string; duration?: number }
-      if (!typedTrack.name || typedTrack.name.trim().length === 0) {
+      if (!isValidTrackInput(track)) {
+        errors.push(`Track ${index + 1}: Invalid track data`)
+        return
+      }
+
+      // Validate track name
+      if (!track.name || track.name.trim().length === 0) {
         errors.push(`Track ${index + 1}: Name is required`)
       }
 
-      if (typeof (typedTrack as { track_number?: number }).track_number !== 'number' || (typedTrack as { track_number?: number }).track_number! < 1) {
+      // Validate track number
+      if (typeof track.track_number !== 'number' || track.track_number < 1) {
         errors.push(`Track ${index + 1}: Invalid track number`)
       }
 
-      if (typeof (typedTrack as { duration_ms?: number }).duration_ms !== 'number' || (typedTrack as { duration_ms?: number }).duration_ms! < 1000) {
-        warnings.push(`Track ${index + 1}: Duration seems unusually short`)
-      }
-
-      if ((typedTrack as { duration_ms?: number }).duration_ms! > 1800000) { // 30 minutes
-        warnings.push(`Track ${index + 1}: Duration seems unusually long`)
+      // Validate duration
+      if (typeof track.duration_ms === 'number') {
+        if (track.duration_ms < 1000) {
+          warnings.push(`Track ${index + 1}: Duration seems unusually short`)
+        }
+        if (track.duration_ms > 1800000) { // 30 minutes
+          warnings.push(`Track ${index + 1}: Duration seems unusually long`)
+        }
       }
     })
 
     // Check for duplicate track numbers (only warn since we fix them automatically)
-    const trackNumbers = tracks.map(t => (t as { track_number?: number }).track_number).filter(n => typeof n === 'number')
+    const trackNumbers = tracks
+      .filter(isValidTrackInput)
+      .map(t => t.track_number)
+      .filter((n): n is number => typeof n === 'number')
+    
     const duplicateNumbers = trackNumbers.filter((n, i) => trackNumbers.indexOf(n) !== i)
     if (duplicateNumbers.length > 0) {
       warnings.push(`Track numbers were automatically resequenced (original had duplicates)`)

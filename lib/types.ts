@@ -77,26 +77,6 @@ export interface SpotifyArtist {
   genres: string[]
 }
 
-export interface MigrationResult {
-  success: boolean
-  album?: Album
-  error?: string
-  spotify_match?: boolean
-  original_data: {
-    title: string
-    artist: string
-    year: number
-  }
-}
-
-export interface MigrationSummary {
-  total_processed: number
-  successful: number
-  failed: number
-  spotify_matches: number
-  errors: string[]
-  processing_time_ms: number
-}
 
 export type Database = {
   public: {
