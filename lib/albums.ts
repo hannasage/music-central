@@ -1,4 +1,4 @@
-import { createClient } from './supabase'
+import { createClient, createServerComponentClient } from './supabase'
 import { Album } from './types'
 
 export async function getFeaturedAlbums(limit = 4): Promise<Album[]> {
@@ -69,6 +69,37 @@ export async function searchAlbums(query: string, limit = 20): Promise<Album[]> 
   }
 
   return albums || []
+}
+
+export async function getAllAlbums(
+  page: number = 1,
+  limit: number = 24,
+  sortBy: string = 'created_at',
+  sortOrder: 'asc' | 'desc' = 'desc'
+): Promise<{ albums: Album[]; total: number; totalPages: number }> {
+  const supabase = await createServerComponentClient()
+  
+  const offset = (page - 1) * limit
+
+  const { data: albums, error, count } = await supabase
+    .from('albums')
+    .select('*', { count: 'exact' })
+    .order(sortBy, { ascending: sortOrder === 'asc' })
+    .range(offset, offset + limit - 1)
+
+  if (error) {
+    console.error('Error fetching albums:', error)
+    return { albums: [], total: 0, totalPages: 0 }
+  }
+
+  const total = count || 0
+  const totalPages = Math.ceil(total / limit)
+
+  return { 
+    albums: albums || [], 
+    total,
+    totalPages
+  }
 }
 
 export async function getAlbumById(id: string): Promise<Album | null> {
