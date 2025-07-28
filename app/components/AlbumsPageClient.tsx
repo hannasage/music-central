@@ -44,8 +44,14 @@ export default function AlbumsPageClient({
       const newAlbums = data.albums || []
       
       setAlbums(prev => {
-        const updatedAlbums = [...prev, ...newAlbums]
-        setHasMore(updatedAlbums.length < initialPagination.total)
+        // Create a Set of existing album IDs for fast lookup
+        const existingIds = new Set(prev.map(album => album.id))
+        
+        // Filter out any albums that are already in the list
+        const uniqueNewAlbums = newAlbums.filter(album => !existingIds.has(album.id))
+        
+        const updatedAlbums = [...prev, ...uniqueNewAlbums]
+        setHasMore(updatedAlbums.length < initialPagination.total && uniqueNewAlbums.length > 0)
         return updatedAlbums
       })
       setOffset(prev => prev + 24)
