@@ -11,8 +11,7 @@ interface BattleChoice {
 }
 
 interface PreferenceInsight {
-  category: string
-  value: string
+  summary: string
   confidence: number
 }
 
@@ -226,15 +225,15 @@ async function analyzePreferencesWithAI(history: BattleChoice[], openai: OpenAI)
     `"${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.personal_vibes?.length ? `, Vibes: ${album.personal_vibes.join(', ')}` : ''}`
   )
 
-  const systemPrompt = `You are an expert music preference analyst. Analyze music choices to extract key insights.
+  const systemPrompt = `You are an expert music preference analyst. Analyze music choices to create a cohesive summary of the user's music taste.
 
-CHOSEN ALBUMS (${chosenAlbums.length} selections):
+MORE FAVORED ALBUMS (${chosenAlbums.length} selections):
 ${chosenDescriptions.join('\n')}
 
-REJECTED ALBUMS (${rejectedAlbums.length} rejections):
+LESS FAVORED ALBUMS (${rejectedAlbums.length} rejections):
 ${rejectedDescriptions.join('\n')}
 
-Analyze patterns and extract up to 6 key insights about your music preferences. Consider:
+Analyze the patterns in their choices and write a single, cohesive paragraph (2-3 sentences) that captures their music taste. Consider:
 - Genre preferences and patterns
 - Era/decade preferences  
 - Mood and vibe patterns
@@ -242,41 +241,40 @@ Analyze patterns and extract up to 6 key insights about your music preferences. 
 - Style evolution trends
 - Any unique characteristics
 
-For each insight, provide a confidence score (0.0-1.0) based on consistency of the pattern.
+Don't overly focus on the less favored section in analyzing the user's listening taste. 
+Don't point out specific examples of albums, only point out artists.
 
-Respond with ONLY a JSON array:
-[
-  {
-    "category": "Insight Category",
-    "value": "Clear, specific insight about your taste",
-    "confidence": 0.85
-  }
-]`
+
+Write in second person ("you") and make it concise and impactful. Connect the insights naturally into flowing sentences.
+
+Respond with ONLY a JSON object:
+{
+  "summary": "Your cohesive paragraph summary here...",
+  "confidence": 0.85
+}`
 
   try {
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: 'Analyze these music preferences and provide insights.' }
+        { role: 'user', content: 'Analyze these music preferences and provide a cohesive summary.' }
       ],
       temperature: 0.3,
-      max_tokens: 500
+      max_tokens: 400
     })
 
     const content = response.choices[0]?.message?.content?.trim()
     if (!content) throw new Error('No response from OpenAI')
 
-    const insights = JSON.parse(content)
+    const insight = JSON.parse(content)
     
-    // Validate and clean insights
-    if (Array.isArray(insights)) {
-      return insights
-        .filter(insight => insight.category && insight.value && typeof insight.confidence === 'number')
-        .slice(0, 6)
+    // Validate the single insight object
+    if (insight.summary && typeof insight.confidence === 'number') {
+      return [insight]
     }
 
-    throw new Error('Invalid insights format')
+    throw new Error('Invalid insight format')
 
   } catch (error) {
     console.error('Error with AI preference analysis:', error)
@@ -287,9 +285,8 @@ Respond with ONLY a JSON array:
 }
 
 function getFallbackInsights(history: BattleChoice[]): PreferenceInsight[] {
-  const insights: PreferenceInsight[] = []
   const chosenAlbums = history.map(choice => choice.chosenAlbum)
-
+  
   // Basic genre analysis
   const genreCounts = new Map<string, number>()
   chosenAlbums.forEach(album => {
@@ -298,16 +295,32 @@ function getFallbackInsights(history: BattleChoice[]): PreferenceInsight[] {
     })
   })
 
-  const topGenre = Array.from(genreCounts.entries())
-    .sort((a, b) => b[1] - a[1])[0]
+  const topGenres = Array.from(genreCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([genre]) => genre)
 
-  if (topGenre && topGenre[1] >= 2) {
-    insights.push({
-      category: 'Favorite Genre',
-      value: topGenre[0],
-      confidence: Math.min(topGenre[1] / history.length, 1)
-    })
+  // Basic era analysis
+  const years = chosenAlbums.map(album => album.year).sort((a, b) => a - b)
+  const avgYear = Math.round(years.reduce((sum, year) => sum + year, 0) / years.length)
+  const decade = Math.floor(avgYear / 10) * 10
+
+  let summary = `Based on your ${history.length} choices, you show a preference for ${topGenres.join(' and ')} music`
+  if (topGenres.length > 0) {
+    summary += `, particularly from the ${decade}s era`
+  }
+  summary += '. Your taste appears to favor '
+  
+  // Add some variety based on album diversity
+  const uniqueArtists = new Set(chosenAlbums.map(album => album.artist)).size
+  if (uniqueArtists === chosenAlbums.length) {
+    summary += 'diverse artists and exploring different sounds.'
+  } else {
+    summary += 'certain artists or similar musical styles.'
   }
 
-  return insights.slice(0, 3)
+  return [{
+    summary,
+    confidence: Math.min(history.length / 5, 0.8)
+  }]
 }

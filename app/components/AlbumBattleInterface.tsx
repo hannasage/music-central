@@ -14,8 +14,7 @@ interface BattleChoice {
 }
 
 interface PreferenceInsight {
-  category: string
-  value: string
+  summary: string
   confidence: number
 }
 
@@ -186,19 +185,10 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
                   <Brain className="w-5 h-5 text-purple-400" />
                   <h3 className="font-semibold text-white">What I&apos;ve Learned About Your Taste</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {insights.map((insight, index) => (
-                    <div key={index} className="bg-zinc-800/50 rounded-lg p-4">
-                      <h4 className="font-medium text-zinc-300 mb-1">{insight.category}</h4>
-                      <p className="text-white">{insight.value}</p>
-                      <div className="mt-2 w-full bg-zinc-700 rounded-full h-2">
-                        <div 
-                          className="bg-purple-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${insight.confidence * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div className="bg-zinc-800/50 rounded-lg p-4">
+                  <p className="text-white leading-relaxed">
+                    {insights[0].summary}
+                  </p>
                 </div>
               </div>
             </div>
@@ -259,19 +249,10 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
             </div>
             
             {insights.length > 0 ? (
-              <div className="space-y-3">
-                {insights.map((insight, index) => (
-                  <div key={index} className="bg-zinc-800/50 rounded-lg p-3">
-                    <h4 className="font-medium text-zinc-300 mb-1 text-sm">{insight.category}</h4>
-                    <p className="text-white text-sm">{insight.value}</p>
-                    <div className="mt-2 w-full bg-zinc-700 rounded-full h-1.5">
-                      <div 
-                        className="bg-purple-500 h-1.5 rounded-full transition-all duration-300"
-                        style={{ width: `${insight.confidence * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-zinc-800/50 rounded-lg p-4">
+                <p className="text-white text-sm leading-relaxed">
+                  {insights[0].summary}
+                </p>
               </div>
             ) : round === 1 ? (
               <div className="space-y-4">
