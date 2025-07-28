@@ -9,21 +9,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const limit = searchParams.get('limit')
     const offset = searchParams.get('offset')
-    const orderBy = searchParams.get('order_by') || 'created_at'
-    const orderDirection = searchParams.get('order_direction') || 'desc'
 
     // Build query with count
     let query = supabase
       .from('albums')
       .select('*', { count: 'exact' })
 
-    // Apply ordering
-    const validOrderFields = ['created_at', 'title', 'artist', 'year'] as const
-    const orderField = validOrderFields.includes(orderBy as typeof validOrderFields[number]) 
-      ? orderBy as typeof validOrderFields[number] 
-      : 'created_at'
-    
-    query = query.order(orderField, { ascending: orderDirection === 'asc' })
+    // Apply 2D sorting: Artist alphabetical ascending, then Release year ascending
+    query = query
+      .order('artist', { ascending: true })
+      .order('year', { ascending: true })
 
     // Apply pagination if specified
     if (limit) {
