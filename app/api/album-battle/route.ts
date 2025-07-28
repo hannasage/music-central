@@ -245,7 +245,7 @@ Don't overly focus on the less favored section in analyzing the user's listening
 Don't point out specific examples of albums, only point out artists.
 
 
-Write in second person ("you") and make it concise and impactful. Connect the insights naturally into flowing sentences.
+Write in second person ("you") and make it concise and impactful. Use an 8th grade reading level when writing.
 
 Respond with ONLY a JSON object:
 {
