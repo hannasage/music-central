@@ -145,22 +145,6 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Main Battle Area */}
         <div className="flex-1 space-y-8">
-          {/* Header */}
-          <div className="text-center space-y-4">
-            <div className="flex items-center justify-center space-x-4">
-              <h2 className="text-2xl font-bold text-white">Round {round}</h2>
-              <button
-                onClick={resetGame}
-                className="p-2 text-zinc-400 hover:text-white transition-colors duration-200"
-                title="Reset game"
-              >
-                <RotateCcw className="w-5 h-5" />
-              </button>
-            </div>
-            <p className="text-zinc-300">
-              Choose the album you prefer. Listen to previews first!
-            </p>
-          </div>
 
           {/* Battle Arena */}
           <div className="relative">
