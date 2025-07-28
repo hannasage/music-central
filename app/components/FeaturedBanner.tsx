@@ -138,10 +138,11 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
                 {/* Mobile: Icon buttons, Desktop: Full buttons */}
                 <Link
                   href={`/albums/${currentAlbum.id}`}
-                  className="lg:hidden bg-white hover:bg-zinc-100 text-black p-2.5 rounded-lg font-medium transition-colors duration-200 shadow-lg"
+                  className="lg:hidden bg-white hover:bg-zinc-100 text-black px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 shadow-lg flex items-center justify-center space-x-2 w-32"
                   title="View Album"
                 >
                   <Eye className="w-4 h-4" />
+                  <span className="text-sm">View</span>
                 </Link>
                 
                 <Link
@@ -152,17 +153,6 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
                   <ExternalLink className="w-4 h-4" />
                 </Link>
                 
-                {currentAlbum.streaming_links?.spotify && (
-                  <a
-                    href={currentAlbum.streaming_links.spotify}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-green-500 hover:bg-green-400 text-white p-2.5 lg:p-3 rounded-lg font-medium transition-colors duration-200 shadow-lg"
-                    title="Listen on Spotify"
-                  >
-                    <SpotifyIcon className="w-4 h-4 lg:w-5 lg:h-5" />
-                  </a>
-                )}
               </div>
             </div>
           </div>
