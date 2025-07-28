@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
     const orderBy = searchParams.get('order_by') || 'created_at'
     const orderDirection = searchParams.get('order_direction') || 'desc'
 
-    // Build query
+    // Build query with count
     let query = supabase
       .from('albums')
-      .select('*')
+      .select('*', { count: 'exact' })
 
     // Apply ordering
     const validOrderFields = ['created_at', 'title', 'artist', 'year'] as const

@@ -1,14 +1,12 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import AlbumCard from '@/app/components/AlbumCard'
 import AlbumsControls from '@/app/components/AlbumsControls'
 import { Album } from '@/lib/types'
 import { 
-  ChevronLeft, 
-  ChevronRight,
-  Music
+  Music,
+  Loader
 } from 'lucide-react'
 
 interface PaginationInfo {
@@ -27,17 +25,58 @@ export default function AlbumsPageClient({
   initialAlbums,
   initialPagination
 }: AlbumsPageClientProps) {
-  const router = useRouter()
+  const [albums, setAlbums] = useState<Album[]>(initialAlbums)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(albums.length < initialPagination.total)
+  const [offset, setOffset] = useState(24) // Start with next batch
+  const loaderRef = useRef<HTMLDivElement>(null)
 
-  const handlePageChange = useCallback((page: number) => {
-    const params = new URLSearchParams()
-    if (page > 1) params.set('page', page.toString())
+  const loadMoreAlbums = useCallback(async () => {
+    if (isLoading || !hasMore) return
 
-    const newURL = `/albums${params.toString() ? `?${params.toString()}` : ''}`
-    router.push(newURL)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [router])
+    setIsLoading(true)
+    try {
+      const response = await fetch(`/api/albums?limit=24&offset=${offset}`)
+      if (!response.ok) throw new Error('Failed to fetch albums')
+      
+      const data = await response.json()
+      const newAlbums = data.albums || []
+      
+      setAlbums(prev => {
+        const updatedAlbums = [...prev, ...newAlbums]
+        setHasMore(updatedAlbums.length < initialPagination.total)
+        return updatedAlbums
+      })
+      setOffset(prev => prev + 24)
+    } catch (error) {
+      console.error('Error loading more albums:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [isLoading, hasMore, offset, albums.length, initialPagination.total])
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          loadMoreAlbums()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current)
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current)
+      }
+    }
+  }, [hasMore, isLoading, loadMoreAlbums])
 
   return (
     <>
@@ -50,17 +89,17 @@ export default function AlbumsPageClient({
       </div>
 
       {/* Albums Grid/List */}
-      {initialAlbums.length > 0 ? (
+      {albums.length > 0 ? (
         <>
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-              {initialAlbums.map((album) => (
+              {albums.map((album) => (
                 <AlbumCard key={album.id} album={album} size="small" />
               ))}
             </div>
           ) : (
             <div className="space-y-4 mb-8">
-              {initialAlbums.map((album) => (
+              {albums.map((album) => (
                 <div
                   key={album.id}
                   className="flex items-center space-x-4 p-4 bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-zinc-700/50 transition-all duration-200"
@@ -88,65 +127,25 @@ export default function AlbumsPageClient({
             </div>
           )}
 
-          {/* Pagination */}
-          {initialPagination.totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-              <div className="text-sm text-zinc-400">
-                Showing {((initialPagination.page - 1) * initialPagination.limit) + 1} to{' '}
-                {Math.min(initialPagination.page * initialPagination.limit, initialPagination.total)} of{' '}
-                {initialPagination.total} albums
+          {/* Loading indicator and intersection observer target */}
+          <div ref={loaderRef} className="flex justify-center py-8">
+            {isLoading && (
+              <div className="flex items-center space-x-2 text-zinc-400">
+                <Loader className="w-5 h-5 animate-spin" />
+                <span>Loading more albums...</span>
               </div>
-              
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => handlePageChange(initialPagination.page - 1)}
-                  disabled={initialPagination.page === 1}
-                  className="flex items-center space-x-1 px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>Previous</span>
-                </button>
+            )}
+          </div>
 
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: Math.min(5, initialPagination.totalPages) }, (_, i) => {
-                    let pageNum: number
-                    if (initialPagination.totalPages <= 5) {
-                      pageNum = i + 1
-                    } else if (initialPagination.page <= 3) {
-                      pageNum = i + 1
-                    } else if (initialPagination.page >= initialPagination.totalPages - 2) {
-                      pageNum = initialPagination.totalPages - 4 + i
-                    } else {
-                      pageNum = initialPagination.page - 2 + i
-                    }
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`px-3 py-2 rounded-lg text-sm transition-colors duration-200 ${
-                          pageNum === initialPagination.page
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-zinc-800/50 border border-zinc-700/50 text-zinc-300 hover:text-white hover:bg-zinc-700/50'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <button
-                  onClick={() => handlePageChange(initialPagination.page + 1)}
-                  disabled={initialPagination.page === initialPagination.totalPages}
-                  className="flex items-center space-x-1 px-3 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span>Next</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+          {/* Status indicator */}
+          <div className="text-center text-sm text-zinc-400 mb-8">
+            Showing {albums.length} of {initialPagination.total} albums
+            {!hasMore && albums.length > 0 && (
+              <div className="mt-2 text-zinc-500">
+                You've reached the end of your collection
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </>
       ) : (
         <div className="text-center py-12">

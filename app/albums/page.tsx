@@ -4,22 +4,11 @@ import AlbumsPageClient from '@/app/components/AlbumsPageClient'
 import { AlbumGridSkeleton } from '@/app/components/LoadingSkeleton'
 import { getAllAlbums } from '@/lib/albums'
 
-interface SearchParams {
-  page?: string
-}
-
-interface AlbumsPageProps {
-  searchParams: Promise<SearchParams>
-}
-
-export default async function AlbumsPage({ searchParams }: AlbumsPageProps) {
-  const resolvedSearchParams = await searchParams
-  const page = parseInt(resolvedSearchParams.page || '1')
-
-  const result = await getAllAlbums(page, 24)
+export default async function AlbumsPage() {
+  const result = await getAllAlbums(1, 24) // Always get first page for initial load
   
   const pagination = {
-    page,
+    page: 1,
     limit: 24,
     total: result.total,
     totalPages: result.totalPages
