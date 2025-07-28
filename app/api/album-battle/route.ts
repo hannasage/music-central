@@ -243,7 +243,7 @@ Analyze the patterns in their choices and write a single, cohesive paragraph (2-
 
 Don't overly focus on the less favored section in analyzing the user's listening taste. 
 Don't point out specific examples of albums, only point out artists.
-
+Don't just inject words into a general script, really think about how to summarize the user's taste and vibe preferences.
 
 Write in second person ("you") and make it concise and impactful. Use an 8th grade reading level when writing.
 
