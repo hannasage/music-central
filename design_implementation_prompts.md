@@ -101,101 +101,164 @@ OUTPUT: Show the transformed site with new color scheme, typography, and glassmo
 
 ---
 
-## Phase 2: 3D Hero Section - Core Implementation
+## Phase 2: 2D Scrolling Wall - Performance-Optimized Implementation
 
 ```
-ROLE: You are a WebGL/Three.js specialist creating an unprecedented 3D web experience.
+ROLE: You are a performance-focused frontend engineer creating a smooth, engaging scrolling experience with advanced CSS and JavaScript optimization techniques.
 
-OBJECTIVE: Build a full-viewport 3D hero section featuring organically stacked cubes with rotating album artwork as the centerpiece of the vinyl catalog.
+OBJECTIVE: Build a full-viewport horizontal scrolling wall of album covers with dynamic layouts, smooth animations, and performance optimizations that can handle large collections flawlessly.
 
-3D SPECIFICATIONS:
+SCROLLING WALL SPECIFICATIONS:
 
-Hero Layout:
-- Full viewport height (100vh)
-- 3D cube arrangement taking center stage
-- Minimal UI overlay (floating nav, subtle branding)
-- Scroll indicator at bottom
+Layout System:
+- Horizontal auto-scrolling masonry-style grid
+- Variable album sizes: large (300px), medium (200px), small (150px)
+- Organic positioning with subtle rotations (0°, ±5°, ±10°)
+- 20-30 albums visible (desktop) / 10-15 (mobile)
+- Multiple scroll speeds for depth effect
 
-Cube System:
-- 8-12 cubes in organic stacking pattern (non-grid)
-- Varied sizes: primary (200px), secondary (150px), accent (100px)
-- Dark metallic material with glassmorphism faces
-- 5-8 album covers visible (desktop) / 3-4 (mobile)
+Performance Requirements:
+- Virtual scrolling for collections 100+ albums
+- 60fps smooth scrolling on all devices
+- <16ms frame budget per animation frame
+- Memory usage <50MB for album images
+- Lazy loading with 2-screen buffer
 
-Artwork Behavior:
-- Automatic rotation every 3-4 seconds
-- Smooth fade transitions between albums
-- Click on artwork navigates to album detail page
-- Hover effects: subtle glow, 1.05x scale
-
-TECHNICAL REQUIREMENTS:
-- Three.js for 3D rendering
-- React integration with proper cleanup
-- Mobile-optimized performance
-- Graceful fallback for unsupported devices
+Interaction Design:
+- Auto-scroll with user override (scroll, hover, touch)
+- Click navigation to album detail pages
+- Hover effects: glow, lift, scale (1.05x)
+- Touch-friendly mobile interactions
+- Keyboard navigation support
 
 TASKS:
 
-1. Install and configure Three.js:
-   ```bash
-   npm install three @types/three @react-three/fiber @react-three/drei
-   ```
-
-2. Create 3D Hero Component (`/components/3DHero.tsx`):
+1. Create scrolling wall component (`/components/ScrollingWall.tsx`):
    ```typescript
-   interface Cube3D {
+   interface Album2D {
      id: string;
-     position: [number, number, number];
-     size: number;
-     hasArtwork: boolean;
-     currentAlbum?: Album;
+     title: string;
+     artist: string;
+     coverUrl: string;
+     size: 'large' | 'medium' | 'small';
+     rotation: number;
+     layer: number; // For parallax depth
+   }
+
+   interface ScrollingWallProps {
+     albums: Album[];
+     autoScrollSpeed: number;
+     enableParallax: boolean;
    }
    ```
 
-3. Implement cube geometry and materials:
-   - Box geometry with rounded edges
-   - Materials: dark metallic base + glassmorphism faces
-   - Texture loading for album artwork
-   - Efficient geometry reuse
+2. Implement virtual scrolling system:
+   - Calculate visible album range based on scroll position
+   - Render only visible + buffer albums (10 albums ahead/behind)
+   - Dynamic DOM manipulation for smooth scrolling
+   - Intersection Observer for visibility detection
+   - Memory cleanup for off-screen elements
 
-4. Create organic cube arrangement:
-   - Predefined positions that look naturally stacked
-   - Responsive positions for different screen sizes
-   - Collision detection to prevent overlap
-   - Visual balance and composition
+3. Create dynamic layout algorithm:
+   ```typescript
+   const generateWallLayout = (albums: Album[], screenWidth: number) => {
+     const positions: Album2D[] = [];
+     let currentX = 0;
+     let currentY = 0;
+     
+     albums.forEach((album, index) => {
+       const size = getRandomSize(); // Weighted random
+       const rotation = getRandomRotation(); // -10 to 10 degrees
+       const layer = Math.floor(Math.random() * 3); // 0-2 for parallax
+       
+       positions.push({
+         ...album,
+         size,
+         rotation,
+         layer,
+         x: currentX,
+         y: currentY
+       });
+       
+       currentX += size.width + getRandomSpacing();
+       // Implement vertical offsetting logic
+     });
+     
+     return positions;
+   };
+   ```
 
-5. Implement artwork rotation system:
-   - Timer-based rotation through album collection
-   - Smooth texture swapping with fade effects
-   - Random selection algorithm avoiding repeats
-   - Click event handling for navigation
+4. Implement smooth auto-scrolling:
+   - RequestAnimationFrame-based scroll loop
+   - Easing functions for natural movement
+   - Configurable speed with momentum
+   - Pause on hover/interaction
+   - Resume with smooth acceleration
 
-6. Add lighting and environment:
-   - Multiple colored light sources
-   - Dynamic shadows on cubes
-   - Ambient lighting for mood
-   - Particle system preparation
+5. Create parallax depth system:
+   ```css
+   .wall-layer-0 { transform: translateZ(0) translateX(var(--scroll-x)); }
+   .wall-layer-1 { transform: translateZ(0) translateX(calc(var(--scroll-x) * 0.8)); }
+   .wall-layer-2 { transform: translateZ(0) translateX(calc(var(--scroll-x) * 0.6)); }
+   ```
 
-7. Optimize for performance:
-   - Efficient render loop
-   - Texture optimization and caching
-   - Mobile device detection and adaptation
-   - FPS monitoring and quality adjustment
+6. Build performance-optimized album cards:
+   - CSS transform3d for hardware acceleration
+   - Optimized hover states with will-change
+   - Efficient image loading with srcset
+   - Skeleton loading states
+   - Gesture handling for mobile
 
-8. Create fallback for non-3D devices:
-   - 2D equivalent using CSS transforms
-   - Similar visual impact without WebGL
-   - Progressive enhancement approach
+7. Implement scroll controls:
+   - Mouse wheel override auto-scroll
+   - Touch gesture support (swipe, momentum)
+   - Keyboard arrow key navigation
+   - Smooth scroll-to-album functionality
+   - Auto-resume after user interaction timeout
+
+8. Create responsive adaptations:
+   - Mobile: Vertical scrolling option
+   - Tablet: Reduced complexity, maintained smoothness
+   - Desktop: Full parallax and hover effects
+   - Large screens: Enhanced visual density
+
+9. Add accessibility features:
+   - Reduced motion support (disable auto-scroll)
+   - Keyboard navigation between albums
+   - Screen reader compatibility
+   - Focus management during scrolling
+
+10. Performance monitoring integration:
+    - FPS tracking and quality adjustment
+    - Memory usage monitoring
+    - Automatic quality degradation on low-end devices
+    - Performance debug overlay (development)
+
+OPTIMIZATION TECHNIQUES:
+- Use CSS containment for isolated rendering
+- Implement GPU-layer promotion strategically
+- Batch DOM updates during scroll
+- Debounce expensive calculations
+- Use passive event listeners
+- Implement efficient event delegation
+
+MOBILE OPTIMIZATIONS:
+- Touch momentum scrolling
+- Reduced animation complexity
+- Smaller image sizes
+- Battery usage optimization
+- Heat-based performance scaling
 
 SUCCESS CRITERIA:
-- 3D cubes render smoothly at 60fps on desktop
-- Album artwork rotates automatically and smoothly
-- Click navigation to album details works
-- Mobile version maintains visual impact
-- No memory leaks or performance issues
-- Fallback works on older devices
+- Smooth 60fps scrolling on all target devices
+- No janky animations or dropped frames
+- Memory usage stays within budget
+- Touch interactions feel natural and responsive
+- Auto-scroll resumes smoothly after user interaction
+- Accessibility features work properly
+- Large collections (500+ albums) perform well
 
-OUTPUT: Functional 3D hero section with cube arrangement and rotating album artwork that serves as an impressive landing experience.
+OUTPUT: High-performance scrolling wall that showcases album collection with smooth animations, dynamic layouts, and flawless performance across all devices.
 ```
 
 ---
