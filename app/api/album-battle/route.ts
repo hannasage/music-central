@@ -135,8 +135,9 @@ async function selectPairWithAI(
   const chosenAlbums = history.map(choice => choice.chosenAlbum)
   const rejectedAlbums = history.map(choice => choice.rejectedAlbum)
 
-  // Create simplified album descriptions for AI
-  const albumDescriptions = availableAlbums.map(album => ({
+  // Create simplified album descriptions for AI and shuffle them
+  const shuffledAlbums = [...availableAlbums].sort(() => Math.random() - 0.5)
+  const albumDescriptions = shuffledAlbums.map(album => ({
     id: album.id,
     artist: album.artist,
     title: album.title,
@@ -155,17 +156,17 @@ async function selectPairWithAI(
 
   const systemPrompt = `You are an expert music curator selecting album pairs for a preference learning game.
 
-CHOSEN ALBUMS (user liked these):
+CHOSEN ALBUMS (you liked these):
 ${chosenDescriptions.join('\n')}
 
-REJECTED ALBUMS (user didn't prefer these):
+REJECTED ALBUMS (you didn't prefer these):
 ${rejectedDescriptions.join('\n')}
 
 AVAILABLE ALBUMS:
 ${albumDescriptions.map((album, i) => `${i + 1}. "${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.vibes.length ? `, Vibes: ${album.vibes.join(', ')}` : ''} [ID: ${album.id}]`).join('\n')}
 
-Select TWO albums that will create an interesting choice for learning user preferences. Consider:
-1. One album that aligns with emerging patterns from chosen albums
+Select TWO albums that will create an interesting choice for learning your preferences. Consider:
+1. One album that aligns with emerging patterns from your chosen albums
 2. One album that offers contrast or discovery potential
 3. Make choices meaningful - avoid albums that are too similar or obviously different
 4. Consider genre, era, vibe, and style patterns
@@ -174,7 +175,7 @@ Respond with ONLY a JSON object:
 {
   "album1_id": "album_id_here",
   "album2_id": "album_id_here",
-  "reasoning": "Brief explanation of why this pairing will reveal preferences"
+  "reasoning": "Brief explanation of why this pairing will reveal your preferences"
 }`
 
   try {
@@ -225,7 +226,7 @@ async function analyzePreferencesWithAI(history: BattleChoice[], openai: OpenAI)
     `"${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.personal_vibes?.length ? `, Vibes: ${album.personal_vibes.join(', ')}` : ''}`
   )
 
-  const systemPrompt = `You are an expert music preference analyst. Analyze user music choices to extract key insights.
+  const systemPrompt = `You are an expert music preference analyst. Analyze music choices to extract key insights.
 
 CHOSEN ALBUMS (${chosenAlbums.length} selections):
 ${chosenDescriptions.join('\n')}
@@ -233,7 +234,7 @@ ${chosenDescriptions.join('\n')}
 REJECTED ALBUMS (${rejectedAlbums.length} rejections):
 ${rejectedDescriptions.join('\n')}
 
-Analyze patterns and extract up to 6 key insights about this user's music preferences. Consider:
+Analyze patterns and extract up to 6 key insights about your music preferences. Consider:
 - Genre preferences and patterns
 - Era/decade preferences  
 - Mood and vibe patterns
@@ -247,7 +248,7 @@ Respond with ONLY a JSON array:
 [
   {
     "category": "Insight Category",
-    "value": "Clear, specific insight",
+    "value": "Clear, specific insight about your taste",
     "confidence": 0.85
   }
 ]`

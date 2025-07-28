@@ -200,103 +200,176 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
   }
 
   return (
-    <div className={`space-y-8 ${className}`}>
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center space-x-4">
-          <h2 className="text-2xl font-bold text-white">Round {round}</h2>
-          <button
-            onClick={resetGame}
-            className="p-2 text-zinc-400 hover:text-white transition-colors duration-200"
-            title="Reset game"
-          >
-            <RotateCcw className="w-5 h-5" />
-          </button>
-        </div>
-        <p className="text-zinc-300">
-          Choose the album you prefer. Listen to previews first!
-        </p>
-      </div>
-
-      {/* Battle Arena */}
-      <div className="relative">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          <AlbumBattleCard
-            album={albumPair[0]}
-            onChoose={() => handleChoice(albumPair[0])}
-            isChosen={chosenAlbum?.id === albumPair[0].id}
-            isDisabled={isTransitioning}
-            side="left"
-          />
-          
-          <div className="flex items-center justify-center lg:hidden">
-            <div className="text-4xl font-bold text-zinc-600">VS</div>
-          </div>
-
-          <AlbumBattleCard
-            album={albumPair[1]}
-            onChoose={() => handleChoice(albumPair[1])}
-            isChosen={chosenAlbum?.id === albumPair[1].id}
-            isDisabled={isTransitioning}
-            side="right"
-          />
-        </div>
-
-        {/* VS indicator for desktop */}
-        <div className="hidden lg:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="w-12 h-12 bg-zinc-800/90 backdrop-blur-sm rounded-full border-2 border-zinc-700/50 flex items-center justify-center">
-            <span className="text-lg font-bold text-zinc-300">VS</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Insights Panel */}
-      {insights.length > 0 && (
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-zinc-900/50 backdrop-blur-sm rounded-xl p-6 border border-zinc-800/50">
-            <div className="flex items-center space-x-3 mb-4">
-              <Brain className="w-5 h-5 text-purple-400" />
-              <h3 className="font-semibold text-white">What I've Learned About Your Taste</h3>
+    <div className={className}>
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Main Battle Area */}
+        <div className="flex-1 space-y-8">
+          {/* Header */}
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center space-x-4">
+              <h2 className="text-2xl font-bold text-white">Round {round}</h2>
+              <button
+                onClick={resetGame}
+                className="p-2 text-zinc-400 hover:text-white transition-colors duration-200"
+                title="Reset game"
+              >
+                <RotateCcw className="w-5 h-5" />
+              </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {insights.map((insight, index) => (
-                <div key={index} className="bg-zinc-800/50 rounded-lg p-4">
-                  <h4 className="font-medium text-zinc-300 mb-1">{insight.category}</h4>
-                  <p className="text-white">{insight.value}</p>
-                  <div className="mt-2 w-full bg-zinc-700 rounded-full h-2">
-                    <div 
-                      className="bg-purple-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${insight.confidence * 100}%` }}
-                    />
+            <p className="text-zinc-300">
+              Choose the album you prefer. Listen to previews first!
+            </p>
+          </div>
+
+          {/* Battle Arena */}
+          <div className="relative">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <AlbumBattleCard
+                album={albumPair[0]}
+                onChoose={() => handleChoice(albumPair[0])}
+                isChosen={chosenAlbum?.id === albumPair[0].id}
+                isDisabled={isTransitioning}
+                side="left"
+              />
+              
+              <div className="flex items-center justify-center lg:hidden">
+                <div className="text-4xl font-bold text-zinc-600">VS</div>
+              </div>
+
+              <AlbumBattleCard
+                album={albumPair[1]}
+                onChoose={() => handleChoice(albumPair[1])}
+                isChosen={chosenAlbum?.id === albumPair[1].id}
+                isDisabled={isTransitioning}
+                side="right"
+              />
+            </div>
+
+            {/* VS indicator for desktop */}
+            <div className="hidden lg:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+              <div className="w-12 h-12 bg-zinc-800/90 backdrop-blur-sm rounded-full border-2 border-zinc-700/50 flex items-center justify-center">
+                <span className="text-lg font-bold text-zinc-300">VS</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Insights Panel */}
+          {insights.length > 0 && (
+            <div className="lg:hidden">
+              <div className="bg-zinc-900/50 backdrop-blur-sm rounded-xl p-6 border border-zinc-800/50">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Brain className="w-5 h-5 text-purple-400" />
+                  <h3 className="font-semibold text-white">What I've Learned About Your Taste</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {insights.map((insight, index) => (
+                    <div key={index} className="bg-zinc-800/50 rounded-lg p-4">
+                      <h4 className="font-medium text-zinc-300 mb-1">{insight.category}</h4>
+                      <p className="text-white">{insight.value}</p>
+                      <div className="mt-2 w-full bg-zinc-700 rounded-full h-2">
+                        <div 
+                          className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${insight.confidence * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Battle History Grid */}
+          {battleHistory.length > 0 && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-zinc-900/30 backdrop-blur-sm rounded-xl p-6 border border-zinc-800/30">
+                <h3 className="font-semibold text-white mb-6 flex items-center space-x-2">
+                  <TrendingUp className="w-5 h-5 text-blue-400" />
+                  <span>Your Choices ({battleHistory.length} rounds)</span>
+                </h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+                  {battleHistory.slice(-16).reverse().map((choice, index) => (
+                    <div key={choice.round} className="group">
+                      <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
+                        {choice.chosenAlbum.cover_art_url ? (
+                          <img
+                            src={choice.chosenAlbum.cover_art_url}
+                            alt={choice.chosenAlbum.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-zinc-700 flex items-center justify-center">
+                            <Music className="w-6 h-6 text-zinc-500" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                        <div className="absolute top-1 right-1 bg-blue-500/90 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
+                          {choice.round}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-white font-medium line-clamp-1 mb-1">
+                          {choice.chosenAlbum.title}
+                        </div>
+                        <div className="text-xs text-zinc-400 line-clamp-1">
+                          {choice.chosenAlbum.artist}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block w-80 space-y-6">
+          {/* Insights Panel */}
+          <div className="bg-zinc-900/50 backdrop-blur-sm rounded-xl p-4 border border-zinc-800/50">
+            <div className="flex items-center space-x-2 mb-4">
+              <Brain className="w-4 h-4 text-purple-400" />
+              <h3 className="font-semibold text-white text-sm">Your Music Taste</h3>
+            </div>
+            
+            {insights.length > 0 ? (
+              <div className="space-y-3">
+                {insights.map((insight, index) => (
+                  <div key={index} className="bg-zinc-800/50 rounded-lg p-3">
+                    <h4 className="font-medium text-zinc-300 mb-1 text-sm">{insight.category}</h4>
+                    <p className="text-white text-sm">{insight.value}</p>
+                    <div className="mt-2 w-full bg-zinc-700 rounded-full h-1.5">
+                      <div 
+                        className="bg-purple-500 h-1.5 rounded-full transition-all duration-300"
+                        style={{ width: `${insight.confidence * 100}%` }}
+                      />
+                    </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 mx-auto mb-4 bg-zinc-800/50 rounded-full flex items-center justify-center">
+                  <Brain className="w-6 h-6 text-zinc-500" />
                 </div>
-              ))}
-            </div>
+                <h4 className="font-medium text-zinc-300 mb-2 text-sm">Learning Your Taste</h4>
+                <p className="text-zinc-400 text-xs leading-relaxed">
+                  {round === 1 
+                    ? "Make your first choice to start discovering your music preferences!"
+                    : "Keep choosing albums - insights will appear as I learn your taste patterns."
+                  }
+                </p>
+                <div className="mt-4 flex items-center justify-center space-x-1">
+                  <div className="w-1.5 h-1.5 bg-purple-500/50 rounded-full animate-pulse" />
+                  <div className="w-1.5 h-1.5 bg-purple-500/50 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                  <div className="w-1.5 h-1.5 bg-purple-500/50 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
 
-      {/* Battle History */}
-      {battleHistory.length > 0 && (
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-zinc-900/30 backdrop-blur-sm rounded-xl p-6 border border-zinc-800/30">
-            <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
-              <TrendingUp className="w-5 h-5 text-blue-400" />
-              <span>Your Choices ({battleHistory.length} rounds)</span>
-            </h3>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {battleHistory.slice(-5).reverse().map((choice, index) => (
-                <div key={choice.round} className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-400">Round {choice.round}:</span>
-                  <span className="text-white">
-                    "{choice.chosenAlbum.title}" by {choice.chosenAlbum.artist}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
