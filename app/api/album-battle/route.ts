@@ -260,7 +260,7 @@ Respond with ONLY a JSON object:
         { role: 'system', content: systemPrompt },
         { role: 'user', content: 'Analyze these music preferences and provide a cohesive summary.' }
       ],
-      temperature: 0.3,
+      temperature: 0.7,
       max_tokens: 400
     })
 
