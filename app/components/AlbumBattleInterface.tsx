@@ -29,7 +29,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
   const [battleHistory, setBattleHistory] = useState<BattleChoice[]>([])
   const [insights, setInsights] = useState<PreferenceInsight[]>([])
   const [round, setRound] = useState(1)
-  const [gameStarted, setGameStarted] = useState(false)
+  const [gameStarted, setGameStarted] = useState(true)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
   // Load initial album pair
@@ -122,69 +122,9 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
     setRound(1)
     setAlbumPair(null)
     setChosenAlbum(null)
-    setGameStarted(false)
     setIsTransitioning(false)
   }
 
-  const startGame = () => {
-    setGameStarted(true)
-  }
-
-  if (!gameStarted) {
-    return (
-      <div className={`flex flex-col items-center justify-center min-h-[600px] text-center space-y-8 ${className}`}>
-        <div className="space-y-4">
-          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <Zap className="w-10 h-10 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-white">Discover Your Music Taste</h2>
-          <p className="text-xl text-zinc-300 max-w-2xl">
-            Choose between pairs of albums from your collection. 
-            I'll learn your preferences and help you discover hidden gems!
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
-          <div className="bg-zinc-900/50 backdrop-blur-sm rounded-xl p-6 border border-zinc-800/50">
-            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center mb-4">
-              <Music className="w-6 h-6 text-green-400" />
-            </div>
-            <h3 className="font-semibold text-white mb-2">Listen & Compare</h3>
-            <p className="text-zinc-400 text-sm">
-              Preview albums on your favorite streaming platforms before choosing
-            </p>
-          </div>
-
-          <div className="bg-zinc-900/50 backdrop-blur-sm rounded-xl p-6 border border-zinc-800/50">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center mb-4">
-              <Brain className="w-6 h-6 text-purple-400" />
-            </div>
-            <h3 className="font-semibold text-white mb-2">AI Learning</h3>
-            <p className="text-zinc-400 text-sm">
-              Each choice teaches me about your taste in genres, eras, and vibes
-            </p>
-          </div>
-
-          <div className="bg-zinc-900/50 backdrop-blur-sm rounded-xl p-6 border border-zinc-800/50">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center mb-4">
-              <TrendingUp className="w-6 h-6 text-blue-400" />
-            </div>
-            <h3 className="font-semibold text-white mb-2">Get Smarter</h3>
-            <p className="text-zinc-400 text-sm">
-              Recommendations improve with every round as I understand you better
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={startGame}
-          className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold text-lg rounded-xl hover:from-blue-400 hover:to-purple-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
-        >
-          Start Music Battle
-        </button>
-      </div>
-    )
-  }
 
   if (isLoading || !albumPair) {
     return (
@@ -347,6 +287,64 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
                   </div>
                 ))}
               </div>
+            ) : round === 1 ? (
+              <div className="space-y-4">
+                {/* Welcome message */}
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h4 className="font-semibold text-white text-sm mb-2">Discover Your Music Taste</h4>
+                  <p className="text-zinc-400 text-xs leading-relaxed">
+                    Choose between albums and I'll learn your preferences!
+                  </p>
+                </div>
+
+                {/* How it works cards */}
+                <div className="space-y-3">
+                  <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/30">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Music className="w-4 h-4 text-green-400" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-white text-xs mb-1">Listen & Compare</h5>
+                        <p className="text-zinc-400 text-xs leading-relaxed">
+                          Preview albums on streaming platforms before choosing
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/30">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Brain className="w-4 h-4 text-purple-400" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-white text-xs mb-1">AI Learning</h5>
+                        <p className="text-zinc-400 text-xs leading-relaxed">
+                          Each choice teaches me about your taste in genres, eras, and vibes
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/30">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <TrendingUp className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-white text-xs mb-1">Get Smarter</h5>
+                        <p className="text-zinc-400 text-xs leading-relaxed">
+                          Recommendations improve as I understand you better
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="text-center py-8">
                 <div className="w-16 h-16 mx-auto mb-4 bg-zinc-800/50 rounded-full flex items-center justify-center">
@@ -354,10 +352,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
                 </div>
                 <h4 className="font-medium text-zinc-300 mb-2 text-sm">Learning Your Taste</h4>
                 <p className="text-zinc-400 text-xs leading-relaxed">
-                  {round === 1 
-                    ? "Make your first choice to start discovering your music preferences!"
-                    : "Keep choosing albums - insights will appear as I learn your taste patterns."
-                  }
+                  Keep choosing albums - insights will appear as I learn your taste patterns.
                 </p>
                 <div className="mt-4 flex items-center justify-center space-x-1">
                   <div className="w-1.5 h-1.5 bg-purple-500/50 rounded-full animate-pulse" />
