@@ -220,7 +220,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
 
       {/* Battle Arena */}
       <div className="relative">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
           <AlbumBattleCard
             album={albumPair[0]}
             onChoose={() => handleChoice(albumPair[0])}
@@ -244,8 +244,8 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
 
         {/* VS indicator for desktop */}
         <div className="hidden lg:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="w-16 h-16 bg-zinc-800/90 backdrop-blur-sm rounded-full border-2 border-zinc-700/50 flex items-center justify-center">
-            <span className="text-2xl font-bold text-zinc-300">VS</span>
+          <div className="w-12 h-12 bg-zinc-800/90 backdrop-blur-sm rounded-full border-2 border-zinc-700/50 flex items-center justify-center">
+            <span className="text-lg font-bold text-zinc-300">VS</span>
           </div>
         </div>
       </div>

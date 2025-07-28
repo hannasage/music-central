@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { Album } from '@/lib/types'
-import { StreamingButton } from '@/app/components/ui'
+import { StreamingIcon } from '@/app/components/ui/icons'
 import { Music, Play } from 'lucide-react'
 
 interface AlbumBattleCardProps {
@@ -65,7 +65,7 @@ export default function AlbumBattleCard({
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
-              <Music className="w-16 h-16 text-zinc-500" />
+              <Music className="w-12 h-12 text-zinc-500" />
             </div>
           )}
           
@@ -77,7 +77,7 @@ export default function AlbumBattleCard({
             <button
               onClick={onChoose}
               disabled={isDisabled}
-              className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 ${
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 ${
                 isChosen 
                   ? 'bg-blue-500 text-white' 
                   : 'bg-white/95 text-black hover:bg-white hover:scale-105'
@@ -89,62 +89,74 @@ export default function AlbumBattleCard({
         </div>
 
         {/* Album Info */}
-        <div className="p-6">
-          <div className="space-y-3 mb-4">
-            <h3 className="text-xl font-bold text-white line-clamp-2 leading-tight">
-              {album.title}
-            </h3>
-            <p className="text-lg text-zinc-300 line-clamp-1">
-              by {album.artist}
-            </p>
-            <div className="flex items-center space-x-3 text-sm text-zinc-400">
-              <span>{album.year}</span>
-              {primaryGenre && (
-                <>
-                  <span>•</span>
-                  <span className="bg-zinc-800/50 px-2 py-1 rounded-full border border-zinc-700/50">
-                    {primaryGenre}
-                  </span>
-                </>
-              )}
+        <div className="p-4">
+          <div className="flex items-start justify-between">
+            {/* Left side: Album details */}
+            <div className="flex-1 space-y-1">
+              <h3 className="text-lg font-bold text-white line-clamp-2 leading-tight pr-2">
+                {album.title}
+              </h3>
+              <p className="text-base text-zinc-300 line-clamp-1">
+                by {album.artist}
+              </p>
+              <div className="flex items-center space-x-2 text-xs text-zinc-400">
+                <span>{album.year}</span>
+                {primaryGenre && (
+                  <>
+                    <span>•</span>
+                    <span className="bg-zinc-800/50 px-2 py-1 rounded-full border border-zinc-700/50">
+                      {primaryGenre}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Streaming Links */}
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2 text-zinc-400">
-              <Play className="w-4 h-4" />
-              <span className="text-sm font-medium">Preview on:</span>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-2">
-              <StreamingButton
-                service="spotify"
-                url={streamingLinks.spotify}
-                showLabel={true}
-                size="sm"
-              />
-              <StreamingButton
-                service="apple_music"
-                url={streamingLinks.apple_music}
-                showLabel={true}
-                size="sm"
-              />
-              <StreamingButton
-                service="youtube_music"
-                url={streamingLinks.youtube_music}
-                showLabel={true}
-                size="sm"
-              />
+            {/* Right side: Streaming Links */}
+            <div className="flex flex-col items-end space-y-2 ml-3">
+              <div className="flex items-center space-x-1 text-zinc-400">
+                <Play className="w-3 h-3" />
+                <span className="text-xs font-medium">Listen</span>
+              </div>
+              
+              <div className="flex items-center space-x-1">
+                <a
+                  href={streamingLinks.spotify}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 bg-green-500 hover:bg-green-400 rounded-md transition-colors duration-200"
+                  title="Listen on Spotify"
+                >
+                  <StreamingIcon service="spotify" size="sm" />
+                </a>
+                <a
+                  href={streamingLinks.apple_music}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 bg-gradient-to-r from-[#fa5a72] to-[#fa253e] hover:from-[#fb6b7f] hover:to-[#fb3651] rounded-md transition-colors duration-200"
+                  title="Listen on Apple Music"
+                >
+                  <StreamingIcon service="apple_music" size="sm" />
+                </a>
+                <a
+                  href={streamingLinks.youtube_music}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 bg-red-500 hover:bg-red-400 rounded-md transition-colors duration-200"
+                  title="Listen on YouTube Music"
+                >
+                  <StreamingIcon service="youtube_music" size="sm" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Side indicator */}
-      <div className={`absolute top-4 ${side === 'left' ? 'left-4' : 'right-4'}`}>
-        <div className="w-8 h-8 bg-zinc-800/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-zinc-700/50">
-          <span className="text-zinc-300 font-semibold text-sm">
+      <div className={`absolute top-3 ${side === 'left' ? 'left-3' : 'right-3'}`}>
+        <div className="w-6 h-6 bg-zinc-800/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-zinc-700/50">
+          <span className="text-zinc-300 font-semibold text-xs">
             {side === 'left' ? 'A' : 'B'}
           </span>
         </div>
