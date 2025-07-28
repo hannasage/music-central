@@ -18,7 +18,7 @@ interface PreferenceInsight {
 
 export async function POST(request: NextRequest) {
   try {
-    const { action, history = [], choice, round = 1 } = await request.json()
+    const { action, history = [], round = 1 } = await request.json()
 
     // Initialize OpenAI
     if (!process.env.OPENAI_API_KEY) {

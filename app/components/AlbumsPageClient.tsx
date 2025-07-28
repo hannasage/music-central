@@ -48,7 +48,7 @@ export default function AlbumsPageClient({
         const existingIds = new Set(prev.map(album => album.id))
         
         // Filter out any albums that are already in the list
-        const uniqueNewAlbums = newAlbums.filter(album => !existingIds.has(album.id))
+        const uniqueNewAlbums = newAlbums.filter((album: Album) => !existingIds.has(album.id))
         
         const updatedAlbums = [...prev, ...uniqueNewAlbums]
         setHasMore(updatedAlbums.length < initialPagination.total && uniqueNewAlbums.length > 0)
@@ -60,10 +60,11 @@ export default function AlbumsPageClient({
     } finally {
       setIsLoading(false)
     }
-  }, [isLoading, hasMore, offset, albums.length, initialPagination.total])
+  }, [isLoading, hasMore, offset, initialPagination.total])
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
+    const currentLoader = loaderRef.current
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoading) {
@@ -73,13 +74,13 @@ export default function AlbumsPageClient({
       { threshold: 0.1 }
     )
 
-    if (loaderRef.current) {
-      observer.observe(loaderRef.current)
+    if (currentLoader) {
+      observer.observe(currentLoader)
     }
 
     return () => {
-      if (loaderRef.current) {
-        observer.unobserve(loaderRef.current)
+      if (currentLoader) {
+        observer.unobserve(currentLoader)
       }
     }
   }, [hasMore, isLoading, loadMoreAlbums])
@@ -148,7 +149,7 @@ export default function AlbumsPageClient({
             Showing {albums.length} of {initialPagination.total} albums
             {!hasMore && albums.length > 0 && (
               <div className="mt-2 text-zinc-500">
-                You've reached the end of your collection
+                You&apos;ve reached the end of your collection
               </div>
             )}
           </div>

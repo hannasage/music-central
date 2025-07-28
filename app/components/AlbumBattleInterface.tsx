@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { Album } from '@/lib/types'
 import AlbumBattleCard from './AlbumBattleCard'
 import { Zap, RotateCcw, TrendingUp, Brain, Music } from 'lucide-react'
@@ -29,17 +30,10 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
   const [battleHistory, setBattleHistory] = useState<BattleChoice[]>([])
   const [insights, setInsights] = useState<PreferenceInsight[]>([])
   const [round, setRound] = useState(1)
-  const [gameStarted, setGameStarted] = useState(true)
+  const [gameStarted] = useState(true)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
-  // Load initial album pair
-  useEffect(() => {
-    if (gameStarted && !albumPair) {
-      loadNextBattle()
-    }
-  }, [gameStarted, albumPair])
-
-  const loadNextBattle = async () => {
+  const loadNextBattle = useCallback(async () => {
     setIsLoading(true)
     try {
       const response = await fetch('/api/album-battle', {
@@ -65,7 +59,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [battleHistory, round])
 
   const handleChoice = async (chosenAlbum: Album) => {
     if (!albumPair || isTransitioning) return
@@ -124,6 +118,13 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
     setChosenAlbum(null)
     setIsTransitioning(false)
   }
+
+  // Load initial album pair
+  useEffect(() => {
+    if (gameStarted && !albumPair) {
+      loadNextBattle()
+    }
+  }, [gameStarted, albumPair, loadNextBattle])
 
 
   if (isLoading || !albumPair) {
@@ -199,7 +200,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
               <div className="bg-zinc-900/50 backdrop-blur-sm rounded-xl p-6 border border-zinc-800/50">
                 <div className="flex items-center space-x-3 mb-4">
                   <Brain className="w-5 h-5 text-purple-400" />
-                  <h3 className="font-semibold text-white">What I've Learned About Your Taste</h3>
+                  <h3 className="font-semibold text-white">What I&apos;ve Learned About Your Taste</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {insights.map((insight, index) => (
@@ -228,14 +229,15 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
                   <span>Your Choices ({battleHistory.length} rounds)</span>
                 </h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                  {battleHistory.slice(-16).reverse().map((choice, index) => (
+                  {battleHistory.slice(-16).reverse().map((choice) => (
                     <div key={choice.round} className="group">
                       <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
                         {choice.chosenAlbum.cover_art_url ? (
-                          <img
+                          <Image
                             src={choice.chosenAlbum.cover_art_url}
                             alt={choice.chosenAlbum.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-200"
                           />
                         ) : (
                           <div className="w-full h-full bg-zinc-700 flex items-center justify-center">
@@ -296,7 +298,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
                   </div>
                   <h4 className="font-semibold text-white text-sm mb-2">Discover Your Music Taste</h4>
                   <p className="text-zinc-400 text-xs leading-relaxed">
-                    Choose between albums and I'll learn your preferences!
+                    Choose between albums and I&apos;ll learn your preferences!
                   </p>
                 </div>
 
