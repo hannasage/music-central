@@ -1,5 +1,6 @@
 import { createClient, createServerComponentClient } from './supabase'
 import { Album } from './types'
+import { sortAlbumsByArtist } from './sorting'
 
 export async function getFeaturedAlbums(limit = 4): Promise<Album[]> {
   const supabase = createClient()
@@ -77,25 +78,45 @@ export async function getAllAlbums(
 ): Promise<{ albums: Album[]; total: number; totalPages: number }> {
   const supabase = await createServerComponentClient()
   
-  const offset = (page - 1) * limit
-
-  const { data: albums, error, count } = await supabase
+  // First get total count
+  const { count } = await supabase
     .from('albums')
-    .select('*', { count: 'exact' })
-    .order('artist', { ascending: true })
-    .order('year', { ascending: true })
-    .range(offset, offset + limit - 1)
+    .select('*', { count: 'exact', head: true })
+
+  if (!count) {
+    return { albums: [], total: 0, totalPages: 0 }
+  }
+
+  // Get all albums for proper sorting, then paginate in memory
+  const { data: allAlbums, error } = await supabase
+    .from('albums')
+    .select('*')
 
   if (error) {
     console.error('Error fetching albums:', error)
     return { albums: [], total: 0, totalPages: 0 }
   }
 
-  const total = count || 0
+  // Sort by artist (ignoring articles) then by year
+  const sortedAlbums = sortAlbumsByArtist(allAlbums || [])
+    .sort((a, b) => {
+      // Secondary sort by year if artists are the same
+      const artistCompare = a.artist.localeCompare(b.artist)
+      if (artistCompare === 0) {
+        return a.year - b.year
+      }
+      return 0 // Keep artist sort order
+    })
+
+  // Apply pagination
+  const offset = (page - 1) * limit
+  const paginatedAlbums = sortedAlbums.slice(offset, offset + limit)
+
+  const total = count
   const totalPages = Math.ceil(total / limit)
 
   return { 
-    albums: albums || [], 
+    albums: paginatedAlbums, 
     total,
     totalPages
   }

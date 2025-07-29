@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerComponentClient } from '@/lib/supabase'
+import { sortAlbumsByArtist } from '@/lib/sorting'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,24 +11,10 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit')
     const offset = searchParams.get('offset')
 
-    // Build query with count
-    let query = supabase
+    // Get all albums and count
+    const { data: allAlbums, error, count } = await supabase
       .from('albums')
       .select('*', { count: 'exact' })
-
-    // Apply 2D sorting: Artist alphabetical ascending, then Release year ascending
-    query = query
-      .order('artist', { ascending: true })
-      .order('year', { ascending: true })
-
-    // Apply pagination if specified
-    if (limit) {
-      const limitNum = parseInt(limit, 10)
-      const offsetNum = offset ? parseInt(offset, 10) : 0
-      query = query.range(offsetNum, offsetNum + limitNum - 1)
-    }
-
-    const { data: albums, error, count } = await query
 
     if (error) {
       console.error('Error fetching albums:', error)
@@ -37,8 +24,27 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Sort by artist (ignoring articles) then by year
+    const sortedAlbums = sortAlbumsByArtist(allAlbums || [])
+      .sort((a, b) => {
+        // Secondary sort by year if artists are the same
+        const artistCompare = a.artist.localeCompare(b.artist)
+        if (artistCompare === 0) {
+          return a.year - b.year
+        }
+        return 0 // Keep artist sort order
+      })
+
+    // Apply pagination if specified
+    let albums = sortedAlbums
+    if (limit) {
+      const limitNum = parseInt(limit, 10)
+      const offsetNum = offset ? parseInt(offset, 10) : 0
+      albums = sortedAlbums.slice(offsetNum, offsetNum + limitNum)
+    }
+
     return NextResponse.json({
-      albums: albums || [],
+      albums,
       count,
       pagination: limit ? {
         limit: parseInt(limit, 10),

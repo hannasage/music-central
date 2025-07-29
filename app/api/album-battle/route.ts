@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
 import { Album } from '@/lib/types'
+import { sortAlbumsByArtist } from '@/lib/sorting'
 import OpenAI from 'openai'
 
 interface BattleChoice {
@@ -30,10 +31,12 @@ export async function POST(request: NextRequest) {
 
     // Get all albums from collection
     const supabase = createClient()
-    const { data: albums, error } = await supabase
+    const { data: allAlbums, error } = await supabase
       .from('albums')
       .select('*')
-      .order('artist', { ascending: true })
+    
+    // Sort albums by artist (ignoring articles)
+    const albums = allAlbums ? sortAlbumsByArtist(allAlbums) : []
 
     if (error) {
       console.error('Error fetching albums:', error)

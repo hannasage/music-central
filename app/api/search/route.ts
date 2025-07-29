@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
 import { Album } from '@/lib/types'
+import { sortAlbumsByArtist } from '@/lib/sorting'
 
 interface SearchFilters {
   genres?: string[]
@@ -87,39 +88,68 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Sorting
-    switch (params.sortBy) {
-      case 'year':
-        query = query.order('year', { ascending: params.sortOrder === 'asc' })
-        break
-      case 'artist':
-        query = query.order('artist', { ascending: params.sortOrder === 'asc' })
-        break
-      case 'title':
-        query = query.order('title', { ascending: params.sortOrder === 'asc' })
-        break
-      case 'relevance':
-      default:
-        // For relevance, order by created_at desc if no search query, otherwise rely on textSearch ranking
-        if (!params.q) {
-          query = query.order('created_at', { ascending: false })
-        }
-        break
-    }
+    // For artist sorting, we need to handle it client-side to ignore articles
+    // For other sorts, we can use database sorting
+    let albums: Album[] = []
+    let count = 0
 
-    // Get total count first
-    const { count } = await query
+    if (params.sortBy === 'artist') {
+      // Get all results first, then sort and paginate client-side
+      const { data: allResults, error: allError, count: totalCount } = await query
+      
+      if (allError) {
+        console.error('Search error:', allError)
+        return NextResponse.json(
+          { error: 'Search failed', details: allError.message },
+          { status: 500 }
+        )
+      }
 
-    // Then apply pagination
-    const offset = ((params.page || 1) - 1) * (params.limit || 20)
-    const { data: albums, error } = await query.range(offset, offset + (params.limit || 20) - 1)
+      // Sort by artist (ignoring articles)
+      const sortedResults = sortAlbumsByArtist(allResults || [])
+      if (params.sortOrder === 'desc') {
+        sortedResults.reverse()
+      }
 
-    if (error) {
-      console.error('Search error:', error)
-      return NextResponse.json(
-        { error: 'Search failed', details: error.message },
-        { status: 500 }
-      )
+      // Apply pagination
+      const offset = ((params.page || 1) - 1) * (params.limit || 20)
+      albums = sortedResults.slice(offset, offset + (params.limit || 20))
+      count = totalCount || 0
+    } else {
+      // Database sorting for non-artist fields
+      switch (params.sortBy) {
+        case 'year':
+          query = query.order('year', { ascending: params.sortOrder === 'asc' })
+          break
+        case 'title':
+          query = query.order('title', { ascending: params.sortOrder === 'asc' })
+          break
+        case 'relevance':
+        default:
+          // For relevance, order by created_at desc if no search query, otherwise rely on textSearch ranking
+          if (!params.q) {
+            query = query.order('created_at', { ascending: false })
+          }
+          break
+      }
+
+      // Get total count first
+      const { count: totalCount } = await query
+
+      // Then apply pagination
+      const offset = ((params.page || 1) - 1) * (params.limit || 20)
+      const { data: results, error } = await query.range(offset, offset + (params.limit || 20) - 1)
+      
+      if (error) {
+        console.error('Search error:', error)
+        return NextResponse.json(
+          { error: 'Search failed', details: error.message },
+          { status: 500 }
+        )
+      }
+
+      albums = results || []
+      count = totalCount || 0
     }
 
     console.log('Search results:', { query: params.q, count, resultsLength: albums?.length })
