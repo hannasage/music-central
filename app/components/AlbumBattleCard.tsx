@@ -12,6 +12,7 @@ interface AlbumBattleCardProps {
   isChosen?: boolean
   isDisabled?: boolean
   side: 'left' | 'right'
+  mobile?: boolean
 }
 
 export default function AlbumBattleCard({ 
@@ -19,7 +20,8 @@ export default function AlbumBattleCard({
   onChoose, 
   isChosen = false, 
   isDisabled = false,
-  side 
+  side,
+  mobile = false
 }: AlbumBattleCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
 
@@ -40,6 +42,89 @@ export default function AlbumBattleCard({
   const streamingLinks = generateStreamingLinks(album)
   const primaryGenre = album.genres && album.genres.length > 0 ? album.genres[0] : ''
 
+  // Mobile layout - horizontal card with checkbox
+  if (mobile) {
+    return (
+      <div className={`relative transition-all duration-300 ${
+        isChosen ? 'scale-[1.02]' : ''
+      } ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+        
+        <div className={`flex items-center space-x-3 p-3 bg-zinc-900/50 backdrop-blur-sm rounded-lg border-2 transition-all duration-300 ${
+          isChosen ? 'border-blue-500 bg-blue-500/10' : 'border-zinc-800/50 hover:border-zinc-700/50'
+        }`}>
+          
+          {/* Album Artwork - Clickable */}
+          <button 
+            onClick={onChoose}
+            disabled={isDisabled}
+            className="w-24 h-24 flex-shrink-0 relative rounded overflow-hidden bg-zinc-700 hover:opacity-80 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {album.cover_art_url ? (
+              <Image
+                src={album.cover_art_url}
+                alt={`${album.title} by ${album.artist}`}
+                fill
+                className={`object-cover transition-all duration-500 ${
+                  imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+                }`}
+                onLoadingComplete={() => setImageLoaded(true)}
+                priority
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
+                <Music className="w-6 h-6 text-zinc-500" />
+              </div>
+            )}
+          </button>
+
+          {/* Album Info */}
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-white text-sm truncate">
+              {album.title}
+            </h4>
+            <p className="text-zinc-400 text-xs truncate">
+              by {album.artist}
+            </p>
+            <div className="flex items-center space-x-2 text-xs text-zinc-500 mt-1">
+              <span>{album.year}</span>
+              {primaryGenre && (
+                <>
+                  <span>•</span>
+                  <span className="truncate">{primaryGenre}</span>
+                </>
+              )}
+            </div>
+            
+            {/* Streaming Links - Moved below song info */}
+            <div className="flex items-center space-x-2 mt-2">
+              <a
+                href={streamingLinks.spotify}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-green-500 hover:bg-green-400 rounded-md transition-colors duration-200"
+                title="Listen on Spotify"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <StreamingIcon service="spotify" size="md" />
+              </a>
+              <a
+                href={streamingLinks.apple_music}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-gradient-to-r from-[#fa5a72] to-[#fa253e] hover:from-[#fb6b7f] hover:to-[#fb3651] rounded-md transition-colors duration-200"
+                title="Listen on Apple Music"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <StreamingIcon service="apple_music" size="md" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Desktop layout - original card design
   return (
     <div className={`relative group transition-all duration-500 ${
       isChosen ? 'scale-105 ring-4 ring-blue-500' : ''

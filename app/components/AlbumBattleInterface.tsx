@@ -31,6 +31,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
   const [round, setRound] = useState(1)
   const [gameStarted] = useState(true)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [selectedMobileAlbum, setSelectedMobileAlbum] = useState<Album | null>(null)
 
   const loadNextBattle = useCallback(async () => {
     setIsLoading(true)
@@ -105,8 +106,21 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
       setRound(prev => prev + 1)
       setAlbumPair(null)
       setChosenAlbum(null)
+      setSelectedMobileAlbum(null)
       setIsTransitioning(false)
     }, 2000)
+  }
+
+  // Handle mobile album selection (radio button behavior)
+  const handleMobileSelection = (album: Album) => {
+    setSelectedMobileAlbum(album)
+  }
+
+  // Handle mobile submission
+  const handleMobileSubmit = () => {
+    if (selectedMobileAlbum && !isTransitioning) {
+      handleChoice(selectedMobileAlbum)
+    }
   }
 
 
@@ -139,33 +153,70 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
 
           {/* Battle Arena */}
           <div className="relative">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <AlbumBattleCard
-                album={albumPair[0]}
-                onChoose={() => handleChoice(albumPair[0])}
-                isChosen={chosenAlbum?.id === albumPair[0].id}
-                isDisabled={isTransitioning}
-                side="left"
-              />
-              
-              <div className="flex items-center justify-center lg:hidden">
-                <div className="text-4xl font-bold text-zinc-600">VS</div>
+            {/* Desktop View - Side by side cards */}
+            <div className="hidden md:block">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <AlbumBattleCard
+                  album={albumPair[0]}
+                  onChoose={() => handleChoice(albumPair[0])}
+                  isChosen={chosenAlbum?.id === albumPair[0].id}
+                  isDisabled={isTransitioning}
+                  side="left"
+                />
+                
+                <div className="flex items-center justify-center lg:hidden">
+                  <div className="text-4xl font-bold text-zinc-600">VS</div>
+                </div>
+
+                <AlbumBattleCard
+                  album={albumPair[1]}
+                  onChoose={() => handleChoice(albumPair[1])}
+                  isChosen={chosenAlbum?.id === albumPair[1].id}
+                  isDisabled={isTransitioning}
+                  side="right"
+                />
               </div>
 
-              <AlbumBattleCard
-                album={albumPair[1]}
-                onChoose={() => handleChoice(albumPair[1])}
-                isChosen={chosenAlbum?.id === albumPair[1].id}
-                isDisabled={isTransitioning}
-                side="right"
-              />
+              {/* VS indicator for desktop */}
+              <div className="hidden lg:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                <div className="w-12 h-12 bg-zinc-800/90 backdrop-blur-sm rounded-full border-2 border-zinc-700/50 flex items-center justify-center">
+                  <span className="text-lg font-bold text-zinc-300">VS</span>
+                </div>
+              </div>
             </div>
 
-            {/* VS indicator for desktop */}
-            <div className="hidden lg:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-              <div className="w-12 h-12 bg-zinc-800/90 backdrop-blur-sm rounded-full border-2 border-zinc-700/50 flex items-center justify-center">
-                <span className="text-lg font-bold text-zinc-300">VS</span>
+            {/* Mobile View - Horizontal cards with checkboxes */}
+            <div className="md:hidden space-y-4">
+              <div className="space-y-3">
+                <AlbumBattleCard
+                  album={albumPair[0]}
+                  onChoose={() => handleMobileSelection(albumPair[0])}
+                  isChosen={selectedMobileAlbum?.id === albumPair[0].id}
+                  isDisabled={isTransitioning}
+                  side="left"
+                  mobile={true}
+                />
+                
+                <AlbumBattleCard
+                  album={albumPair[1]}
+                  onChoose={() => handleMobileSelection(albumPair[1])}
+                  isChosen={selectedMobileAlbum?.id === albumPair[1].id}
+                  isDisabled={isTransitioning}
+                  side="right"
+                  mobile={true}
+                />
               </div>
+
+              {/* Submit Button */}
+              {selectedMobileAlbum && (
+                <button
+                  onClick={handleMobileSubmit}
+                  disabled={isTransitioning}
+                  className="w-full py-4 bg-blue-500 hover:bg-blue-400 disabled:bg-zinc-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                >
+                  <span>Submit Choice</span>
+                </button>
+              )}
             </div>
           </div>
 
