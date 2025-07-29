@@ -2,13 +2,17 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Search, Menu, X, Disc3, Sparkles } from 'lucide-react'
+import { Search, Menu, X, Disc3, Sparkles, LogOut } from 'lucide-react'
+import { createClientSideClient } from '@/lib/supabase-client'
+import { useRouter } from 'next/navigation'
 import RandomButton from './RandomButton'
 
 export default function Header() {
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const supabase = createClientSideClient()
+  const router = useRouter()
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -16,6 +20,12 @@ export default function Header() {
       // Navigate to search results
       window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`
     }
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/admin/login')
+    router.refresh()
   }
 
 
@@ -82,6 +92,16 @@ export default function Header() {
               <RandomButton />
             </div>
 
+            {/* Admin Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="hidden md:flex items-center space-x-2 px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="text-sm">Admin</span>
+            </button>
+
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -130,6 +150,15 @@ export default function Header() {
                 className="w-full justify-center"
               />
             </div>
+
+            {/* Mobile Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center space-x-2 mx-4 py-2 px-4 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout (Admin)</span>
+            </button>
           </div>
         )}
 
