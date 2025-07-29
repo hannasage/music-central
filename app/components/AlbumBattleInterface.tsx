@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { Album } from '@/lib/types'
 import AlbumBattleCard from './AlbumBattleCard'
-import { Zap, RotateCcw, TrendingUp, Brain, Music } from 'lucide-react'
+import { Zap, TrendingUp, Brain, Music } from 'lucide-react'
 
 interface BattleChoice {
   round: number
@@ -109,14 +109,6 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
     }, 2000)
   }
 
-  const resetGame = () => {
-    setBattleHistory([])
-    setInsights([])
-    setRound(1)
-    setAlbumPair(null)
-    setChosenAlbum(null)
-    setIsTransitioning(false)
-  }
 
   // Load initial album pair
   useEffect(() => {
