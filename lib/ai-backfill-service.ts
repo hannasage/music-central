@@ -141,7 +141,7 @@ export class AIBackfillService {
       const hasRock = album.genres?.some(g => g.toLowerCase().includes('rock'))
       const hasSoul = album.genres?.some(g => g.toLowerCase().includes('soul') || g.toLowerCase().includes('r&b'))
       
-      let examples = []
+      const examples: string[] = []
       
       if (isVintage) examples.push('"analog-warm", "vinyl-crackling", "sepia-toned"')
       if (isModern) examples.push('"digital-crisp", "studio-polished", "genre-blending"')
@@ -255,7 +255,7 @@ Return valid JSON only:
     ]
     
     // Add decade-specific vibes
-    let decadeVibes = []
+    let decadeVibes: string[] = []
     if (decade === 1960) decadeVibes = ['revolutionary', 'psychedelic', 'experimental']
     else if (decade === 1970) decadeVibes = ['groovy', 'funky', 'soulful']
     else if (decade === 1980) decadeVibes = ['synth-driven', 'new-wave', 'electronic']
