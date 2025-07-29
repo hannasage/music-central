@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import OpenAI from 'openai'
+import { Agent, run } from '@openai/agents'
 import { cookies } from 'next/headers'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
-interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,10 +36,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Messages array is required' }, { status: 400 })
     }
 
-    // System prompt for the music assistant
-    const systemPrompt = {
-      role: 'system' as const,
-      content: `You are a knowledgeable and enthusiastic music assistant for Music Central, a digital vinyl collection platform. Your personality is friendly, passionate about music, and helpful.
+    // Create the music assistant agent
+    const musicAgent = new Agent({
+      name: 'Music Assistant',
+      instructions: `You are a knowledgeable and enthusiastic music assistant for Music Central, a digital vinyl collection platform. Your personality is friendly, passionate about music, and helpful.
 
 Key traits:
 - You're an expert on music across all genres and eras
@@ -64,35 +55,35 @@ You should:
 - Suggest new discoveries based on their tastes
 - Be enthusiastic about music without being overwhelming
 
-Keep responses conversational and engaging. You're here to enhance their musical journey!`
-    }
-
-    // Prepare messages for OpenAI
-    const openaiMessages = [
-      systemPrompt,
-      ...messages.map((msg: ChatMessage) => ({
-        role: msg.role,
-        content: msg.content
-      }))
-    ]
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: openaiMessages,
-      max_tokens: 500,
-      temperature: 0.7,
+Keep responses conversational and engaging. You're here to enhance their musical journey!`,
+      tools: [], // No tools for now, but ready to add them
     })
 
-    const assistantMessage = completion.choices[0]?.message?.content
-
-    if (!assistantMessage) {
-      return NextResponse.json({ error: 'No response generated' }, { status: 500 })
+    // Get the latest user message
+    const latestMessage = messages[messages.length - 1]
+    if (!latestMessage || latestMessage.role !== 'user') {
+      return NextResponse.json({ error: 'Latest message must be from user' }, { status: 400 })
     }
+
+    // For now, we'll pass the conversation context as part of the input
+    // This is a simplified approach - the Agents SDK handles conversation state differently
+    let contextualInput = latestMessage.content
+    
+    if (messages.length > 1) {
+      const conversationHistory = messages.slice(0, -1)
+        .map(msg => `${msg.role}: ${msg.content}`)
+        .join('\n')
+      
+      contextualInput = `Previous conversation:\n${conversationHistory}\n\nCurrent message: ${latestMessage.content}`
+    }
+
+    // Run the agent
+    const result = await run(musicAgent, contextualInput)
 
     return NextResponse.json({
       message: {
         role: 'assistant',
-        content: assistantMessage
+        content: result.finalOutput
       }
     })
 
