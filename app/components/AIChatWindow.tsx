@@ -33,10 +33,11 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       
       {/* Chat Window */}
       <div className={`
-        fixed bottom-24 right-6 w-80 h-96 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50
+        fixed bottom-24 right-6 w-96 h-[32rem] bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50
         transform transition-all duration-300 origin-bottom-right
         ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}
         max-md:fixed max-md:inset-4 max-md:w-auto max-md:h-auto max-md:bottom-6 max-md:top-20
+        flex flex-col
       `}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-700">
@@ -61,14 +62,14 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 p-4 space-y-4 overflow-y-auto max-h-64">
+        <div className="flex-1 p-4 space-y-4 overflow-y-auto">
           {hardcodedMessages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
+                className={`max-w-sm px-3 py-2 rounded-lg text-sm ${
                   message.type === 'user'
                     ? 'bg-blue-600 text-white'
                     : 'bg-zinc-800 text-zinc-100 border border-zinc-700'
@@ -86,7 +87,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-zinc-700">
+        <div className="p-4 border-t border-zinc-700 flex-shrink-0">
           <div className="flex items-center space-x-2">
             <input
               type="text"
@@ -95,13 +96,13 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
               disabled
             />
             <button
-              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
               disabled
             >
               Send
             </button>
           </div>
-          <p className="text-xs text-zinc-500 mt-2">Chat functionality coming soon...</p>
+          <p className="text-xs text-zinc-500 mt-2 leading-tight">Chat functionality coming soon...</p>
         </div>
       </div>
     </>
