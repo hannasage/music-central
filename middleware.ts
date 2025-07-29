@@ -34,11 +34,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // If trying to access protected routes and not authenticated, redirect to login
-  if (!user && !request.nextUrl.pathname.startsWith('/admin/login')) {
-    return NextResponse.redirect(new URL('/admin/login', request.url))
-  }
-
+  // Allow public access to all routes - no authentication required
+  // Admin features will be conditionally shown based on auth state in components
   return response
 }
 

@@ -1,18 +1,39 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Menu, X, Disc3, Sparkles, LogOut } from 'lucide-react'
 import { createClientSideClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
 import RandomButton from './RandomButton'
+import type { User } from '@supabase/supabase-js'
 
 export default function Header() {
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [user, setUser] = useState<User | null>(null)
   const supabase = createClientSideClient()
   const router = useRouter()
+
+  useEffect(() => {
+    // Get initial session
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user ?? null)
+    }
+
+    getSession()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -92,15 +113,16 @@ export default function Header() {
               <RandomButton />
             </div>
 
-            {/* Admin Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="hidden md:flex items-center space-x-2 px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-              title="Logout"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm">Admin</span>
-            </button>
+            {/* Admin Logout Button - Only show when authenticated */}
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="hidden md:flex items-center space-x-2 px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
 
             {/* Mobile Menu Button */}
             <button
@@ -151,14 +173,16 @@ export default function Header() {
               />
             </div>
 
-            {/* Mobile Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="flex items-center justify-center space-x-2 mx-4 py-2 px-4 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout (Admin)</span>
-            </button>
+            {/* Mobile Logout Button - Only show when authenticated */}
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="flex items-center justify-center space-x-2 mx-4 py-2 px-4 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout (Admin)</span>
+              </button>
+            )}
           </div>
         )}
 
