@@ -35,7 +35,7 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-zinc-400">
             <Music className="w-16 h-16 mx-auto mb-4" />
-            <p className="text-lg">No featured albums available</p>
+            <p className="text-lg">No Featured Albums</p>
           </div>
         </div>
       </div>

@@ -41,6 +41,7 @@ export interface Album {
   cover_art_url?: string
   streaming_links: StreamingLinks
   tracks?: Track[]
+  featured: boolean
   created_at: string
   updated_at: string
 }

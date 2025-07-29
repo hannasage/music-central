@@ -8,11 +8,30 @@ export async function getFeaturedAlbums(limit = 4): Promise<Album[]> {
   const { data: albums, error } = await supabase
     .from('albums')
     .select('*')
+    .eq('featured', true)
     .order('created_at', { ascending: false })
     .limit(limit)
 
   if (error) {
     console.error('Error fetching featured albums:', error)
+    return []
+  }
+
+  return albums || []
+}
+
+export async function getFeaturedAlbumsFromDB(limit = 4): Promise<Album[]> {
+  const supabase = createClient()
+  
+  const { data: albums, error } = await supabase
+    .from('albums')
+    .select('*')
+    .eq('featured', true)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    console.error('Error fetching featured albums from DB:', error)
     return []
   }
 
