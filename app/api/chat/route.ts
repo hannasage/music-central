@@ -46,55 +46,8 @@ export async function POST(request: NextRequest) {
         limit: z.number().optional().default(10).describe('Maximum number of results to return')
       }),
       execute: async (input) => {
-        try {
-          // Try multiple search strategies
-          const searchQueries = [
-            // Exact phrase match
-            `title.ilike.%${input.query}%,artist.ilike.%${input.query}%`,
-            // Individual words
-            ...input.query.split(' ').map(word => `title.ilike.%${word}%,artist.ilike.%${word}%`),
-            // Combined with wildcards
-            `title.ilike.%${input.query.split(' ').join('%')}%,artist.ilike.%${input.query.split(' ').join('%')}%`
-          ]
-
-          let albums = []
-          let error = null
-
-          // Try each search strategy until we find results
-          for (const query of searchQueries) {
-            const result = await supabase
-              .from('albums')
-              .select('*')
-              .or(query)
-              .limit(input.limit)
-
-            if (result.error) {
-              error = result.error
-              continue
-            }
-
-            if (result.data && result.data.length > 0) {
-              albums = result.data
-              break
-            }
-          }
-
-          if (error && albums.length === 0) {
-            return `Error searching albums: ${error.message}`
-          }
-
-          if (!albums || albums.length === 0) {
-            return `No albums found matching "${input.query}". Try searching for individual words like the artist name or part of the album title.`
-          }
-
-          const results = albums.map(album => 
-            `"${album.title}" by ${album.artist} (${album.year})\n  Database ID: ${album.id}\n  Featured: ${album.featured ? 'Yes' : 'No'}`
-          ).join('\n\n')
-          
-          return `Found ${albums.length} album(s):\n\n${results}\n\nTo feature/unfeature an album, use the Database ID shown above.`
-        } catch (error) {
-          return `Error searching albums: ${error}`
-        }
+        const { searchAlbumsForAgent } = await import('@/lib/search-service')
+        return searchAlbumsForAgent(supabase, input.query, input.limit)
       }
     })
 

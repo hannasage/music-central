@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { createServerComponentClient } from '@/lib/supabase'
+import { createErrorResponse, createSuccessResponse } from '@/lib/api-helpers'
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,23 +20,16 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching featured albums:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch featured albums' },
-        { status: 500 }
-      )
+      return createErrorResponse('Failed to fetch featured albums', 500)
     }
 
-    return NextResponse.json({
+    return createSuccessResponse({
       albums: albums || [],
       count: albums?.length || 0
     })
 
   } catch (error) {
     console.error('Featured albums API error:', error)
-    
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return createErrorResponse('Internal server error', 500)
   }
 }
