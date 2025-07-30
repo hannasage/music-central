@@ -248,15 +248,6 @@ function AlbumContent({ id }: { id: string }) {
             </div>
           </div>
         )}
-
-        {/* Authentication Hint */}
-        {!isAuthenticated && (
-          <div className="mt-6 bg-blue-900/20 backdrop-blur-sm rounded-2xl p-4 border border-blue-800/30">
-            <div className="text-blue-400 text-sm text-center">
-              <strong>Tip:</strong> Log in to edit genres and personal vibes directly on this page.
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
