@@ -12,7 +12,7 @@
 
 .idea/
 
-/supabase/seed.sql
+supabase/seed.sql
 
 # testing
 /coverage
