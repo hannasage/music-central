@@ -153,11 +153,18 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              className={`rounded-full transition-all duration-300 ${
                 index === currentIndex
-                  ? 'bg-white scale-125'
+                  ? 'bg-white'
                   : 'bg-white/50 hover:bg-white/75'
               }`}
+              style={{ 
+                width: '8px', 
+                height: '8px', 
+                minWidth: '8px', 
+                minHeight: '8px',
+                padding: '0'
+              }}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
