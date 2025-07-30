@@ -1,6 +1,22 @@
+import type { Metadata } from 'next'
 import AlbumBattleInterface from '@/app/components/AlbumBattleInterface'
 import Header from '@/app/components/Header'
 import BetaBanner from '@/app/components/BetaBanner'
+
+export const metadata: Metadata = {
+  title: "AI Curator - Discover Your Next Favorite Album | Hanna's Record Collection",
+  description: "Let AI help you discover your next favorite album from Hanna's curated collection. Battle albums head-to-head and get personalized recommendations based on your preferences.",
+  openGraph: {
+    title: "AI Curator - Discover Your Next Favorite Album",
+    description: "Let AI help you discover your next favorite album from Hanna's curated collection. Battle albums head-to-head and get personalized recommendations based on your preferences.",
+    type: "website",
+  },
+  twitter: {
+    card: 'summary',
+    title: "AI Curator - Discover Your Next Favorite Album",
+    description: "Let AI help you discover your next favorite album from Hanna's curated collection. Battle albums head-to-head and get personalized recommendations based on your preferences.",
+  },
+}
 
 export default function RecommendationsPage() {
   return (

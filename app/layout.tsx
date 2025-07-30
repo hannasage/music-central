@@ -15,15 +15,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Music Central - Your Digital Vinyl Collection",
-  description: "Discover, explore, and enjoy your vinyl collection with AI-powered music discovery and Spotify integration.",
-  keywords: ["music", "vinyl", "collection", "discovery", "spotify"],
-  authors: [{ name: "Music Central" }],
-  creator: "Music Central",
+  title: "Hanna's Record Collection",
+  description: "A curated collection of vinyl records with personal thoughts, AI-powered music discovery, and streaming integration.",
+  keywords: ["music", "vinyl", "collection", "discovery", "spotify", "records"],
+  authors: [{ name: "Hanna" }],
+  creator: "Hanna",
   metadataBase: new URL('http://localhost:3000'),
   openGraph: {
-    title: "Music Central - Your Digital Vinyl Collection",
-    description: "Discover, explore, and enjoy your vinyl collection with AI-powered music discovery.",
+    title: "Hanna's Record Collection",
+    description: "A curated collection of vinyl records with personal thoughts and AI-powered music discovery.",
     type: "website",
     locale: "en_US",
   },

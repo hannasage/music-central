@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import type { Metadata } from 'next'
 import Header from './components/Header'
 import FeaturedBanner from './components/FeaturedBanner'
 import AlbumCard from './components/AlbumCard'
@@ -6,6 +7,21 @@ import { FeaturedAlbumsSkeleton, AlbumGridSkeleton } from './components/LoadingS
 import { getFeaturedAlbums, getRecentlyAddedAlbums } from '@/lib/albums'
 import Link from 'next/link'
 import { ArrowRight, Clock, Sparkles } from 'lucide-react'
+
+export const metadata: Metadata = {
+  title: "Hanna's Record Collection",
+  description: "Welcome to my personal vinyl collection featuring 223+ carefully curated albums with personal thoughts, streaming links, and AI-powered music discovery.",
+  openGraph: {
+    title: "Hanna's Record Collection",
+    description: "Welcome to my personal vinyl collection featuring 223+ carefully curated albums with personal thoughts, streaming links, and AI-powered music discovery.",
+    type: "website",
+  },
+  twitter: {
+    card: 'summary',
+    title: "Hanna's Record Collection",
+    description: "Welcome to my personal vinyl collection featuring 223+ carefully curated albums with personal thoughts, streaming links, and AI-powered music discovery.",
+  },
+}
 
 async function FeaturedSection() {
   const featuredAlbums = await getFeaturedAlbums(4)
