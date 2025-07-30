@@ -146,6 +146,23 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
         </div>
       </div>
 
+      {/* Page Indicators */}
+      {albums.length > 1 && (
+        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 lg:bottom-4 lg:left-1/2 lg:top-auto lg:transform lg:-translate-x-1/2 lg:translate-y-0 flex flex-col space-y-2 lg:flex-row lg:space-y-0 lg:space-x-2 z-10">
+          {albums.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentIndex
+                  ? 'bg-white scale-125'
+                  : 'bg-white/50 hover:bg-white/75'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
 
     </div>
   )
