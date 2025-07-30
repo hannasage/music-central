@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { createServerComponentClient } from '@/lib/supabase'
+import { createErrorResponse, createSuccessResponse } from '@/lib/api-helpers'
 import { sortAlbumsByArtist } from '@/lib/sorting'
 
 export async function GET(request: NextRequest) {
@@ -18,10 +19,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching albums:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch albums' },
-        { status: 500 }
-      )
+      return createErrorResponse('Failed to fetch albums', 500)
     }
 
     // Sort by artist (ignoring articles) then by year
@@ -43,7 +41,7 @@ export async function GET(request: NextRequest) {
       albums = sortedAlbums.slice(offsetNum, offsetNum + limitNum)
     }
 
-    return NextResponse.json({
+    return createSuccessResponse({
       albums,
       count,
       pagination: limit ? {
@@ -55,10 +53,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Albums API error:', error)
-    
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return createErrorResponse('Internal server error', 500)
   }
 }

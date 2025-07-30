@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { Album, SpotifyAudioFeatures } from './types'
 
 export interface ValidationResult {
@@ -276,6 +277,86 @@ export class AlbumValidator {
       console.log('⚠️  Some albums have validation issues that should be reviewed.')
     }
   }
+}
+
+// API Update validation schemas using Zod
+export const albumUpdateSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(255, 'Title too long').optional(),
+  artist: z.string().min(1, 'Artist is required').max(255, 'Artist too long').optional(),
+  year: z.number().int().min(1900, 'Year must be after 1900').max(new Date().getFullYear() + 10, 'Year cannot be too far in the future').optional(),
+  spotify_id: z.string().nullable().optional(),
+  genres: z.array(z.string().min(1).max(50)).max(20, 'Too many genres').optional(),
+  personal_vibes: z.array(z.string().min(1).max(50)).max(20, 'Too many vibes').optional(),
+  thoughts: z.string().max(2000, 'Thoughts too long').nullable().optional(),
+  cover_art_url: z.string().url('Invalid cover art URL').nullable().optional(),
+  streaming_links: z.object({
+    spotify: z.string().url().optional(),
+    apple_music: z.string().url().optional(), 
+    youtube_music: z.string().url().optional()
+  }).optional()
+}).strict()
+
+// Schema for partial updates (PATCH)
+export const albumPartialUpdateSchema = albumUpdateSchema.partial()
+
+// Schema for full updates (PUT) - requires core fields
+export const albumFullUpdateSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(255, 'Title too long'),
+  artist: z.string().min(1, 'Artist is required').max(255, 'Artist too long'),
+  year: z.number().int().min(1900, 'Year must be after 1900').max(new Date().getFullYear() + 10, 'Year cannot be too far in the future'),
+  spotify_id: z.string().nullable().optional(),
+  genres: z.array(z.string().min(1).max(50)).max(20, 'Too many genres').default([]),
+  personal_vibes: z.array(z.string().min(1).max(50)).max(20, 'Too many vibes').default([]),
+  thoughts: z.string().max(2000, 'Thoughts too long').nullable().optional(),
+  cover_art_url: z.string().url('Invalid cover art URL').nullable().optional(),
+  streaming_links: z.object({
+    spotify: z.string().url().optional(),
+    apple_music: z.string().url().optional(), 
+    youtube_music: z.string().url().optional()
+  }).optional().default({})
+}).strict()
+
+// Helper function to validate and sanitize album updates
+export function validateAlbumUpdate(data: unknown, isPartial: boolean = true) {
+  const schema = isPartial ? albumPartialUpdateSchema : albumFullUpdateSchema
+  
+  try {
+    return {
+      success: true,
+      data: schema.parse(data),
+      error: null
+    }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        data: null,
+        error: error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ')
+      }
+    }
+    return {
+      success: false,
+      data: null,
+      error: 'Invalid data format'
+    }
+  }
+}
+
+// Helper function to sanitize string arrays (remove duplicates, trim, filter empty)
+export function sanitizeStringArray(arr: string[]): string[] {
+  if (!Array.isArray(arr)) return []
+  
+  return [...new Set(
+    arr
+      .map(str => typeof str === 'string' ? str.trim() : '')
+      .filter(str => str.length > 0)
+  )]
+}
+
+// Helper function to merge arrays while avoiding duplicates
+export function mergeUniqueArrays(existing: string[], updates: string[]): string[] {
+  const combined = [...(existing || []), ...(updates || [])]
+  return sanitizeStringArray(combined)
 }
 
 export default AlbumValidator

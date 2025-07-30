@@ -12,6 +12,8 @@
 
 .idea/
 
+supabase/seed.sql
+
 # testing
 /coverage
 
