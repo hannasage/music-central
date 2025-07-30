@@ -1,23 +1,97 @@
-import { Suspense } from 'react'
+'use client'
+
+import { Suspense, useState, useEffect } from 'react'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { getAlbumById } from '@/lib/albums'
+import { createClientSideClient } from '@/lib/supabase-client'
 import StreamingLinks from '@/app/components/StreamingLinks'
 import AudioFeatures from '@/app/components/AudioFeatures'
 import TrackList from '@/app/components/TrackList'
 import Header from '@/app/components/Header'
 import ScrollToTop from '@/app/components/ScrollToTop'
+import EditableTagList from '@/app/components/EditableTagList'
+import { useAuth } from '@/hooks/useAuth'
+import { useUpdateAlbum } from '@/hooks/useUpdateAlbum'
+import { Album } from '@/lib/types'
 import { Calendar, Tag, Heart, MessageSquare, Music } from 'lucide-react'
 
 interface AlbumPageProps {
   params: Promise<{ id: string }>
 }
 
-async function AlbumContent({ id }: { id: string }) {
-  const album = await getAlbumById(id)
+function AlbumContent({ id }: { id: string }) {
+  const [album, setAlbum] = useState<Album | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const { isAuthenticated } = useAuth()
+  const { updateAlbum, isUpdating, error } = useUpdateAlbum()
 
-  if (!album) {
-    notFound()
+  useEffect(() => {
+    const fetchAlbum = async () => {
+      try {
+        const supabase = createClientSideClient()
+        const { data: albumData, error } = await supabase
+          .from('albums')
+          .select('*')
+          .eq('id', id)
+          .single()
+
+        if (error || !albumData) {
+          console.error('Error fetching album:', error)
+          notFound()
+        } else {
+          setAlbum(albumData)
+        }
+      } catch (error) {
+        console.error('Failed to fetch album:', error)
+        notFound()
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchAlbum()
+  }, [id])
+
+  const handleGenresUpdate = async (newGenres: string[]) => {
+    if (!album) return
+    
+    // Optimistic update
+    const previousGenres = album.genres
+    setAlbum(prev => prev ? { ...prev, genres: newGenres } : null)
+    
+    try {
+      const updatedAlbum = await updateAlbum(album.id, { genres: newGenres })
+      if (updatedAlbum) {
+        setAlbum(updatedAlbum)
+      }
+    } catch (error) {
+      // Rollback on error
+      setAlbum(prev => prev ? { ...prev, genres: previousGenres } : null)
+      throw error
+    }
+  }
+
+  const handleVibesUpdate = async (newVibes: string[]) => {
+    if (!album) return
+    
+    // Optimistic update
+    const previousVibes = album.personal_vibes
+    setAlbum(prev => prev ? { ...prev, personal_vibes: newVibes } : null)
+    
+    try {
+      const updatedAlbum = await updateAlbum(album.id, { personal_vibes: newVibes })
+      if (updatedAlbum) {
+        setAlbum(updatedAlbum)
+      }
+    } catch (error) {
+      // Rollback on error
+      setAlbum(prev => prev ? { ...prev, personal_vibes: previousVibes } : null)
+      throw error
+    }
+  }
+
+  if (isLoading || !album) {
+    return <AlbumPageSkeleton />
   }
 
   return (
@@ -79,52 +153,51 @@ async function AlbumContent({ id }: { id: string }) {
                   </div>
 
                   {/* Year & Genres */}
-                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-zinc-400">
-                    <div className="flex items-center space-x-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center lg:justify-start space-x-2 text-zinc-400">
                       <Calendar className="w-4 h-4" />
                       <span>{album.year}</span>
                     </div>
-                    {album.genres.length > 0 && (
-                      <div className="flex items-center space-x-2">
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-center lg:justify-start space-x-2 text-zinc-300">
                         <Tag className="w-4 h-4" />
-                        <div className="flex flex-wrap gap-2">
-                          {album.genres.slice(0, 3).map((genre) => (
-                            <span
-                              key={genre}
-                              className="bg-zinc-800/50 px-3 py-1 rounded-full text-sm border border-zinc-700/50"
-                            >
-                              {genre}
-                            </span>
-                          ))}
-                          {album.genres.length > 3 && (
-                            <span className="text-zinc-500 text-sm">
-                              +{album.genres.length - 3} more
-                            </span>
-                          )}
-                        </div>
+                        <span className="font-medium">Genres</span>
+                        {isUpdating && <span className="text-xs text-blue-400">Saving...</span>}
                       </div>
-                    )}
+                      <div className="flex justify-center lg:justify-start">
+                        <EditableTagList
+                          tags={album.genres}
+                          onUpdate={handleGenresUpdate}
+                          placeholder="No genres assigned"
+                          addPlaceholder="Add genre..."
+                          type="genres"
+                          disabled={!isAuthenticated}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Personal Vibes */}
-                  {album.personal_vibes.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-center lg:justify-start space-x-2 text-zinc-300">
-                        <Heart className="w-4 h-4" />
-                        <span className="font-medium">Personal Vibes</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-                        {album.personal_vibes.map((vibe) => (
-                          <span
-                            key={vibe}
-                            className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-sm border border-blue-500/30"
-                          >
-                            {vibe}
-                          </span>
-                        ))}
-                      </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center lg:justify-start space-x-2 text-zinc-300">
+                      <Heart className="w-4 h-4" />
+                      <span className="font-medium">Personal Vibes</span>
+                      {isUpdating && <span className="text-xs text-blue-400">Saving...</span>}
                     </div>
-                  )}
+                    <div className="flex justify-center lg:justify-start">
+                      <EditableTagList
+                        tags={album.personal_vibes}
+                        onUpdate={handleVibesUpdate}
+                        placeholder="No personal vibes assigned"
+                        addPlaceholder="Add vibe..."
+                        type="vibes"
+                        disabled={!isAuthenticated}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
 
                   {/* Streaming Links */}
                   <div className="pt-4">
@@ -167,19 +240,20 @@ async function AlbumContent({ id }: { id: string }) {
           </div>
         </div>
 
-        {/* All Genres */}
-        {album.genres.length > 3 && (
-          <div className="mt-12 bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-zinc-800/50">
-            <h3 className="text-lg font-semibold text-white mb-4">All Genres</h3>
-            <div className="flex flex-wrap gap-2">
-              {album.genres.map((genre) => (
-                <span
-                  key={genre}
-                  className="bg-zinc-800/50 text-zinc-300 px-3 py-2 rounded-lg text-sm border border-zinc-700/50 hover:bg-zinc-700/50 transition-colors duration-200"
-                >
-                  {genre}
-                </span>
-              ))}
+        {/* Error Display */}
+        {error && (
+          <div className="mt-6 bg-red-900/50 backdrop-blur-sm rounded-2xl p-4 border border-red-800/50">
+            <div className="text-red-400 text-sm">
+              <strong>Error:</strong> {error}
+            </div>
+          </div>
+        )}
+
+        {/* Authentication Hint */}
+        {!isAuthenticated && (
+          <div className="mt-6 bg-blue-900/20 backdrop-blur-sm rounded-2xl p-4 border border-blue-800/30">
+            <div className="text-blue-400 text-sm text-center">
+              <strong>Tip:</strong> Log in to edit genres and personal vibes directly on this page.
             </div>
           </div>
         )}
@@ -223,12 +297,28 @@ function AlbumPageSkeleton() {
   )
 }
 
-export default async function AlbumPage({ params }: AlbumPageProps) {
-  const resolvedParams = await params
-  
+export default function AlbumPage({ params }: AlbumPageProps) {
   return (
     <Suspense fallback={<AlbumPageSkeleton />}>
-      <AlbumContent id={resolvedParams.id} />
+      <AlbumContentWrapper params={params} />
     </Suspense>
   )
+}
+
+function AlbumContentWrapper({ params }: { params: Promise<{ id: string }> }) {
+  const [id, setId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params
+      setId(resolvedParams.id)
+    }
+    resolveParams()
+  }, [params])
+
+  if (!id) {
+    return <AlbumPageSkeleton />
+  }
+
+  return <AlbumContent id={id} />
 }
