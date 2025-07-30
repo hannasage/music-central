@@ -131,7 +131,8 @@ class VinylImporter {
         thoughts: undefined, // Leave empty for user to add personal thoughts later
         cover_art_url: album.artwork_url,
         streaming_links: {},
-        tracks: undefined
+        tracks: undefined,
+        featured: false // Default to not featured
       }
 
       // Enrich with Spotify data
