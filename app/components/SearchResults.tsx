@@ -248,28 +248,8 @@ export default function SearchResults({
       ) : (
         <div className="space-y-4">
           {results.map((album) => (
-            <div
-              key={album.id}
-              className="flex items-center space-x-4 p-4 bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-zinc-700/50 transition-colors duration-200"
-            >
-              <AlbumCard album={album} size="small" className="flex-shrink-0" />
-              <div className="flex-1 min-w-0 space-y-2">
-                <h3 className="text-lg font-semibold text-white truncate">
-                  {highlightText(album.title, query)}
-                </h3>
-                <p className="text-zinc-400 truncate">
-                  by {highlightText(album.artist, query)}
-                </p>
-                <div className="flex items-center space-x-2 text-sm text-zinc-500">
-                  <span>{album.year}</span>
-                  {album.genres.length > 0 && (
-                    <>
-                      <span>•</span>
-                      <span>{highlightText(album.genres[0], query)}</span>
-                    </>
-                  )}
-                </div>
-              </div>
+            <div key={album.id} className="p-2">
+              <AlbumCard album={album} size="medium" />
             </div>
           ))}
         </div>

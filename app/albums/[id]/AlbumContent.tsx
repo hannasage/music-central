@@ -127,7 +127,7 @@ export default function AlbumContent({ id }: { id: string }) {
                                 key={index}
                                 className="bg-zinc-800/50 text-zinc-300 border-zinc-700/50 px-3 py-1 rounded-full text-sm border inline-flex items-center gap-2"
                               >
-                                {genre}
+                                {genre.toLowerCase()}
                               </span>
                             ))
                           )}
@@ -152,7 +152,7 @@ export default function AlbumContent({ id }: { id: string }) {
                               key={index}
                               className="bg-blue-500/20 text-blue-400 border-blue-500/30 px-3 py-1 rounded-full text-sm border inline-flex items-center gap-2"
                             >
-                              {vibe}
+                              {vibe.toLowerCase()}
                             </span>
                           ))
                         )}

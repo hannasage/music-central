@@ -282,8 +282,8 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
           )}
         </div>
 
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block w-80 space-y-6">
+        {/* Sidebar - Desktop width, mobile full width */}
+        <div className="block w-full lg:w-80 space-y-6">
           {/* Insights Panel */}
           <div className="bg-zinc-900/50 backdrop-blur-sm rounded-xl p-4 border border-zinc-800/50">
             <div className="flex items-center space-x-2 mb-4">

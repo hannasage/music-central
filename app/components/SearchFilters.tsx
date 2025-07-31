@@ -214,7 +214,7 @@ export default function SearchFiltersComponent({
                       className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
                     />
                     <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                      {genre}
+                      {genre.toLowerCase()}
                     </span>
                   </label>
                 ))
@@ -309,7 +309,7 @@ export default function SearchFiltersComponent({
                       className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
                     />
                     <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                      {vibe}
+                      {vibe.toLowerCase()}
                     </span>
                   </label>
                 ))

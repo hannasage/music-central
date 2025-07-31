@@ -107,28 +107,8 @@ export default function AlbumsPageClient({
           ) : (
             <div className="space-y-4 mb-8">
               {albums.map((album) => (
-                <div
-                  key={album.id}
-                  className="flex items-center space-x-4 p-4 bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-zinc-700/50 transition-all duration-200"
-                >
-                  <AlbumCard album={album} size="small" className="flex-shrink-0 w-16 h-16" />
-                  <div className="flex-grow min-w-0">
-                    <h3 className="text-white font-semibold truncate">{album.title}</h3>
-                    <p className="text-zinc-400 text-sm truncate">{album.artist}</p>
-                    <p className="text-zinc-500 text-xs">{album.year}</p>
-                  </div>
-                  {album.genres && album.genres.length > 0 && (
-                    <div className="hidden sm:flex flex-wrap gap-1">
-                      {album.genres.slice(0, 2).map((genre) => (
-                        <span
-                          key={genre}
-                          className="px-2 py-1 bg-zinc-800/50 text-zinc-400 text-xs rounded-full"
-                        >
-                          {genre}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                <div key={album.id} className="p-2">
+                  <AlbumCard album={album} size="medium" />
                 </div>
               ))}
             </div>

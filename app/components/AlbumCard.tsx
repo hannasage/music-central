@@ -64,7 +64,7 @@ export default function AlbumCard({ album, size = 'medium', className = '' }: Al
             <span>{album.year}</span>
             {primaryGenre && (
               <span className="bg-zinc-800/50 px-2 py-1 rounded-full text-xs border border-zinc-700/50 truncate">
-                {primaryGenre}
+                {primaryGenre.toLowerCase()}
               </span>
             )}
           </div>
