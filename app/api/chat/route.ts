@@ -7,6 +7,7 @@ import {
   checkBuildStatusTool,
   searchAlbumsTool,
   toggleFeaturedTool,
+  updateAlbumTool,
   ToolContext 
 } from '@/lib/agent-tools'
 
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
     // Initialize tools with context where needed
     const searchTool = searchAlbumsTool(toolContext)
     const toggleTool = toggleFeaturedTool(toolContext)
+    const updateTool = updateAlbumTool(toolContext)
 
     // Create the vinyl collection assistant agent
     const musicAgent = new Agent({
@@ -71,6 +73,7 @@ Your primary role:
 
 You have access to their complete vinyl collection and can:
 - Search their existing albums by artist, title, genre, or year using the search_albums tool
+- Update album information using the update_album_field tool for adding/removing genres, vibes, updating thoughts, etc.
 - Analyze their collection for patterns and preferences
 - Recommend new albums that complement what they already own
 - Help find specific pressings, variants, or rare editions
@@ -84,6 +87,21 @@ Featured Album Management:
 - NEVER guess album IDs - always search first to get the correct Database ID
 - You can feature multiple albums or remove featured status from albums
 - Always confirm what you found in the search before making changes
+
+Album Information Management:
+- You can update existing album information using update_album_field tool
+- ALWAYS search for the album first using search_albums to get the correct Database ID
+- Supported operations:
+  * Add/remove genres: "add" or "remove" operation with genre names (e.g., "shoegaze", "indie rock")
+  * Add/remove personal vibes: "add" or "remove" operation with vibe terms (e.g., "melancholic", "energetic")
+  * Update thoughts: "set" operation with new thoughts about the album
+  * Update basic info: "set" operation for title, artist, year, or cover art URL
+- All text fields will be normalized (genres and vibes converted to lowercase)
+- For arrays (genres, vibes): you can "set" (replace all), "add" (append new), or "remove" (delete existing)
+- For strings/numbers (thoughts, title, artist, year): only "set" operation is allowed
+- Examples:
+  * "Add shoegaze to Census Designated's genres" → search for album, then update_album_field with field="genres", operation="add", value="shoegaze"
+  * "Update thoughts for In Colour" → search for album, then update_album_field with field="thoughts", operation="set", value="new thoughts"
 
 Build and Deployment Management:
 - You can trigger production builds of the Music Central website when content changes are made
@@ -102,7 +120,7 @@ Your personality:
 - Conversational and friendly, like a knowledgeable record store owner
 
 Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, and suggest additions that make sense for their specific taste and collection goals.`,
-      tools: [searchTool, toggleTool, triggerVercelBuildTool, checkBuildStatusTool]
+      tools: [searchTool, toggleTool, updateTool, triggerVercelBuildTool, checkBuildStatusTool]
     })
 
     // Get the latest user message
