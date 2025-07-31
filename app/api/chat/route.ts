@@ -88,6 +88,137 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Vercel build management tools
+    const triggerVercelBuildTool = tool({
+      name: 'trigger_vercel_build',
+      description: 'Trigger a secure production build and deployment of the Music Central app via Vercel SDK',
+      parameters: z.object({
+        reason: z.string().nullable().optional().describe('Optional reason for triggering this build')
+      }),
+      execute: async (input) => {
+        try {
+          const { Vercel } = await import('@vercel/sdk')
+          
+          // Validate required environment variables
+          if (!process.env.VERCEL_TOKEN) {
+            return 'Error: VERCEL_TOKEN environment variable is required but not configured.'
+          }
+          if (!process.env.VERCEL_GITHUB_ORG) {
+            return 'Error: VERCEL_GITHUB_ORG environment variable is required but not configured.'
+          }
+          if (!process.env.VERCEL_REPO_NAME) {
+            return 'Error: VERCEL_REPO_NAME environment variable is required but not configured.'
+          }
+
+          const vercel = new Vercel({
+            bearerToken: process.env.VERCEL_TOKEN
+          })
+
+          // Create deployment from current Git state
+          const deployment = await vercel.deployments.createDeployment({
+            requestBody: {
+              name: 'music-central',
+              target: 'production',
+              // This will trigger a deployment from the connected Git repository
+              gitSource: {
+                type: 'github',
+                org: process.env.VERCEL_GITHUB_ORG,
+                repo: process.env.VERCEL_REPO_NAME,
+                ref: 'main'
+              }
+            }
+          })
+
+          const reasonText = input.reason ? ` (Reason: ${input.reason})` : ''
+          return `✅ Build triggered successfully!${reasonText}
+
+Deployment ID: ${deployment.id}
+Initial Status: ${deployment.readyState || 'QUEUED'}
+Build URL: https://vercel.com/dashboard/deployments/${deployment.id}
+
+You can ask me to check the build status anytime using the deployment ID above.`
+
+        } catch (error) {
+          console.error('Vercel build trigger error:', error)
+          return `❌ Failed to trigger build: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }
+      }
+    })
+
+    const checkBuildStatusTool = tool({
+      name: 'check_build_status',
+      description: 'Check the current status of a Vercel deployment by its ID',
+      parameters: z.object({
+        deploymentId: z.string().describe('The deployment ID to check (from trigger_vercel_build)')
+      }),
+      execute: async (input) => {
+        try {
+          const { Vercel } = await import('@vercel/sdk')
+          
+          // Validate required environment variables
+          if (!process.env.VERCEL_TOKEN) {
+            return 'Error: VERCEL_TOKEN environment variable is required but not configured.'
+          }
+          if (!process.env.VERCEL_GITHUB_ORG) {
+            return 'Error: VERCEL_GITHUB_ORG environment variable is required but not configured.'
+          }
+          if (!process.env.VERCEL_REPO_NAME) {
+            return 'Error: VERCEL_REPO_NAME environment variable is required but not configured.'
+          }
+
+          const vercel = new Vercel({
+            bearerToken: process.env.VERCEL_TOKEN
+          })
+
+          const deployment = await vercel.deployments.getDeployment({
+            idOrUrl: input.deploymentId,
+            withGitRepoInfo: 'true'
+          })
+
+          const status = deployment.readyState || 'UNKNOWN'
+          const isReady = status === 'READY'
+          const isFailed = status === 'ERROR'
+          const isBuilding = status === 'BUILDING' || status === 'QUEUED'
+
+          let statusMessage = ''
+          
+          if (isReady) {
+            statusMessage = `🎉 Build completed successfully!
+            
+✅ Status: ${status}
+🌐 Live URL: https://${deployment.url}
+📊 Build Dashboard: https://vercel.com/dashboard/deployments/${deployment.id}
+
+Your updated content is now live on the production site!`
+          } else if (isFailed) {
+            statusMessage = `❌ Build failed with status: ${status}
+
+🔍 Check the build logs at: https://vercel.com/dashboard/deployments/${deployment.id}
+📋 You may need to fix any build errors and try again.`
+          } else if (isBuilding) {
+            statusMessage = `⏳ Build still in progress...
+
+Status: ${status}
+🔄 The build is currently running. This typically takes 2-5 minutes.
+📊 Monitor progress: https://vercel.com/dashboard/deployments/${deployment.id}
+
+I can check again in a few minutes if needed.`
+          } else {
+            statusMessage = `📋 Build Status: ${status}
+
+Deployment ID: ${deployment.id}
+Dashboard: https://vercel.com/dashboard/deployments/${deployment.id}`
+          }
+
+          return statusMessage
+
+        } catch (error) {
+          console.error('Vercel status check error:', error)
+          return `❌ Failed to check build status: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }
+      }
+    })
+
     // Create the vinyl collection assistant agent
     const musicAgent = new Agent({
       name: 'Vinyl Collection Assistant',
@@ -117,6 +248,15 @@ Featured Album Management:
 - You can feature multiple albums or remove featured status from albums
 - Always confirm what you found in the search before making changes
 
+Build and Deployment Management:
+- You can trigger production builds of the Music Central website when content changes are made
+- Use trigger_vercel_build when the user makes significant changes to their collection data and wants to update the live site
+- Always explain what the build will do before triggering it (regenerate static pages, deploy new content, etc.)
+- Use check_build_status when the user wants to check on a deployment's progress
+- Provide clear status updates and deployment URLs when builds complete
+- If a build fails, help interpret the error and suggest next steps
+- Common reasons to trigger builds: featured album changes, bulk collection updates, new content additions
+
 Your personality:
 - Knowledgeable about vinyl records, pressings, and music history
 - Enthusiastic but respectful of their personal taste
@@ -125,7 +265,7 @@ Your personality:
 - Conversational and friendly, like a knowledgeable record store owner
 
 Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, and suggest additions that make sense for their specific taste and collection goals.`,
-      tools: [searchAlbumsTool, toggleFeaturedTool]
+      tools: [searchAlbumsTool, toggleFeaturedTool, triggerVercelBuildTool, checkBuildStatusTool]
     })
 
     // Get the latest user message
