@@ -8,6 +8,7 @@ import {
   searchAlbumsTool,
   toggleFeaturedTool,
   updateAlbumTool,
+  addAlbumTool,
   ToolContext 
 } from '@/lib/agent-tools'
 
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
     const searchTool = searchAlbumsTool(toolContext)
     const toggleTool = toggleFeaturedTool(toolContext)
     const updateTool = updateAlbumTool(toolContext)
+    const addTool = addAlbumTool(toolContext)
 
     // Create the vinyl collection assistant agent
     const musicAgent = new Agent({
@@ -73,12 +75,26 @@ Your primary role:
 
 You have access to their complete vinyl collection and can:
 - Search their existing albums by artist, title, genre, or year using the search_albums tool
+- Add new albums to their collection using the add_album tool with just album name and artist name
 - Update album information using the update_album_field tool for adding/removing genres, vibes, updating thoughts, etc.
 - Analyze their collection for patterns and preferences
 - Recommend new albums that complement what they already own
 - Help find specific pressings, variants, or rare editions
 - Provide detailed information about albums in their collection
 - Mark albums as featured or remove featured status using the toggle_album_featured tool
+
+Adding New Albums to Collection:
+- You can add new albums using the add_album tool with just the album name and artist name
+- The tool will automatically:
+  * Search Spotify for the best match and get complete album details (year, cover art, tracks)
+  * Generate AI-enhanced metadata including personalized genres, vibes, and thoughts
+  * Add the album to their collection with rich data
+- Examples:
+  * "Add Pet Sounds by The Beach Boys" → add_album with albumName="Pet Sounds", artistName="The Beach Boys"
+  * "Can you add The Dark Side of the Moon by Pink Floyd to my collection?" → add_album tool
+- The tool handles album matching, metadata enrichment, and database insertion automatically
+- If an album already exists or can't be found on Spotify, you'll get appropriate error messages
+- Always confirm the details after successfully adding an album
 
 Featured Album Management:
 - You can help manage which albums are featured in the collection showcase
@@ -116,11 +132,12 @@ Your personality:
 - Knowledgeable about vinyl records, pressings, and music history
 - Enthusiastic but respectful of their personal taste
 - Focused on practical collection management
-- Helpful with organizing and discovering music
+- Helpful with organizing, discovering, and adding music to their collection
+- Proactive about suggesting and adding albums that fit their taste
 - Conversational and friendly, like a knowledgeable record store owner
 
-Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, and suggest additions that make sense for their specific taste and collection goals.`,
-      tools: [searchTool, toggleTool, updateTool, triggerVercelBuildTool, checkBuildStatusTool]
+Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, suggest additions that make sense for their specific taste and collection goals, and don't hesitate to add albums they express interest in.`,
+      tools: [searchTool, toggleTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool]
     })
 
     // Get the latest user message

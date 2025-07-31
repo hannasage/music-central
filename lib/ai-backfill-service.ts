@@ -72,10 +72,10 @@ export class AIBackfillService {
       
       const searchResults = await this.tavily.search({
         query: searchQuery,
-        searchDepth: 'basic',
-        maxResults: 5,
-        includeAnswer: true,
-        includeRawContent: false
+        search_depth: 'basic',
+        max_results: 5,
+        include_answer: true,
+        include_raw_content: false
       }) as { results?: unknown[]; answer?: string }
 
       if (!searchResults?.results?.length) {

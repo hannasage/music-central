@@ -155,17 +155,22 @@ class SpotifyAPI {
   }
 
   async findBestAlbumMatch(artist: string, title: string): Promise<SpotifyAlbum | null> {
+    const matches = await this.findAlbumMatches(artist, title, 1)
+    return matches.length > 0 ? matches[0].album : null
+  }
+
+  async findAlbumMatches(artist: string, title: string, limit = 5): Promise<Array<{ album: SpotifyAlbum; score: number; reason: string }>> {
     try {
-      const searchResult = await this.searchAlbum(artist, title, 5)
+      const searchResult = await this.searchAlbum(artist, title, Math.max(limit, 5))
       
       if (!searchResult.albums.items.length) {
         // Try a broader search without quotes
         const broadQuery = encodeURIComponent(`${title} ${artist}`)
-        const broadEndpoint = `/search?q=${broadQuery}&type=album&limit=10`
+        const broadEndpoint = `/search?q=${broadQuery}&type=album&limit=${Math.max(limit * 2, 10)}`
         const broadResult = await this.makeRequest<SpotifySearchResult>(broadEndpoint)
         
         if (!broadResult.albums.items.length) {
-          return null
+          return []
         }
         searchResult.albums.items = broadResult.albums.items
       }
@@ -178,33 +183,62 @@ class SpotifyAPI {
         const searchArtist = artist.toLowerCase()
 
         let score = 0
+        const reasons: string[] = []
         
         // Exact title match gets high score
-        if (albumTitle === searchTitle) score += 50
-        else if (albumTitle.includes(searchTitle) || searchTitle.includes(albumTitle)) score += 25
+        if (albumTitle === searchTitle) {
+          score += 50
+          reasons.push('exact title match')
+        } else if (albumTitle.includes(searchTitle)) {
+          score += 30
+          reasons.push('title contains search term')
+        } else if (searchTitle.includes(albumTitle)) {
+          score += 25
+          reasons.push('search term contains title')
+        }
         
         // Exact artist match gets high score
-        if (albumArtist === searchArtist) score += 50
-        else if (albumArtist.includes(searchArtist) || searchArtist.includes(albumArtist)) score += 25
+        if (albumArtist === searchArtist) {
+          score += 50
+          reasons.push('exact artist match')
+        } else if (albumArtist.includes(searchArtist)) {
+          score += 30
+          reasons.push('artist contains search term')
+        } else if (searchArtist.includes(albumArtist)) {
+          score += 25
+          reasons.push('search term contains artist')
+        }
         
         // Prefer studio albums over compilations/live albums
-        if (!albumTitle.includes('live') && !albumTitle.includes('compilation')) score += 10
+        if (!albumTitle.includes('live') && !albumTitle.includes('compilation') && !albumTitle.includes('remix')) {
+          score += 10
+          reasons.push('studio album')
+        }
+
+        // Bonus for newer releases (helps distinguish between multiple albums)
+        const releaseYear = new Date(album.release_date).getFullYear()
+        if (releaseYear >= 2020) score += 5
         
-        return { album, score }
+        const reason = reasons.length > 0 ? reasons.join(', ') : 'partial match'
+        
+        return { 
+          album, 
+          score, 
+          reason: `${reason} (score: ${score})`
+        }
       })
 
-      // Return the highest scoring match if it meets minimum threshold
+      // Sort by score and return top matches that meet minimum threshold
       scoredResults.sort((a, b) => b.score - a.score)
-      const bestMatch = scoredResults[0]
       
-      if (bestMatch && bestMatch.score >= 30) {
-        return bestMatch.album
-      }
-      
-      return null
+      // Return matches that meet minimum threshold, up to the limit
+      return scoredResults
+        .filter(match => match.score >= 25) // Lower threshold to allow more alternatives
+        .slice(0, limit)
+        
     } catch (error) {
-      console.error(`Failed to find album match for "${artist} - ${title}":`, error)
-      return null
+      console.error(`Failed to find album matches for "${artist} - ${title}":`, error)
+      return []
     }
   }
 
