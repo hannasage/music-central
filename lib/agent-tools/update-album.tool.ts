@@ -19,14 +19,16 @@ export const createUpdateAlbumTool = (context: ToolContext) => {
         'title', 
         'artist', 
         'year', 
-        'cover_art_url'
+        'cover_art_url',
+        'removed'
       ]).describe('The field to update'),
       operation: z.enum(['set', 'add', 'remove']).describe('How to update the field: set (replace), add (append to array), remove (from array)'),
       value: z.union([
         z.string(),
         z.number(),
+        z.boolean(),
         z.array(z.string())
-      ]).describe('The value to set, add, or remove. For arrays: single string or array of strings. For scalars: string or number.')
+      ]).describe('The value to set, add, or remove. For arrays: single string or array of strings. For scalars: string, number, or boolean.')
     }),
     execute: async (input) => {
       try {
@@ -40,12 +42,13 @@ export const createUpdateAlbumTool = (context: ToolContext) => {
         const arrayFields = ['genres', 'personal_vibes']
         const scalarFields = ['thoughts', 'title', 'artist', 'cover_art_url']
         const numberFields = ['year']
+        const booleanFields = ['removed']
 
         if (arrayFields.includes(input.field)) {
           if (!['set', 'add', 'remove'].includes(input.operation)) {
             return `Invalid operation "${input.operation}" for array field "${input.field}". Use: set, add, or remove`
           }
-        } else if (scalarFields.includes(input.field) || numberFields.includes(input.field)) {
+        } else if (scalarFields.includes(input.field) || numberFields.includes(input.field) || booleanFields.includes(input.field)) {
           if (input.operation !== 'set') {
             return `Invalid operation "${input.operation}" for field "${input.field}". Only "set" is allowed for scalar fields`
           }
@@ -116,6 +119,22 @@ export const createUpdateAlbumTool = (context: ToolContext) => {
             return `Invalid number value for ${input.field}: ${input.value}`
           }
           updateData[input.field] = numValue
+        } else if (booleanFields.includes(input.field)) {
+          // Handle boolean fields
+          let boolValue: boolean
+          if (typeof input.value === 'boolean') {
+            boolValue = input.value
+          } else {
+            const stringValue = String(input.value).toLowerCase()
+            if (stringValue === 'true' || stringValue === '1' || stringValue === 'yes') {
+              boolValue = true
+            } else if (stringValue === 'false' || stringValue === '0' || stringValue === 'no') {
+              boolValue = false
+            } else {
+              return `Invalid boolean value for ${input.field}: ${input.value}. Use true/false, 1/0, or yes/no.`
+            }
+          }
+          updateData[input.field] = boolValue
         } else {
           // Handle scalar string fields
           updateData[input.field] = String(input.value)

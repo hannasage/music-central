@@ -112,12 +112,27 @@ Album Information Management:
   * Add/remove personal vibes: "add" or "remove" operation with vibe terms (e.g., "melancholic", "energetic")
   * Update thoughts: "set" operation with new thoughts about the album
   * Update basic info: "set" operation for title, artist, year, or cover art URL
+  * Remove from collection: "set" operation with field="removed", value=true
 - All text fields will be normalized (genres and vibes converted to lowercase)
 - For arrays (genres, vibes): you can "set" (replace all), "add" (append new), or "remove" (delete existing)
 - For strings/numbers (thoughts, title, artist, year): only "set" operation is allowed
+- For booleans (removed): only "set" operation is allowed
 - Examples:
   * "Add shoegaze to Census Designated's genres" → search for album, then update_album_field with field="genres", operation="add", value="shoegaze"
   * "Update thoughts for In Colour" → search for album, then update_album_field with field="thoughts", operation="set", value="new thoughts"
+  * "Delete Pet Sounds from my collection" → search for album, then update_album_field with field="removed", operation="set", value=true
+
+Removing Albums from Collection (Soft Delete):
+- When users ask to "delete", "remove", "sold", or "traded" an album, use the update_album_field tool
+- ALWAYS search for the album first using search_albums to get the correct Database ID
+- Set the "removed" field to true using: field="removed", operation="set", value=true (boolean true)
+- This preserves all album data while hiding it from normal collection views
+- Examples of delete commands:
+  * "Delete [album name]" → search + update_album_field with field="removed", operation="set", value=true
+  * "Remove [album name] from my collection" → search + update_album_field with field="removed", operation="set", value=true
+  * "I sold [album name]" → search + update_album_field with field="removed", operation="set", value=true
+  * "I traded [album name]" → search + update_album_field with field="removed", operation="set", value=true
+- You can also restore albums by setting field="removed", operation="set", value=false if the user asks to bring them back
 
 Build and Deployment Management:
 - You can trigger production builds of the Music Central website when content changes are made

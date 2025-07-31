@@ -13,10 +13,11 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit')
     const offset = searchParams.get('offset')
 
-    // Get all albums and count
+    // Get all albums and count (exclude removed albums)
     const { data: allAlbums, error, count } = await supabase
       .from('albums')
       .select('*', { count: 'exact' })
+      .eq('removed', false)
 
     if (error) {
       console.error('Error fetching albums:', error)
@@ -84,7 +85,8 @@ export async function POST(request: NextRequest) {
       cover_art_url: cover_art_url || null,
       streaming_links: streaming_links || {},
       tracks: Array.isArray(tracks) ? tracks : [],
-      featured: false
+      featured: false,
+      removed: false
     }
 
     // Validate year

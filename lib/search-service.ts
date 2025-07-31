@@ -42,7 +42,7 @@ export async function searchAlbums(
     sortOrder = 'desc'
   } = options
 
-  let dbQuery = supabase.from('albums').select('*', { count: 'exact' })
+  let dbQuery = supabase.from('albums').select('*', { count: 'exact' }).eq('removed', false)
 
   // Text search with multiple strategies
   if (query && query.trim()) {

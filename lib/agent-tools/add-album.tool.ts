@@ -55,6 +55,7 @@ export const createAddAlbumTool = (context: ToolContext) => {
               .from('albums')
               .select('spotify_id, title, artist')
               .eq('spotify_id', match.album.id)
+              .eq('removed', false)
               .single()
             
             if (existing) {
@@ -137,6 +138,7 @@ export const createAddAlbumTool = (context: ToolContext) => {
           streaming_links: streamingLinks,
           tracks,
           featured: false,
+          removed: false,
           created_at: '',
           updated_at: ''
         }
@@ -173,7 +175,8 @@ export const createAddAlbumTool = (context: ToolContext) => {
           thoughts: aiSuggestions.thoughts,
           cover_art_url: coverArtUrl || null,
           streaming_links: streamingLinks,
-          tracks: tracks
+          tracks: tracks,
+          removed: false
         }
 
         // Step 7: Create album via API

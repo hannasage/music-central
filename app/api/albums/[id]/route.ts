@@ -52,7 +52,8 @@ const albumUpdateSchema = z.object({
   personal_vibes: z.array(z.string().min(1).max(50)).optional(),
   thoughts: z.string().max(5000).optional(),
   cover_art_url: z.string().url().optional(),
-  streaming_links: streamingLinksSchema
+  streaming_links: streamingLinksSchema,
+  removed: z.boolean().optional()
 }).refine(
   (data) => Object.keys(data).length > 0,
   { message: "At least one field must be provided for update" }
