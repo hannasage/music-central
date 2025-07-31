@@ -9,17 +9,12 @@ import AudioFeatures from '@/app/components/AudioFeatures'
 import TrackList from '@/app/components/TrackList'
 import Header from '@/app/components/Header'
 import ScrollToTop from '@/app/components/ScrollToTop'
-import EditableTagList from '@/app/components/EditableTagList'
-import { useAuth } from '@/hooks/useAuth'
-import { useUpdateAlbum } from '@/hooks/useUpdateAlbum'
 import { Album } from '@/lib/types'
 import { Calendar, Tag, Heart, MessageSquare, Music } from 'lucide-react'
 
 export default function AlbumContent({ id }: { id: string }) {
   const [album, setAlbum] = useState<Album | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { isAuthenticated } = useAuth()
-  const { updateAlbum, isUpdating, error } = useUpdateAlbum()
 
   useEffect(() => {
     const fetchAlbum = async () => {
@@ -47,44 +42,6 @@ export default function AlbumContent({ id }: { id: string }) {
 
     fetchAlbum()
   }, [id])
-
-  const handleGenresUpdate = async (newGenres: string[]) => {
-    if (!album) return
-    
-    // Optimistic update
-    const previousGenres = album.genres
-    setAlbum(prev => prev ? { ...prev, genres: newGenres } : null)
-    
-    try {
-      const updatedAlbum = await updateAlbum(album.id, { genres: newGenres })
-      if (updatedAlbum) {
-        setAlbum(updatedAlbum)
-      }
-    } catch (error) {
-      // Rollback on error
-      setAlbum(prev => prev ? { ...prev, genres: previousGenres } : null)
-      throw error
-    }
-  }
-
-  const handleVibesUpdate = async (newVibes: string[]) => {
-    if (!album) return
-    
-    // Optimistic update
-    const previousVibes = album.personal_vibes
-    setAlbum(prev => prev ? { ...prev, personal_vibes: newVibes } : null)
-    
-    try {
-      const updatedAlbum = await updateAlbum(album.id, { personal_vibes: newVibes })
-      if (updatedAlbum) {
-        setAlbum(updatedAlbum)
-      }
-    } catch (error) {
-      // Rollback on error
-      setAlbum(prev => prev ? { ...prev, personal_vibes: previousVibes } : null)
-      throw error
-    }
-  }
 
   if (isLoading || !album) {
     return <AlbumPageSkeleton />
@@ -159,18 +116,22 @@ export default function AlbumContent({ id }: { id: string }) {
                       <div className="flex items-center justify-center lg:justify-start space-x-2 text-zinc-300">
                         <Tag className="w-4 h-4" />
                         <span className="font-medium">Genres</span>
-                        {isUpdating && <span className="text-xs text-blue-400">Saving...</span>}
                       </div>
                       <div className="flex justify-center lg:justify-start">
-                        <EditableTagList
-                          tags={album.genres}
-                          onUpdate={handleGenresUpdate}
-                          placeholder="No genres assigned"
-                          addPlaceholder="Add genre..."
-                          type="genres"
-                          disabled={!isAuthenticated}
-                          className="w-full"
-                        />
+                        <div className="flex flex-wrap gap-2 w-full">
+                          {album.genres.length === 0 ? (
+                            <span className="text-zinc-500 italic">No genres assigned</span>
+                          ) : (
+                            album.genres.map((genre, index) => (
+                              <span
+                                key={index}
+                                className="bg-zinc-800/50 text-zinc-300 border-zinc-700/50 px-3 py-1 rounded-full text-sm border inline-flex items-center gap-2"
+                              >
+                                {genre}
+                              </span>
+                            ))
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -180,18 +141,22 @@ export default function AlbumContent({ id }: { id: string }) {
                     <div className="flex items-center justify-center lg:justify-start space-x-2 text-zinc-300">
                       <Heart className="w-4 h-4" />
                       <span className="font-medium">Personal Vibes</span>
-                      {isUpdating && <span className="text-xs text-blue-400">Saving...</span>}
                     </div>
                     <div className="flex justify-center lg:justify-start">
-                      <EditableTagList
-                        tags={album.personal_vibes}
-                        onUpdate={handleVibesUpdate}
-                        placeholder="No personal vibes assigned"
-                        addPlaceholder="Add vibe..."
-                        type="vibes"
-                        disabled={!isAuthenticated}
-                        className="w-full"
-                      />
+                      <div className="flex flex-wrap gap-2 w-full">
+                        {album.personal_vibes.length === 0 ? (
+                          <span className="text-zinc-500 italic">No personal vibes assigned</span>
+                        ) : (
+                          album.personal_vibes.map((vibe, index) => (
+                            <span
+                              key={index}
+                              className="bg-blue-500/20 text-blue-400 border-blue-500/30 px-3 py-1 rounded-full text-sm border inline-flex items-center gap-2"
+                            >
+                              {vibe}
+                            </span>
+                          ))
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -235,15 +200,6 @@ export default function AlbumContent({ id }: { id: string }) {
             )}
           </div>
         </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mt-6 bg-red-900/50 backdrop-blur-sm rounded-2xl p-4 border border-red-800/50">
-            <div className="text-red-400 text-sm">
-              <strong>Error:</strong> {error}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
