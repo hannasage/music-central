@@ -24,6 +24,7 @@ export default function AlbumContent({ id }: { id: string }) {
           .from('albums')
           .select('*')
           .eq('id', id)
+          .eq('removed', false)
           .single()
 
         if (error || !albumData) {

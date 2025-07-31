@@ -39,10 +39,11 @@ export default function SearchFiltersComponent({
       const supabase = createClientSideClient()
       
       try {
-        // Fetch all albums to get unique genres and vibes
+        // Fetch all albums to get unique genres and vibes (only active albums)
         const { data: albums, error } = await supabase
           .from('albums')
           .select('genres, personal_vibes')
+          .eq('removed', false)
         
         if (error) {
           console.error('Error fetching filter options:', error)

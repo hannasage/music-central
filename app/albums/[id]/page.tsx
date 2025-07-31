@@ -12,6 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       .from('albums')
       .select('*')
       .eq('id', id)
+      .eq('removed', false)
       .single()
 
     if (error || !album) {

@@ -15,11 +15,27 @@ export async function PUT(
         return createErrorResponse('Featured must be a boolean value', 400)
       }
 
+      // Check if album exists and is not removed
+      const { data: existingAlbum, error: fetchError } = await supabase
+        .from('albums')
+        .select('id, title, artist, removed')
+        .eq('id', id)
+        .single()
+
+      if (fetchError || !existingAlbum) {
+        return createErrorResponse('Album not found', 404)
+      }
+
+      if (existingAlbum.removed) {
+        return createErrorResponse('Cannot modify featured status of removed albums', 400)
+      }
+
       // Update the album's featured status
       const { data: album, error } = await supabase
         .from('albums')
         .update({ featured })
         .eq('id', id)
+        .eq('removed', false) // Extra safety check
         .select()
         .single()
 
@@ -29,7 +45,7 @@ export async function PUT(
       }
 
       if (!album) {
-        return createErrorResponse('Album not found', 404)
+        return createErrorResponse('Album not found or already removed', 404)
       }
 
       return createSuccessResponse({
