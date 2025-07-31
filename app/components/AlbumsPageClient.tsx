@@ -26,7 +26,13 @@ export default function AlbumsPageClient({
   initialPagination
 }: AlbumsPageClientProps) {
   const [albums, setAlbums] = useState<Album[]>(initialAlbums)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    // Default to list view on mobile, grid on desktop
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return 'list'
+    }
+    return 'grid'
+  })
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(albums.length < initialPagination.total)
   const [offset, setOffset] = useState(24) // Start with next batch
@@ -98,21 +104,31 @@ export default function AlbumsPageClient({
       {/* Albums Grid/List */}
       {albums.length > 0 ? (
         <>
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-              {albums.map((album) => (
-                <AlbumCard key={album.id} album={album} size="small" />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4 mb-8">
-              {albums.map((album) => (
-                <div key={album.id} className="p-2">
-                  <AlbumCard album={album} size="medium" />
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Grid View - always on desktop (md+), optional on mobile */}
+          <div className="hidden md:grid grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+            {albums.map((album) => (
+              <AlbumCard key={album.id} album={album} size="small" />
+            ))}
+          </div>
+
+          {/* Mobile View - toggle between grid and list */}
+          <div className="md:hidden">
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+                {albums.map((album) => (
+                  <AlbumCard key={album.id} album={album} size="small" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4 mb-8">
+                {albums.map((album) => (
+                  <div key={album.id} className="p-2">
+                    <AlbumCard album={album} size="medium" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Loading indicator and intersection observer target */}
           <div ref={loaderRef} className="flex justify-center py-8">
