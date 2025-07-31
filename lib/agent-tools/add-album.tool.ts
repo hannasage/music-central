@@ -49,8 +49,11 @@ export const createAddAlbumTool = (context: ToolContext) => {
 
         // Step 2: Check which albums already exist in the collection
         const existingAlbums = new Set()
+        const softDeletedAlbums = new Map() // Map of spotify_id -> album data
+        
         for (const match of albumMatches) {
           try {
+            // Check for active albums (removed = false)
             const { data: existing } = await context.supabase
               .from('albums')
               .select('spotify_id, title, artist')
@@ -63,11 +66,68 @@ export const createAddAlbumTool = (context: ToolContext) => {
               console.log(`⚠️ Album "${match.album.name}" already exists in collection`)
             }
           } catch {
-            // Album doesn't exist, which is good
+            // Album doesn't exist as active, check if it's soft-deleted
+            try {
+              const { data: softDeleted } = await context.supabase
+                .from('albums')
+                .select('id, spotify_id, title, artist, year, genres, personal_vibes, thoughts, created_at')
+                .eq('spotify_id', match.album.id)
+                .eq('removed', true)
+                .single()
+              
+              if (softDeleted) {
+                softDeletedAlbums.set(match.album.id, softDeleted)
+                console.log(`🗂️ Found soft-deleted album "${match.album.name}" - can be restored`)
+              }
+            } catch {
+              // Album doesn't exist at all, which is good for new creation
+            }
           }
         }
 
-        // Filter out albums that already exist
+        // Step 2a: Check if we can restore a soft-deleted album instead
+        if (softDeletedAlbums.size > 0) {
+          // Find the best soft-deleted match to restore
+          const softDeletedMatch = albumMatches.find(match => softDeletedAlbums.has(match.album.id))
+          
+          if (softDeletedMatch) {
+            const albumToRestore = softDeletedAlbums.get(softDeletedMatch.album.id)
+            console.log(`🔄 Restoring soft-deleted album: "${albumToRestore.title}" by ${albumToRestore.artist}`)
+            
+            // Restore the album by setting removed = false
+            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+            const restoreResponse = await fetch(`${siteUrl}/api/albums/${albumToRestore.id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+                'Cookie': context.cookieStore.getAll().map(cookie => `${cookie.name}=${cookie.value}`).join('; ')
+              },
+              body: JSON.stringify({ removed: false })
+            })
+
+            if (!restoreResponse.ok) {
+              const error = await restoreResponse.json()
+              return `❌ Failed to restore album: ${error.error || 'Unknown error occurred'}`
+            }
+
+            // Get the original creation date for display
+            const removedDate = new Date(albumToRestore.created_at)
+            
+            return `🎉 Welcome back! Restored "${albumToRestore.title}" by ${albumToRestore.artist} (${albumToRestore.year}) to your collection!
+
+📋 Preserved Data:
+• Genres: ${albumToRestore.genres?.join(', ') || 'None'}
+• Personal Vibes: ${albumToRestore.personal_vibes?.join(', ') || 'None'}
+• Your Thoughts: ${albumToRestore.thoughts || 'None'}
+• Originally Added: ${removedDate.toLocaleDateString()}
+
+🔄 This album was previously in your collection and has been restored with all your original data intact.
+
+Database ID: ${albumToRestore.id}`
+          }
+        }
+
+        // Filter out albums that already exist (active ones)
         const availableMatches = albumMatches.filter(match => !existingAlbums.has(match.album.id))
         
         if (availableMatches.length === 0) {
@@ -209,7 +269,7 @@ export const createAddAlbumTool = (context: ToolContext) => {
         
         let successMessage = `🎉 Successfully added "${createdAlbum.title}" by ${createdAlbum.artist} (${createdAlbum.year}) to your collection!
 
-📋 Details:
+📋 New Album Details:
 • Genres: ${genreList}
 • Vibes: ${vibeList}
 • Tracks: ${tracks.length} tracks
@@ -217,6 +277,8 @@ export const createAddAlbumTool = (context: ToolContext) => {
 • Spotify Link: ${streamingLinks.spotify ? '✅ Available' : '❌ Not available'}
 
 💭 AI Thoughts: ${aiSuggestions.thoughts}
+
+✨ This is a fresh addition to your collection with AI-generated metadata.
 
 Database ID: ${createdAlbum.id}`
 

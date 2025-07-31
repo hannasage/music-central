@@ -60,10 +60,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient()
     
-    // Get suggestions from titles and artists
+    // Get suggestions from titles and artists (exclude removed albums)
     const { data: albums } = await supabase
       .from('albums')
       .select('title, artist')
+      .eq('removed', false)
       .or(`title.ilike.%${query}%,artist.ilike.%${query}%`)
       .limit(10)
 
