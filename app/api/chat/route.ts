@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { Agent, run, tool } from '@openai/agents'
+import { Agent, run } from '@openai/agents'
 import { cookies } from 'next/headers'
-import { z } from 'zod'
+import { 
+  triggerVercelBuildTool, 
+  checkBuildStatusTool,
+  searchAlbumsTool,
+  toggleFeaturedTool,
+  ToolContext 
+} from '@/lib/agent-tools'
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,56 +43,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Messages array is required' }, { status: 400 })
     }
 
-    // Create tools for album management
-    const searchAlbumsTool = tool({
-      name: 'search_albums',
-      description: 'Search for albums in the collection by title, artist, or other criteria',
-      parameters: z.object({
-        query: z.string().describe('Search query - can be album title, artist name, or other search terms'),
-        limit: z.number().optional().default(10).describe('Maximum number of results to return')
-      }),
-      execute: async (input) => {
-        const { searchAlbumsForAgent } = await import('@/lib/search-service')
-        return searchAlbumsForAgent(supabase, input.query, input.limit)
+    // Create tool context for context-dependent tools
+    const toolContext: ToolContext = {
+      supabase,
+      cookieStore: {
+        getAll: () => cookieStore.getAll(),
+        set: (name, value, options) => cookieStore.set(name, value, options)
       }
-    })
+    }
 
-    const toggleFeaturedTool = tool({
-      name: 'toggle_album_featured',
-      description: 'Mark an album as featured or remove it from featured status',
-      parameters: z.object({
-        albumId: z.string().describe('The ID of the album to update'),
-        featured: z.boolean().describe('Whether to mark the album as featured (true) or remove featured status (false)')
-      }),
-      execute: async (input) => {
-        try {
-          // Validate UUID format
-          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-          if (!uuidRegex.test(input.albumId)) {
-            return `Invalid album ID format. Please use the correct Database ID from the search results (should be a UUID like: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)`
-          }
-
-          const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/albums/${input.albumId}/featured`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Cookie': cookieStore.getAll().map(cookie => `${cookie.name}=${cookie.value}`).join('; ')
-            },
-            body: JSON.stringify({ featured: input.featured })
-          })
-
-          if (!response.ok) {
-            const error = await response.json()
-            return `Error updating album: ${error.error || 'Unknown error'}`
-          }
-
-          const result = await response.json()
-          return result.message
-        } catch (error) {
-          return `Error updating album featured status: ${error}`
-        }
-      }
-    })
+    // Initialize tools with context where needed
+    const searchTool = searchAlbumsTool(toolContext)
+    const toggleTool = toggleFeaturedTool(toolContext)
 
     // Create the vinyl collection assistant agent
     const musicAgent = new Agent({
@@ -117,6 +85,15 @@ Featured Album Management:
 - You can feature multiple albums or remove featured status from albums
 - Always confirm what you found in the search before making changes
 
+Build and Deployment Management:
+- You can trigger production builds of the Music Central website when content changes are made
+- Use trigger_vercel_build when the user makes significant changes to their collection data and wants to update the live site
+- Always explain what the build will do before triggering it (regenerate static pages, deploy new content, etc.)
+- Use check_build_status when the user wants to check on a deployment's progress
+- Provide clear status updates and deployment URLs when builds complete
+- If a build fails, help interpret the error and suggest next steps
+- Common reasons to trigger builds: featured album changes, bulk collection updates, new content additions
+
 Your personality:
 - Knowledgeable about vinyl records, pressings, and music history
 - Enthusiastic but respectful of their personal taste
@@ -125,7 +102,7 @@ Your personality:
 - Conversational and friendly, like a knowledgeable record store owner
 
 Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, and suggest additions that make sense for their specific taste and collection goals.`,
-      tools: [searchAlbumsTool, toggleFeaturedTool]
+      tools: [searchTool, toggleTool, triggerVercelBuildTool, checkBuildStatusTool]
     })
 
     // Get the latest user message
