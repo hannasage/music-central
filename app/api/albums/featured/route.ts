@@ -2,8 +2,6 @@ import { NextRequest } from 'next/server'
 import { createServerComponentClient } from '@/lib/supabase'
 import { createErrorResponse, createSuccessResponse } from '@/lib/api-helpers'
 
-export const dynamic = 'force-dynamic'
-
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerComponentClient()

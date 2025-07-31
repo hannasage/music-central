@@ -1,7 +1,5 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
-
-export const dynamic = 'force-dynamic'
 import Header from './components/Header'
 import FeaturedBanner from './components/FeaturedBanner'
 import AlbumCard from './components/AlbumCard'

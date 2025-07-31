@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
 import { withAuth, createErrorResponse, createSuccessResponse } from '@/lib/api-helpers'
-import { revalidatePath } from 'next/cache'
 
 export async function PUT(
   request: NextRequest,
@@ -32,9 +31,6 @@ export async function PUT(
       if (!album) {
         return createErrorResponse('Album not found', 404)
       }
-
-      // Revalidate the home page to show updated featured albums immediately
-      revalidatePath('/')
 
       return createSuccessResponse({
         message: `Album "${album.title}" by ${album.artist} ${featured ? 'marked as featured' : 'removed from featured'}`,
