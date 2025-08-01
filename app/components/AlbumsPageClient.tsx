@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import AlbumCard from '@/app/components/AlbumCard'
 import AlbumsControls from '@/app/components/AlbumsControls'
 import { Album } from '@/lib/types'
+import { useViewMode } from '@/app/hooks/useViewMode'
 import { 
   Music,
   Loader
@@ -26,10 +27,7 @@ export default function AlbumsPageClient({
   initialPagination
 }: AlbumsPageClientProps) {
   const [albums, setAlbums] = useState<Album[]>(initialAlbums)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
-    // Default to grid view on both mobile and desktop
-    return 'grid'
-  })
+  const { viewMode, setViewMode, isLoaded } = useViewMode()
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(albums.length < initialPagination.total)
   const [offset, setOffset] = useState(24) // Start with next batch

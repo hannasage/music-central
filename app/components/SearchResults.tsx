@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { Album } from '@/lib/types'
 import AlbumCard from './AlbumCard'
 import AlbumsControls from './AlbumsControls'
+import { useViewMode } from '@/app/hooks/useViewMode'
 import { Search, SortAsc, SortDesc, ChevronLeft, ChevronRight } from 'lucide-react'
 import { LoadingWithText } from '@/app/components/ui'
 
@@ -35,7 +36,7 @@ export default function SearchResults({
   sortOrder = 'desc',
   className = ''
 }: SearchResultsProps) {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const { viewMode, setViewMode } = useViewMode()
 
   // Highlight search terms in text
   const highlightText = (text: string, searchTerm: string): React.JSX.Element => {
