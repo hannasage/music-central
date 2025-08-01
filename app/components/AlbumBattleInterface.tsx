@@ -49,10 +49,6 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
       
       const data = await response.json()
       setAlbumPair([data.album1, data.album2])
-      
-      if (data.insights) {
-        updateInsights(data.insights)
-      }
     } catch (error) {
       console.error('Error loading battle:', error)
     } finally {
