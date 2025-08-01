@@ -10,16 +10,16 @@ import { ArrowRight, Clock, Sparkles } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: "Hanna's Record Collection",
-  description: "Welcome to my personal vinyl collection featuring 223+ carefully curated albums with personal thoughts, streaming links, and AI-powered music discovery.",
+  description: "Welcome to my personal vinyl collection featuring carefully curated albums with personal thoughts, streaming links, and AI-powered music discovery.",
   openGraph: {
     title: "Hanna's Record Collection",
-    description: "Welcome to my personal vinyl collection featuring 223+ carefully curated albums with personal thoughts, streaming links, and AI-powered music discovery.",
+    description: "Welcome to my personal vinyl collection featuring carefully curated albums with personal thoughts, streaming links, and AI-powered music discovery.",
     type: "website",
   },
   twitter: {
     card: 'summary',
     title: "Hanna's Record Collection",
-    description: "Welcome to my personal vinyl collection featuring 223+ carefully curated albums with personal thoughts, streaming links, and AI-powered music discovery.",
+    description: "Welcome to my personal vinyl collection featuring carefully curated albums with personal thoughts, streaming links, and AI-powered music discovery.",
   },
 }
 
@@ -84,14 +84,11 @@ function Footer() {
               <Link href="/albums" className="block text-zinc-400 hover:text-white transition-colors duration-200">
                 All Albums
               </Link>
-              <Link href="/genres" className="block text-zinc-400 hover:text-white transition-colors duration-200">
-                Genres
+              <Link href="/recommendations" className="block text-zinc-400 hover:text-white transition-colors duration-200">
+                AI Curator
               </Link>
-              <Link href="/artists" className="block text-zinc-400 hover:text-white transition-colors duration-200">
-                Artists
-              </Link>
-              <Link href="/random" className="block text-zinc-400 hover:text-white transition-colors duration-200">
-                Random Discovery
+              <Link href="/search" className="block text-zinc-400 hover:text-white transition-colors duration-200">
+                Search
               </Link>
             </nav>
           </div>
@@ -100,20 +97,28 @@ function Footer() {
             <h4 className="text-sm font-semibold text-white mb-3 uppercase tracking-wider">Connect</h4>
             <nav className="space-y-2">
               <a 
-                href="https://spotify.com" 
+                href="https://github.com/hannasage" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="block text-zinc-400 hover:text-white transition-colors duration-200"
               >
-                Spotify
+                GitHub
               </a>
               <a 
-                href="https://last.fm" 
+                href="https://linkedin.com/in/hannasage" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="block text-zinc-400 hover:text-white transition-colors duration-200"
               >
-                Last.fm
+                LinkedIn
+              </a>
+              <a 
+                href="https://open.spotify.com/playlist/5v6rho05qMtlqC829KfDjR?si=cf9e63e089ff41f0" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block text-zinc-400 hover:text-white transition-colors duration-200"
+              >
+                My Spotify Playlist
               </a>
             </nav>
           </div>
@@ -148,23 +153,6 @@ export default function HomePage() {
           <RecentlyAddedSection />
         </Suspense>
 
-        {/* Stats Section */}
-        <div className="bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-8 border border-zinc-800/50">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-            <div>
-              <div className="text-3xl font-bold text-blue-400 mb-2">223</div>
-              <div className="text-zinc-400">Albums in Collection</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-green-400 mb-2">156</div>
-              <div className="text-zinc-400">Unique Artists</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-purple-400 mb-2">42</div>
-              <div className="text-zinc-400">Genres Discovered</div>
-            </div>
-          </div>
-        </div>
       </main>
 
       <Footer />
