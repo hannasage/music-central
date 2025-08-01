@@ -1,6 +1,8 @@
 'use client'
 
-import { Brain, Zap, Music, TrendingUp } from 'lucide-react'
+import { useState } from 'react'
+import { Brain, Zap, Music, TrendingUp, RotateCcw } from 'lucide-react'
+import ConfirmationModal from './ConfirmationModal'
 
 interface PreferenceInsight {
   summary: string
@@ -11,14 +13,39 @@ interface MusicTastePanelProps {
   insights: PreferenceInsight[]
   round: number
   className?: string
+  onStartOver?: () => void
 }
 
-export default function MusicTastePanel({ insights, round, className = '' }: MusicTastePanelProps) {
+export default function MusicTastePanel({ insights, round, className = '', onStartOver }: MusicTastePanelProps) {
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+
+  const handleStartOverClick = () => {
+    setShowConfirmModal(true)
+  }
+
+  const handleConfirmStartOver = () => {
+    setShowConfirmModal(false)
+    if (onStartOver) {
+      onStartOver()
+    }
+  }
   return (
     <div className={`bg-zinc-900/50 backdrop-blur-sm rounded-xl p-4 border border-zinc-800/50 ${className}`}>
-      <div className="flex items-center space-x-2 mb-4">
-        <Brain className="w-4 h-4 text-purple-400" />
-        <h3 className="font-semibold text-white text-sm">Your Music Taste</h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-2">
+          <Brain className="w-4 h-4 text-purple-400" />
+          <h3 className="font-semibold text-white text-sm">Your Music Taste</h3>
+        </div>
+        {onStartOver && round > 1 && (
+          <button
+            onClick={handleStartOverClick}
+            className="flex items-center space-x-1 px-2 py-1 text-xs text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-700/50 rounded-md transition-colors duration-200"
+            title="Start Over (clears all saved progress)"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span>Start Over</span>
+          </button>
+        )}
       </div>
       
       {insights.length > 0 ? (
@@ -101,6 +128,17 @@ export default function MusicTastePanel({ insights, round, className = '' }: Mus
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmStartOver}
+        title="Start Over?"
+        message="This will permanently delete all your battle history, insights, and progress. This action cannot be undone."
+        confirmText="Yes, Start Over"
+        cancelText="Keep My Progress"
+        isDangerous={true}
+      />
     </div>
   )
 }

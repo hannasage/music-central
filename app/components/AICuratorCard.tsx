@@ -6,7 +6,7 @@ import { Album } from '@/lib/types'
 import { StreamingIcon } from '@/app/components/ui/icons'
 import { Music, Play } from 'lucide-react'
 
-interface AlbumBattleCardProps {
+interface AICuratorCardProps {
   album: Album
   onChoose: () => void
   isChosen?: boolean
@@ -15,14 +15,14 @@ interface AlbumBattleCardProps {
   mobile?: boolean
 }
 
-export default function AlbumBattleCard({ 
+export default function AICuratorCard({ 
   album, 
   onChoose, 
   isChosen = false, 
   isDisabled = false,
   side,
   mobile = false
-}: AlbumBattleCardProps) {
+}: AICuratorCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
 
   const generateStreamingLinks = (album: Album) => {

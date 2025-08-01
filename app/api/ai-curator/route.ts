@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
-    console.error('Album battle API error:', error)
+    console.error('AI Curator API error:', error)
     
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -121,9 +121,8 @@ async function getAlbumPairWithAI(
   }
 
   if (round === 1 || history.length === 0) {
-    // First round: random selection
-    const shuffled = [...availableAlbums].sort(() => Math.random() - 0.5)
-    return [shuffled[0], shuffled[1]]
+    // First round: Use AI to select strategically opposing albums
+    return await selectFirstPairWithAI(availableAlbums, openai)
   }
 
   // Use AI to select the most interesting album pair
@@ -215,6 +214,124 @@ Respond with ONLY a JSON object:
   }
 }
 
+async function selectFirstPairWithAI(
+  availableAlbums: Album[], 
+  openai: OpenAI
+): Promise<[Album, Album]> {
+  // Create simplified album descriptions for AI and shuffle them
+  const shuffledAlbums = [...availableAlbums].sort(() => Math.random() - 0.5)
+  const albumDescriptions = shuffledAlbums.map(album => ({
+    id: album.id,
+    artist: album.artist,
+    title: album.title,
+    year: album.year,
+    genres: album.genres,
+    vibes: album.personal_vibes || []
+  })).slice(0, 50) // Limit to prevent token overflow
+
+  const systemPrompt = `You are an expert music curator selecting the perfect first pair of albums for a music preference discovery game.
+
+AVAILABLE ALBUMS:
+${albumDescriptions.map((album, i) => `${i + 1}. "${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.vibes.length ? `, Vibes: ${album.vibes.join(', ')}` : ''} [ID: ${album.id}]`).join('\n')}
+
+For the FIRST ROUND, select TWO albums that will maximize the learning potential by being strategically different. Consider:
+
+1. Choose albums from different genres, eras, or styles that represent distinct listening paths
+2. Avoid albums that are too similar (same artist, same genre, same era)
+3. Avoid albums that are so different the choice is obvious (underground experimental vs mainstream pop)
+4. Pick albums that could each appeal to different types of music lovers
+5. Create a meaningful choice that will reveal significant preference information
+
+The goal is to set up two different "listening journeys" - if someone picks Album A, what does that suggest about their taste vs if they pick Album B?
+
+Respond with ONLY a JSON object:
+{
+  "album1_id": "album_id_here",
+  "album2_id": "album_id_here",
+  "reasoning": "Brief explanation of why this first pairing will kickstart effective preference learning"
+}`
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: 'Select the best first pair of albums to start learning music preferences.' }
+      ],
+      temperature: 0.8,
+      max_tokens: 300
+    })
+
+    const content = response.choices[0]?.message?.content?.trim()
+    if (!content) throw new Error('No response from OpenAI')
+
+    const selection = JSON.parse(content)
+    
+    const album1 = availableAlbums.find(a => a.id === selection.album1_id)
+    const album2 = availableAlbums.find(a => a.id === selection.album2_id)
+
+    if (!album1 || !album2) {
+      throw new Error('AI selected invalid album IDs')
+    }
+
+    console.log('AI First Pair Selection Reasoning:', selection.reasoning)
+    return [album1, album2]
+
+  } catch (error) {
+    console.error('Error with AI first pair selection:', error)
+    // Fallback to strategic manual selection
+    return selectStrategicFirstPair(availableAlbums)
+  }
+}
+
+function selectStrategicFirstPair(availableAlbums: Album[]): [Album, Album] {
+  // Group albums by decade and genre for strategic selection
+  const albumsByDecade = new Map<number, Album[]>()
+  const albumsByGenre = new Map<string, Album[]>()
+  
+  availableAlbums.forEach(album => {
+    const decade = Math.floor(album.year / 10) * 10
+    if (!albumsByDecade.has(decade)) {
+      albumsByDecade.set(decade, [])
+    }
+    albumsByDecade.get(decade)!.push(album)
+    
+    album.genres.forEach(genre => {
+      if (!albumsByGenre.has(genre)) {
+        albumsByGenre.set(genre, [])
+      }
+      albumsByGenre.get(genre)!.push(album)
+    })
+  })
+  
+  // Try to find albums from different decades and genres
+  const decades = Array.from(albumsByDecade.keys()).sort()
+  const genres = Array.from(albumsByGenre.keys())
+  
+  if (decades.length >= 2 && genres.length >= 2) {
+    // Pick from different decades and genres
+    const earlyDecade = decades[0]
+    const lateDecade = decades[decades.length - 1]
+    
+    const earlyAlbums = albumsByDecade.get(earlyDecade) || []
+    const lateAlbums = albumsByDecade.get(lateDecade) || []
+    
+    if (earlyAlbums.length > 0 && lateAlbums.length > 0) {
+      const album1 = earlyAlbums[Math.floor(Math.random() * earlyAlbums.length)]
+      const album2 = lateAlbums[Math.floor(Math.random() * lateAlbums.length)]
+      
+      // Make sure they're not the same album
+      if (album1.id !== album2.id) {
+        return [album1, album2]
+      }
+    }
+  }
+  
+  // Fallback to random selection
+  const shuffled = [...availableAlbums].sort(() => Math.random() - 0.5)
+  return [shuffled[0], shuffled[1]]
+}
+
 async function analyzePreferencesWithAI(history: BattleChoice[], openai: OpenAI): Promise<PreferenceInsight[]> {
   if (history.length === 0) return []
 
@@ -229,7 +346,7 @@ async function analyzePreferencesWithAI(history: BattleChoice[], openai: OpenAI)
     `"${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.personal_vibes?.length ? `, Vibes: ${album.personal_vibes.join(', ')}` : ''}`
   )
 
-  const systemPrompt = `You are an expert music preference analyst. Analyze music choices to create a cohesive summary of the user's music taste.
+  const systemPrompt = `You are a music taste analyst. Look at what albums someone chose and figure out what kind of listener they are.
 
 MORE FAVORED ALBUMS (${chosenAlbums.length} selections):
 ${chosenDescriptions.join('\n')}
@@ -237,23 +354,20 @@ ${chosenDescriptions.join('\n')}
 LESS FAVORED ALBUMS (${rejectedAlbums.length} rejections):
 ${rejectedDescriptions.join('\n')}
 
-Analyze the patterns in their choices and write a single, cohesive paragraph (2-3 sentences) that captures their music taste. Consider:
-- Genre preferences and patterns
-- Era/decade preferences  
-- Mood and vibe patterns
-- Artist diversity vs. focus
-- Style evolution trends
-- Any unique characteristics
+Based on their choices, write about what kind of music listener they are. Think about:
 
-Don't overly focus on the less favored section in analyzing the user's listening taste. 
-Don't point out specific examples of albums, only point out artists.
-Don't just inject words into a general script, really think about how to summarize the user's taste and vibe preferences.
+- Do they like trying new music or sticking with what they know?
+- Are they drawn to happy, sad, or energetic music?
+- Do they prefer simple songs or more complex ones?
+- What kind of mood are they usually in when listening?
 
-Write in second person ("you") and make it concise and impactful. Use an 8th grade reading level when writing.
+Write 2-3 sentences about their music personality. Don't just list genres or years - explain what their choices say about them as a person who loves music.
+
+Keep it simple and friendly. Write like you're talking to them directly using "you."
 
 Respond with ONLY a JSON object:
 {
-  "summary": "Your cohesive paragraph summary here...",
+  "summary": "Your music taste summary here...",
   "confidence": 0.85
 }`
 
@@ -291,40 +405,29 @@ Respond with ONLY a JSON object:
 function getFallbackInsights(history: BattleChoice[]): PreferenceInsight[] {
   const chosenAlbums = history.map(choice => choice.chosenAlbum)
   
-  // Basic genre analysis
-  const genreCounts = new Map<string, number>()
-  chosenAlbums.forEach(album => {
-    album.genres.forEach(genre => {
-      genreCounts.set(genre, (genreCounts.get(genre) || 0) + 1)
-    })
-  })
-
-  const topGenres = Array.from(genreCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2)
-    .map(([genre]) => genre)
-
-  // Basic era analysis
-  const years = chosenAlbums.map(album => album.year).sort((a, b) => a - b)
-  const avgYear = Math.round(years.reduce((sum, year) => sum + year, 0) / years.length)
-  const decade = Math.floor(avgYear / 10) * 10
-
-  let summary = `Based on your ${history.length} choices, you show a preference for ${topGenres.join(' and ')} music`
-  if (topGenres.length > 0) {
-    summary += `, particularly from the ${decade}s era`
-  }
-  summary += '. Your taste appears to favor '
-  
-  // Add some variety based on album diversity
+  // Analyze diversity and patterns for interpretive insights
   const uniqueArtists = new Set(chosenAlbums.map(album => album.artist)).size
-  if (uniqueArtists === chosenAlbums.length) {
-    summary += 'diverse artists and exploring different sounds.'
+  const uniqueGenres = new Set(chosenAlbums.flatMap(album => album.genres)).size
+  const years = chosenAlbums.map(album => album.year).sort((a, b) => a - b)
+  const yearSpread = years[years.length - 1] - years[0]
+  
+  // Generate interpretive summary based on patterns
+  let summary = ''
+  
+  if (uniqueArtists === chosenAlbums.length && uniqueGenres > 3) {
+    summary = `You love exploring new music and trying different sounds. You don't stick to just one type of music - you let your ears decide what's good, no matter what genre it is.`
+  } else if (uniqueArtists < chosenAlbums.length * 0.7) {
+    summary = `You tend to really connect with certain artists and want to hear more from them. When you find something you like, you dive in deep and explore more of their music.`
+  } else if (yearSpread < 15) {
+    summary = `You have a strong connection to music from a specific time period. There's something about the sound and vibe of that era that really clicks with you.`
+  } else if (yearSpread > 30) {
+    summary = `You don't care when music was made - good music is good music. You focus more on how songs make you feel than what decade they're from.`
   } else {
-    summary += 'certain artists or similar musical styles.'
+    summary = `You like a good mix of familiar favorites and new discoveries. You enjoy both the comfort of music you know and the excitement of finding something fresh.`
   }
 
   return [{
     summary,
-    confidence: Math.min(history.length / 5, 0.8)
+    confidence: Math.min(history.length / 7, 0.7) // Slightly lower confidence for fallback
   }]
 }

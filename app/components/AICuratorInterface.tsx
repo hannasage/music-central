@@ -3,41 +3,42 @@
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { Album } from '@/lib/types'
-import AlbumBattleCard from './AlbumBattleCard'
+import AICuratorCard from './AICuratorCard'
 import MusicTastePanel from './MusicTastePanel'
+import CuratorSkeleton from './CuratorSkeleton'
+import CuratorCharts from './CuratorCharts'
 import { TrendingUp, Music } from 'lucide-react'
+import { useBattleSession, BattleChoice } from '@/app/hooks/useBattleSession'
 
-interface BattleChoice {
-  round: number
-  chosenAlbum: Album
-  rejectedAlbum: Album
-  timestamp: Date
-}
-
-interface PreferenceInsight {
-  summary: string
-  confidence: number
-}
-
-interface AlbumBattleInterfaceProps {
+interface AICuratorInterfaceProps {
   className?: string
 }
 
-export default function AlbumBattleInterface({ className = '' }: AlbumBattleInterfaceProps) {
-  const [albumPair, setAlbumPair] = useState<[Album, Album] | null>(null)
+export default function AICuratorInterface({ className = '' }: AICuratorInterfaceProps) {
+  const {
+    battleHistory,
+    insights,
+    round,
+    gameStarted,
+    isLoaded,
+    currentAlbumPair,
+    addBattleChoice,
+    updateInsights,
+    updateRound,
+    updateCurrentAlbumPair,
+    startOver
+  } = useBattleSession()
+  
+  const albumPair = currentAlbumPair
   const [isLoading, setIsLoading] = useState(false)
   const [chosenAlbum, setChosenAlbum] = useState<Album | null>(null)
-  const [battleHistory, setBattleHistory] = useState<BattleChoice[]>([])
-  const [insights, setInsights] = useState<PreferenceInsight[]>([])
-  const [round, setRound] = useState(1)
-  const [gameStarted] = useState(true)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [selectedMobileAlbum, setSelectedMobileAlbum] = useState<Album | null>(null)
 
   const loadNextBattle = useCallback(async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/album-battle', {
+      const response = await fetch('/api/ai-curator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -50,17 +51,13 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
       if (!response.ok) throw new Error('Failed to load battle')
       
       const data = await response.json()
-      setAlbumPair([data.album1, data.album2])
-      
-      if (data.insights) {
-        setInsights(data.insights)
-      }
+      updateCurrentAlbumPair([data.album1, data.album2])
     } catch (error) {
       console.error('Error loading battle:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [battleHistory, round])
+  }, [battleHistory, round, updateCurrentAlbumPair])
 
   const handleChoice = async (chosenAlbum: Album) => {
     if (!albumPair || isTransitioning) return
@@ -79,7 +76,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
 
     // Submit choice for analysis
     try {
-      const response = await fetch('/api/album-battle', {
+      const response = await fetch('/api/ai-curator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -92,20 +89,20 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
       if (response.ok) {
         const data = await response.json()
         if (data.insights) {
-          setInsights(data.insights)
+          updateInsights(data.insights)
         }
       }
     } catch (error) {
       console.error('Error submitting choice:', error)
     }
 
-    // Update local state
-    setBattleHistory(prev => [...prev, newChoice])
+    // Update session state
+    addBattleChoice(newChoice)
     
     // Wait for animation, then load next round
     setTimeout(() => {
-      setRound(prev => prev + 1)
-      setAlbumPair(null)
+      updateRound(round + 1)
+      updateCurrentAlbumPair(null)
       setChosenAlbum(null)
       setSelectedMobileAlbum(null)
       setIsTransitioning(false)
@@ -124,27 +121,21 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
     }
   }
 
+  // Handle start over - reset everything and load new battle
+  const handleStartOver = useCallback(() => {
+    startOver()
+    setChosenAlbum(null)
+    setSelectedMobileAlbum(null)
+    setIsTransitioning(false)
+  }, [startOver])
 
   // Load initial album pair
   useEffect(() => {
-    if (gameStarted && !albumPair) {
+    if (isLoaded && gameStarted && !albumPair) {
       loadNextBattle()
     }
-  }, [gameStarted, albumPair, loadNextBattle])
+  }, [isLoaded, gameStarted, albumPair, loadNextBattle])
 
-
-  if (isLoading || !albumPair) {
-    return (
-      <div className={`flex items-center justify-center min-h-[600px] ${className}`}>
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto" />
-          <p className="text-zinc-300 text-lg">
-            {round === 1 ? 'Selecting your first battle...' : 'Finding your next perfect match...'}
-          </p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className={className}>
@@ -153,77 +144,84 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
         <div className="flex-1 space-y-8">
 
           {/* Battle Arena */}
-          <div className="relative">
-            {/* Desktop View - Side by side cards */}
-            <div className="hidden md:block">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                <AlbumBattleCard
-                  album={albumPair[0]}
-                  onChoose={() => handleChoice(albumPair[0])}
-                  isChosen={chosenAlbum?.id === albumPair[0].id}
-                  isDisabled={isTransitioning}
-                  side="left"
-                />
-                
-                <div className="flex items-center justify-center lg:hidden">
-                  <div className="text-4xl font-bold text-zinc-600">VS</div>
+          {isLoading || !albumPair ? (
+            <CuratorSkeleton />
+          ) : (
+            <div className="relative">
+              {/* Desktop View - Side by side cards */}
+              <div className="hidden md:block">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                  <AICuratorCard
+                    album={albumPair[0]}
+                    onChoose={() => handleChoice(albumPair[0])}
+                    isChosen={chosenAlbum?.id === albumPair[0].id}
+                    isDisabled={isTransitioning}
+                    side="left"
+                  />
+                  
+                  <div className="flex items-center justify-center lg:hidden">
+                    <div className="text-4xl font-bold text-zinc-600">VS</div>
+                  </div>
+
+                  <AICuratorCard
+                    album={albumPair[1]}
+                    onChoose={() => handleChoice(albumPair[1])}
+                    isChosen={chosenAlbum?.id === albumPair[1].id}
+                    isDisabled={isTransitioning}
+                    side="right"
+                  />
                 </div>
 
-                <AlbumBattleCard
-                  album={albumPair[1]}
-                  onChoose={() => handleChoice(albumPair[1])}
-                  isChosen={chosenAlbum?.id === albumPair[1].id}
-                  isDisabled={isTransitioning}
-                  side="right"
-                />
-              </div>
-
-              {/* VS indicator for desktop */}
-              <div className="hidden lg:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                <div className="w-12 h-12 bg-zinc-800/90 backdrop-blur-sm rounded-full border-2 border-zinc-700/50 flex items-center justify-center">
-                  <span className="text-lg font-bold text-zinc-300">VS</span>
+                {/* VS indicator for desktop */}
+                <div className="hidden lg:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+                  <div className="w-12 h-12 bg-zinc-800/90 backdrop-blur-sm rounded-full border-2 border-zinc-700/50 flex items-center justify-center">
+                    <span className="text-lg font-bold text-zinc-300">VS</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Mobile View - Horizontal cards with checkboxes */}
-            <div className="md:hidden space-y-4">
-              <div className="space-y-3">
-                <AlbumBattleCard
-                  album={albumPair[0]}
-                  onChoose={() => handleMobileSelection(albumPair[0])}
-                  isChosen={selectedMobileAlbum?.id === albumPair[0].id}
-                  isDisabled={isTransitioning}
-                  side="left"
-                  mobile={true}
-                />
-                
-                <AlbumBattleCard
-                  album={albumPair[1]}
-                  onChoose={() => handleMobileSelection(albumPair[1])}
-                  isChosen={selectedMobileAlbum?.id === albumPair[1].id}
-                  isDisabled={isTransitioning}
-                  side="right"
-                  mobile={true}
-                />
+              {/* Mobile View - Horizontal cards with checkboxes */}
+              <div className="md:hidden space-y-4">
+                <div className="space-y-3">
+                  <AICuratorCard
+                    album={albumPair[0]}
+                    onChoose={() => handleMobileSelection(albumPair[0])}
+                    isChosen={selectedMobileAlbum?.id === albumPair[0].id}
+                    isDisabled={isTransitioning}
+                    side="left"
+                    mobile={true}
+                  />
+                  
+                  <AICuratorCard
+                    album={albumPair[1]}
+                    onChoose={() => handleMobileSelection(albumPair[1])}
+                    isChosen={selectedMobileAlbum?.id === albumPair[1].id}
+                    isDisabled={isTransitioning}
+                    side="right"
+                    mobile={true}
+                  />
+                </div>
+
+                {/* Submit Button */}
+                {selectedMobileAlbum && (
+                  <button
+                    onClick={handleMobileSubmit}
+                    disabled={isTransitioning}
+                    className="w-full py-4 bg-blue-500 hover:bg-blue-400 disabled:bg-zinc-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                  >
+                    <span>Submit Choice</span>
+                  </button>
+                )}
               </div>
-
-              {/* Submit Button */}
-              {selectedMobileAlbum && (
-                <button
-                  onClick={handleMobileSubmit}
-                  disabled={isTransitioning}
-                  className="w-full py-4 bg-blue-500 hover:bg-blue-400 disabled:bg-zinc-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
-                >
-                  <span>Submit Choice</span>
-                </button>
-              )}
             </div>
-          </div>
+          )}
 
           {/* Mobile Insights Panel */}
-          <div className="lg:hidden">
-            <MusicTastePanel insights={insights} round={round} />
+          <div className="lg:hidden space-y-6">
+            <MusicTastePanel insights={insights} round={round} onStartOver={handleStartOver} />
+            {battleHistory.length > 0 && (
+              <CuratorCharts battleHistory={battleHistory} />
+            )}
           </div>
 
           {/* Battle History Grid */}
@@ -269,11 +267,15 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
               </div>
             </div>
           )}
+
         </div>
 
         {/* Sidebar - Desktop only */}
         <div className="hidden lg:block w-80 space-y-6">
-          <MusicTastePanel insights={insights} round={round} />
+          <MusicTastePanel insights={insights} round={round} onStartOver={handleStartOver} />
+          {battleHistory.length > 0 && (
+            <CuratorCharts battleHistory={battleHistory} />
+          )}
         </div>
       </div>
     </div>
