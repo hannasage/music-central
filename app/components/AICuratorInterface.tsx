@@ -57,7 +57,7 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
     } finally {
       setIsLoading(false)
     }
-  }, [battleHistory, round])
+  }, [battleHistory, round, updateCurrentAlbumPair])
 
   const handleChoice = async (chosenAlbum: Album) => {
     if (!albumPair || isTransitioning) return
