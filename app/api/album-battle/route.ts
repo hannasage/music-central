@@ -346,7 +346,7 @@ async function analyzePreferencesWithAI(history: BattleChoice[], openai: OpenAI)
     `"${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.personal_vibes?.length ? `, Vibes: ${album.personal_vibes.join(', ')}` : ''}`
   )
 
-  const systemPrompt = `You are an expert music preference analyst who interprets deeper listening patterns and emotional connections to music.
+  const systemPrompt = `You are a music taste analyst. Look at what albums someone chose and figure out what kind of listener they are.
 
 MORE FAVORED ALBUMS (${chosenAlbums.length} selections):
 ${chosenDescriptions.join('\n')}
@@ -354,25 +354,20 @@ ${chosenDescriptions.join('\n')}
 LESS FAVORED ALBUMS (${rejectedAlbums.length} rejections):
 ${rejectedDescriptions.join('\n')}
 
-Analyze what these choices reveal about the user's deeper music preferences and listening psychology. Instead of listing genres and stats, interpret what these patterns suggest about:
+Based on their choices, write about what kind of music listener they are. Think about:
 
-- Musical sophistication level and listening depth
-- Emotional connection style (nostalgic, energetic, contemplative, etc.)
-- Discovery mindset vs comfort zone preferences
-- How they likely experience and engage with music
-- What draws them to certain artistic expressions
-- Their balance between accessibility and complexity
-- Whether they seek familiarity or novelty in their listening
+- Do they like trying new music or sticking with what they know?
+- Are they drawn to happy, sad, or energetic music?
+- Do they prefer simple songs or more complex ones?
+- What kind of mood are they usually in when listening?
 
-Write a single, insightful paragraph (2-3 sentences) that captures their music listening personality and what motivates their choices. Focus on the "why" behind their preferences rather than the "what." 
+Write 2-3 sentences about their music personality. Don't just list genres or years - explain what their choices say about them as a person who loves music.
 
-Avoid simply stating genres, years, or artist names. Instead, interpret what those choices reveal about their inner musical preferences and emotional connections.
-
-Write in second person ("you") with warmth and insight. Use an 8th grade reading level.
+Keep it simple and friendly. Write like you're talking to them directly using "you."
 
 Respond with ONLY a JSON object:
 {
-  "summary": "Your interpretive insight about their musical psychology...",
+  "summary": "Your music taste summary here...",
   "confidence": 0.85
 }`
 
@@ -420,15 +415,15 @@ function getFallbackInsights(history: BattleChoice[]): PreferenceInsight[] {
   let summary = ''
   
   if (uniqueArtists === chosenAlbums.length && uniqueGenres > 3) {
-    summary = `You seem to be a musical explorer who values discovering new artists and sounds. Your choices suggest you enjoy variety and aren't bound by a single genre, preferring to let your ears guide you to interesting music regardless of category.`
+    summary = `You love exploring new music and trying different sounds. You don't stick to just one type of music - you let your ears decide what's good, no matter what genre it is.`
   } else if (uniqueArtists < chosenAlbums.length * 0.7) {
-    summary = `You appear to form strong connections with specific artists and their musical worlds. When you find something you like, you dive deeper, suggesting you value artistic consistency and the emotional familiarity that comes with favorite creators.`
+    summary = `You tend to really connect with certain artists and want to hear more from them. When you find something you like, you dive in deep and explore more of their music.`
   } else if (yearSpread < 15) {
-    summary = `Your choices suggest you have a strong connection to a particular musical era that resonates with you. You seem drawn to the sounds and cultural energy of that time period, valuing the nostalgia and authenticity it brings to your listening experience.`
+    summary = `You have a strong connection to music from a specific time period. There's something about the sound and vibe of that era that really clicks with you.`
   } else if (yearSpread > 30) {
-    summary = `You have a timeless approach to music that transcends decades. Your choices suggest you focus on the emotional core of songs rather than when they were made, appreciating how great music can connect across generations.`
+    summary = `You don't care when music was made - good music is good music. You focus more on how songs make you feel than what decade they're from.`
   } else {
-    summary = `Your musical choices show a thoughtful balance between familiar comfort and new discovery. You seem to appreciate both the emotional security of known sounds and the excitement of finding something that surprises you.`
+    summary = `You like a good mix of familiar favorites and new discoveries. You enjoy both the comfort of music you know and the excitement of finding something fresh.`
   }
 
   return [{
