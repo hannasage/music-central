@@ -6,6 +6,7 @@ import { Album } from '@/lib/types'
 import AlbumBattleCard from './AlbumBattleCard'
 import MusicTastePanel from './MusicTastePanel'
 import BattlefieldSkeleton from './BattlefieldSkeleton'
+import BattleCharts from './BattleCharts'
 import { TrendingUp, Music } from 'lucide-react'
 import { useBattleSession, BattleChoice, PreferenceInsight } from '@/app/hooks/useBattleSession'
 
@@ -215,8 +216,11 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
           )}
 
           {/* Mobile Insights Panel */}
-          <div className="lg:hidden">
+          <div className="lg:hidden space-y-6">
             <MusicTastePanel insights={insights} round={round} onStartOver={handleStartOver} />
+            {battleHistory.length > 2 && (
+              <BattleCharts battleHistory={battleHistory} />
+            )}
           </div>
 
           {/* Battle History Grid */}
@@ -262,11 +266,15 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
               </div>
             </div>
           )}
+
         </div>
 
         {/* Sidebar - Desktop only */}
         <div className="hidden lg:block w-80 space-y-6">
           <MusicTastePanel insights={insights} round={round} onStartOver={handleStartOver} />
+          {battleHistory.length > 2 && (
+            <BattleCharts battleHistory={battleHistory} />
+          )}
         </div>
       </div>
     </div>
