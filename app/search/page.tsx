@@ -35,6 +35,7 @@ export default function SearchPage() {
 
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [results, setResults] = useState<(Album & { _searchScore?: number })[]>([])
+  const [originalResults, setOriginalResults] = useState<(Album & { _searchScore?: number })[]>([]) // For filter options
   const [isLoading, setIsLoading] = useState(false)
   const [filters, setFilters] = useState<SearchFilters>({})
   const [pagination, setPagination] = useState({
@@ -57,6 +58,7 @@ export default function SearchPage() {
   ) => {
     if (!searchQuery.trim() && Object.keys(searchFilters).length === 0) {
       setResults([])
+      setOriginalResults([])
       setPagination({ page: 1, limit: 20, total: 0, totalPages: 0 })
       return
     }
@@ -64,6 +66,24 @@ export default function SearchPage() {
     setIsLoading(true)
 
     try {
+      // First, get original results without filters for filter options
+      if (Object.keys(searchFilters).length === 0) {
+        // This is the initial search, so we need to get original results
+        const originalParams = new URLSearchParams()
+        if (searchQuery.trim()) originalParams.set('q', searchQuery.trim())
+        originalParams.set('page', '1')
+        originalParams.set('limit', '1000') // Get all results for filter extraction
+        originalParams.set('sortBy', sort)
+        originalParams.set('sortOrder', order)
+
+        const originalResponse = await fetch(`/api/search?${originalParams.toString()}`)
+        if (originalResponse.ok) {
+          const originalData: SearchResponse = await originalResponse.json()
+          setOriginalResults(originalData.results)
+        }
+      }
+
+      // Now get the filtered results for display
       const params = new URLSearchParams()
       if (searchQuery.trim()) params.set('q', searchQuery.trim())
       if (Object.keys(searchFilters).length > 0) {
@@ -201,7 +221,7 @@ export default function SearchPage() {
               <SearchFilters
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
-                searchResults={results}
+                searchResults={originalResults}
               />
             </div>
           </div>
@@ -242,7 +262,7 @@ export default function SearchPage() {
                       handleFiltersChange(newFilters)
                       setShowMobileFilters(false)
                     }}
-                    searchResults={results}
+                    searchResults={originalResults}
                   />
                 </div>
               </div>

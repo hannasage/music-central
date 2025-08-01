@@ -75,24 +75,20 @@ export default function SearchFiltersComponent({
     const vibeSet = new Set<string>()
     
     searchResults.forEach(album => {
-      // Add genres
+      // Add genres (preserve original case from database)
       if (album.genres && Array.isArray(album.genres)) {
         album.genres.forEach((genre: string) => {
           if (genre?.trim()) {
-            // Capitalize only the first letter
-            const formatted = genre.trim().charAt(0).toUpperCase() + genre.trim().slice(1).toLowerCase()
-            genreSet.add(formatted)
+            genreSet.add(genre.trim()) // Keep original case
           }
         })
       }
       
-      // Add personal vibes
+      // Add personal vibes (preserve original case from database)
       if (album.personal_vibes && Array.isArray(album.personal_vibes)) {
         album.personal_vibes.forEach((vibe: string) => {
           if (vibe?.trim()) {
-            // Capitalize only the first letter
-            const formatted = vibe.trim().charAt(0).toUpperCase() + vibe.trim().slice(1).toLowerCase()
-            vibeSet.add(formatted)
+            vibeSet.add(vibe.trim()) // Keep original case
           }
         })
       }
@@ -277,7 +273,7 @@ export default function SearchFiltersComponent({
                         className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
                       />
                       <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                        {genre.toLowerCase()}
+                        {genre}
                       </span>
                     </label>
                   ))
@@ -387,7 +383,7 @@ export default function SearchFiltersComponent({
                         className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
                       />
                       <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                        {vibe.toLowerCase()}
+                        {vibe}
                       </span>
                     </label>
                   ))
