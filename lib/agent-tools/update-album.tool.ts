@@ -20,7 +20,8 @@ export const createUpdateAlbumTool = (context: ToolContext) => {
         'artist', 
         'year', 
         'cover_art_url',
-        'removed'
+        'removed',
+        'featured'
       ]).describe('The field to update'),
       operation: z.enum(['set', 'add', 'remove']).describe('How to update the field: set (replace), add (append to array), remove (from array)'),
       value: z.union([
@@ -42,7 +43,7 @@ export const createUpdateAlbumTool = (context: ToolContext) => {
         const arrayFields = ['genres', 'personal_vibes']
         const scalarFields = ['thoughts', 'title', 'artist', 'cover_art_url']
         const numberFields = ['year']
-        const booleanFields = ['removed']
+        const booleanFields = ['removed', 'featured']
 
         if (arrayFields.includes(input.field)) {
           if (!['set', 'add', 'remove'].includes(input.operation)) {

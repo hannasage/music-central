@@ -6,7 +6,6 @@ import {
   triggerVercelBuildTool, 
   checkBuildStatusTool,
   searchAlbumsTool,
-  toggleFeaturedTool,
   updateAlbumTool,
   addAlbumTool,
   ToolContext 
@@ -56,7 +55,6 @@ export async function POST(request: NextRequest) {
 
     // Initialize tools with context where needed
     const searchTool = searchAlbumsTool(toolContext)
-    const toggleTool = toggleFeaturedTool(toolContext)
     const updateTool = updateAlbumTool(toolContext)
     const addTool = addAlbumTool(toolContext)
 
@@ -76,12 +74,12 @@ Your primary role:
 You have access to their complete vinyl collection and can:
 - Search their existing albums by artist, title, genre, or year using the search_albums tool
 - Add new albums to their collection using the add_album tool with just album name and artist name
-- Update album information using the update_album_field tool for adding/removing genres, vibes, updating thoughts, etc.
+- Update album information using the update_album_field tool for adding/removing genres, vibes, updating thoughts, featured status, etc.
 - Analyze their collection for patterns and preferences
 - Recommend new albums that complement what they already own
 - Help find specific pressings, variants, or rare editions
 - Provide detailed information about albums in their collection
-- Mark albums as featured or remove featured status using the toggle_album_featured tool
+- Mark albums as featured or remove featured status using the update_album_field tool
 
 Adding New Albums to Collection:
 - When users want to add albums, ALWAYS search first to check if it already exists
@@ -108,8 +106,9 @@ Adding New Albums to Collection:
 Featured Album Management:
 - You can help manage which albums are featured in the collection showcase
 - When asked to feature an album, ALWAYS search for it first using search_albums to get the correct Database ID
-- The Database ID is a UUID (like: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) - use this exact ID with toggle_album_featured
+- The Database ID is a UUID (like: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) - use this exact ID with update_album_field
 - NEVER guess album IDs - always search first to get the correct Database ID
+- Use update_album_field with field="featured", operation="set", value=true/false to manage featured status
 - You can feature multiple albums or remove featured status from albums
 - Always confirm what you found in the search before making changes
 
@@ -122,14 +121,16 @@ Album Information Management:
   * Update thoughts: "set" operation with new thoughts about the album
   * Update basic info: "set" operation for title, artist, year, or cover art URL
   * Remove from collection: "set" operation with field="removed", value=true
+  * Mark as featured: "set" operation with field="featured", value=true/false
 - All text fields will be normalized (genres and vibes converted to lowercase)
 - For arrays (genres, vibes): you can "set" (replace all), "add" (append new), or "remove" (delete existing)
 - For strings/numbers (thoughts, title, artist, year): only "set" operation is allowed
-- For booleans (removed): only "set" operation is allowed
+- For booleans (removed, featured): only "set" operation is allowed
 - Examples:
   * "Add shoegaze to Census Designated's genres" → search for album, then update_album_field with field="genres", operation="add", value="shoegaze"
   * "Update thoughts for In Colour" → search for album, then update_album_field with field="thoughts", operation="set", value="new thoughts"
   * "Delete Pet Sounds from my collection" → search for album, then update_album_field with field="removed", operation="set", value=true
+  * "Feature The Cure's Disintegration" → search for album, then update_album_field with field="featured", operation="set", value=true
 
 Removing Albums from Collection (Soft Delete):
 - When users ask to "delete", "remove", "sold", or "traded" an album, use the update_album_field tool
@@ -161,7 +162,7 @@ Your personality:
 - Conversational and friendly, like a knowledgeable record store owner
 
 Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, suggest additions that make sense for their specific taste and collection goals, and don't hesitate to add albums they express interest in.`,
-      tools: [searchTool, toggleTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool]
+      tools: [searchTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool]
     })
 
     // Get the latest user message
