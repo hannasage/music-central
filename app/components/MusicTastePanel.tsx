@@ -26,7 +26,7 @@ export default function MusicTastePanel({ insights, round, className = '', onSta
           <button
             onClick={onStartOver}
             className="flex items-center space-x-1 px-2 py-1 text-xs text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-700/50 rounded-md transition-colors duration-200"
-            title="Start Over"
+            title="Start Over (clears all saved progress)"
           >
             <RotateCcw className="w-3 h-3" />
             <span>Start Over</span>

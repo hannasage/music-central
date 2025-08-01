@@ -8,7 +8,7 @@ import MusicTastePanel from './MusicTastePanel'
 import BattlefieldSkeleton from './BattlefieldSkeleton'
 import BattleCharts from './BattleCharts'
 import { TrendingUp, Music } from 'lucide-react'
-import { useBattleSession, BattleChoice, PreferenceInsight } from '@/app/hooks/useBattleSession'
+import { useBattleSession, BattleChoice } from '@/app/hooks/useBattleSession'
 
 interface AlbumBattleInterfaceProps {
   className?: string
@@ -21,13 +21,15 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
     round,
     gameStarted,
     isLoaded,
+    currentAlbumPair,
     addBattleChoice,
     updateInsights,
     updateRound,
+    updateCurrentAlbumPair,
     startOver
   } = useBattleSession()
   
-  const [albumPair, setAlbumPair] = useState<[Album, Album] | null>(null)
+  const albumPair = currentAlbumPair
   const [isLoading, setIsLoading] = useState(false)
   const [chosenAlbum, setChosenAlbum] = useState<Album | null>(null)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -49,7 +51,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
       if (!response.ok) throw new Error('Failed to load battle')
       
       const data = await response.json()
-      setAlbumPair([data.album1, data.album2])
+      updateCurrentAlbumPair([data.album1, data.album2])
     } catch (error) {
       console.error('Error loading battle:', error)
     } finally {
@@ -100,7 +102,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
     // Wait for animation, then load next round
     setTimeout(() => {
       updateRound(round + 1)
-      setAlbumPair(null)
+      updateCurrentAlbumPair(null)
       setChosenAlbum(null)
       setSelectedMobileAlbum(null)
       setIsTransitioning(false)
@@ -122,7 +124,6 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
   // Handle start over - reset everything and load new battle
   const handleStartOver = useCallback(() => {
     startOver()
-    setAlbumPair(null)
     setChosenAlbum(null)
     setSelectedMobileAlbum(null)
     setIsTransitioning(false)
@@ -218,7 +219,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
           {/* Mobile Insights Panel */}
           <div className="lg:hidden space-y-6">
             <MusicTastePanel insights={insights} round={round} onStartOver={handleStartOver} />
-            {battleHistory.length > 2 && (
+            {battleHistory.length > 0 && (
               <BattleCharts battleHistory={battleHistory} />
             )}
           </div>
@@ -272,7 +273,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
         {/* Sidebar - Desktop only */}
         <div className="hidden lg:block w-80 space-y-6">
           <MusicTastePanel insights={insights} round={round} onStartOver={handleStartOver} />
-          {battleHistory.length > 2 && (
+          {battleHistory.length > 0 && (
             <BattleCharts battleHistory={battleHistory} />
           )}
         </div>

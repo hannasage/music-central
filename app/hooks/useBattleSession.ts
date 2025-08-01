@@ -15,34 +15,36 @@ export interface PreferenceInsight {
   confidence: number
 }
 
-interface BattleSessionState {
+interface BattleState {
   battleHistory: BattleChoice[]
   insights: PreferenceInsight[]
   round: number
   gameStarted: boolean
+  currentAlbumPair: [Album, Album] | null
 }
 
-const SESSION_KEY = 'music-central-battle-session'
+const STORAGE_KEY = 'music-central-battle-session'
 
-const defaultState: BattleSessionState = {
+const defaultState: BattleState = {
   battleHistory: [],
   insights: [],
   round: 1,
-  gameStarted: true
+  gameStarted: true,
+  currentAlbumPair: null
 }
 
 export function useBattleSession() {
-  const [sessionState, setSessionState] = useState<BattleSessionState>(defaultState)
+  const [sessionState, setSessionState] = useState<BattleState>(defaultState)
   const [isLoaded, setIsLoaded] = useState(false)
 
-  // Load session from storage on mount
+  // Load persistent state from localStorage on mount
   useEffect(() => {
-    const stored = sessionStorage.getItem(SESSION_KEY)
+    const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
         // Convert timestamp strings back to Date objects
-        const battleHistory = parsed.battleHistory?.map((choice: any) => ({
+        const battleHistory = parsed.battleHistory?.map((choice: Omit<BattleChoice, 'timestamp'> & { timestamp: string }) => ({
           ...choice,
           timestamp: new Date(choice.timestamp)
         })) || []
@@ -53,17 +55,17 @@ export function useBattleSession() {
           battleHistory
         })
       } catch (error) {
-        console.error('Failed to parse session storage:', error)
+        console.error('Failed to parse localStorage:', error)
         setSessionState(defaultState)
       }
     }
     setIsLoaded(true)
   }, [])
 
-  // Save to session storage whenever state changes
+  // Save to localStorage whenever state changes
   useEffect(() => {
     if (isLoaded) {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionState))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionState))
     }
   }, [sessionState, isLoaded])
 
@@ -86,9 +88,13 @@ export function useBattleSession() {
     }))
   }, [])
 
+  const updateCurrentAlbumPair = useCallback((albumPair: [Album, Album] | null) => {
+    setSessionState(prev => ({ ...prev, currentAlbumPair: albumPair }))
+  }, [])
+
   const startOver = useCallback(() => {
     setSessionState(defaultState)
-    sessionStorage.removeItem(SESSION_KEY)
+    localStorage.removeItem(STORAGE_KEY)
   }, [])
 
   return {
@@ -98,6 +104,7 @@ export function useBattleSession() {
     updateInsights,
     updateRound,
     addBattleChoice,
+    updateCurrentAlbumPair,
     startOver
   }
 }
