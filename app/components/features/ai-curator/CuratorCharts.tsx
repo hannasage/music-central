@@ -47,9 +47,6 @@ export default function CuratorCharts({ battleHistory, className = '' }: Curator
   const allVibes = Array.from(vibeCounts.entries())
     .sort((a, b) => b[1] - a[1])
 
-  // Get displayed entries (limited or all)
-  const displayedGenres = showAllGenres ? allGenres : allGenres.slice(0, INITIAL_DISPLAY_COUNT)
-  const displayedVibes = showAllVibes ? allVibes : allVibes.slice(0, INITIAL_DISPLAY_COUNT)
 
   const maxGenreCount = allGenres.length > 0 ? Math.max(...allGenres.map(([, count]) => count)) : 0
   const maxVibeCount = allVibes.length > 0 ? Math.max(...allVibes.map(([, count]) => count)) : 0
@@ -114,7 +111,8 @@ export default function CuratorCharts({ battleHistory, className = '' }: Curator
             <span>Top Genres</span>
           </h4>
           <div className="space-y-3">
-            {displayedGenres.map(([genre, count]) => (
+            {/* Always show first INITIAL_DISPLAY_COUNT items */}
+            {allGenres.slice(0, INITIAL_DISPLAY_COUNT).map(([genre, count]) => (
               <div key={genre} className="flex items-center space-x-3">
                 <div className="w-32 text-sm text-zinc-300 truncate" title={genre}>
                   {genre}
@@ -131,7 +129,7 @@ export default function CuratorCharts({ battleHistory, className = '' }: Curator
               </div>
             ))}
             
-            {/* Expandable additional genres */}
+            {/* Expandable additional genres (only the remaining ones) */}
             {allGenres.length > INITIAL_DISPLAY_COUNT && (
               <AnimatedCollapsible isOpen={showAllGenres}>
                 <div className="space-y-3 pt-3">
@@ -185,7 +183,8 @@ export default function CuratorCharts({ battleHistory, className = '' }: Curator
               <span>Top Vibes</span>
             </h4>
             <div className="space-y-3">
-              {displayedVibes.map(([vibe, count]) => (
+              {/* Always show first INITIAL_DISPLAY_COUNT items */}
+              {allVibes.slice(0, INITIAL_DISPLAY_COUNT).map(([vibe, count]) => (
                 <div key={vibe} className="flex items-center space-x-3">
                   <div className="w-32 text-sm text-zinc-300 truncate" title={vibe}>
                     {vibe}
@@ -202,7 +201,7 @@ export default function CuratorCharts({ battleHistory, className = '' }: Curator
                 </div>
               ))}
               
-              {/* Expandable additional vibes */}
+              {/* Expandable additional vibes (only the remaining ones) */}
               {allVibes.length > INITIAL_DISPLAY_COUNT && (
                 <AnimatedCollapsible isOpen={showAllVibes}>
                   <div className="space-y-3 pt-3">
