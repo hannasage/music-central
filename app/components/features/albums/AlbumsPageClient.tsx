@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import AlbumCard from '@/app/components/AlbumCard'
-import AlbumsControls from '@/app/components/AlbumsControls'
+import AlbumCard from './AlbumCard'
+import AlbumsControls from './AlbumsControls'
 import { Album } from '@/lib/types'
 import { useViewMode } from '@/app/hooks/useViewMode'
 import { 
@@ -27,7 +27,7 @@ export default function AlbumsPageClient({
   initialPagination
 }: AlbumsPageClientProps) {
   const [albums, setAlbums] = useState<Album[]>(initialAlbums)
-  const { viewMode, setViewMode, isLoaded } = useViewMode()
+  const { viewMode, setViewMode } = useViewMode()
   const [isLoading, setIsLoading] = useState(false)
   const [hasMore, setHasMore] = useState(albums.length < initialPagination.total)
   const [offset, setOffset] = useState(24) // Start with next batch

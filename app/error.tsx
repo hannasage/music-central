@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import Header from './components/Header'
+import Header from './components/shared/Header'
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react'
 
 export default function Error({

@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
-import Header from '@/app/components/Header'
-import AlbumsPageClient from '@/app/components/AlbumsPageClient'
-import { AlbumGridSkeleton } from '@/app/components/LoadingSkeleton'
+import Header from '@/app/components/shared/Header'
+import AlbumsPageClient from '@/app/components/features/albums/AlbumsPageClient'
+import { AlbumGridSkeleton } from '@/app/components/ui/feedback/LoadingSkeleton'
 import { getAllAlbums } from '@/lib/albums'
 
 export default async function AlbumsPage() {

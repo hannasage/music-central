@@ -1,3 +1,4 @@
+import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Album } from '@/lib/types'
@@ -10,7 +11,7 @@ interface AlbumCardProps {
   className?: string
 }
 
-export default function AlbumCard({ album, size = 'medium', layout = 'vertical', className = '' }: AlbumCardProps) {
+const AlbumCard = React.memo(function AlbumCard({ album, size = 'medium', layout = 'vertical', className = '' }: AlbumCardProps) {
   const artworkSizes = {
     small: 'aspect-square w-full',
     medium: 'aspect-square w-full',
@@ -122,4 +123,6 @@ export default function AlbumCard({ album, size = 'medium', layout = 'vertical',
       </div>
     </Link>
   )
-}
+})
+
+export default AlbumCard

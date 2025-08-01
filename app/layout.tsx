@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AccessibilityProvider from "./components/AccessibilityProvider";
-import AuthenticatedAIChat from "./components/AuthenticatedAIChat";
+import AccessibilityProvider from "./components/shared/AccessibilityProvider";
+import AuthenticatedAIChat from "./components/features/ai-curator/AuthenticatedAIChat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

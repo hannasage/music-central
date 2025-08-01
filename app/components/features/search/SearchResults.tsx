@@ -2,8 +2,8 @@
 
 import React from 'react'
 import { Album } from '@/lib/types'
-import AlbumCard from './AlbumCard'
-import AlbumsControls from './AlbumsControls'
+import AlbumCard from '../albums/AlbumCard'
+import AlbumsControls from '../albums/AlbumsControls'
 import { useViewMode } from '@/app/hooks/useViewMode'
 import { Search, SortAsc, SortDesc, ChevronLeft, ChevronRight } from 'lucide-react'
 import { LoadingWithText } from '@/app/components/ui'
@@ -25,7 +25,7 @@ interface SearchResultsProps {
   className?: string
 }
 
-export default function SearchResults({
+const SearchResults = React.memo(function SearchResults({
   results,
   query,
   isLoading = false,
@@ -293,4 +293,6 @@ export default function SearchResults({
       )}
     </div>
   )
-}
+})
+
+export default SearchResults

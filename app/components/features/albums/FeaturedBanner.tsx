@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Album } from '@/lib/types'
@@ -11,7 +11,7 @@ interface FeaturedBannerProps {
   albums: Album[]
 }
 
-export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
+const FeaturedBanner = React.memo(function FeaturedBanner({ albums }: FeaturedBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAutoPlaying] = useState(true)
   const [isTransitioning] = useState(false)
@@ -173,4 +173,6 @@ export default function FeaturedBanner({ albums }: FeaturedBannerProps) {
 
     </div>
   )
-}
+})
+
+export default FeaturedBanner

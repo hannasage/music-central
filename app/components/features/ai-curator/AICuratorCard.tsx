@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import { Album } from '@/lib/types'
-import { StreamingIcon } from '@/app/components/ui/icons'
+import { StreamingIcon } from '../../ui/icons'
 import { Music, Play } from 'lucide-react'
 
 interface AICuratorCardProps {
@@ -15,7 +15,7 @@ interface AICuratorCardProps {
   mobile?: boolean
 }
 
-export default function AICuratorCard({ 
+const AICuratorCard = React.memo(function AICuratorCard({ 
   album, 
   onChoose, 
   isChosen = false, 
@@ -248,4 +248,6 @@ export default function AICuratorCard({
       </div>
     </div>
   )
-}
+})
+
+export default AICuratorCard

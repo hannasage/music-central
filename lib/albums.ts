@@ -1,6 +1,7 @@
 import { createClient, createServerComponentClient } from './supabase'
 import { Album } from './types'
 import { sortAlbumsByArtist } from './sorting'
+import { logger } from './logger'
 
 export async function getFeaturedAlbums(limit = 4): Promise<Album[]> {
   const supabase = createClient()
@@ -14,7 +15,7 @@ export async function getFeaturedAlbums(limit = 4): Promise<Album[]> {
     .limit(limit)
 
   if (error) {
-    console.error('Error fetching featured albums:', error)
+    logger.dbError('getFeaturedAlbums', error, { limit })
     return []
   }
 

@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import SearchInterface from '@/app/components/SearchInterface'
-import SearchResults from '@/app/components/SearchResults'
-import SearchFilters from '@/app/components/SearchFilters'
-import Header from '@/app/components/Header'
+import SearchInterface from '@/app/components/features/search/SearchInterface'
+import SearchResults from '@/app/components/features/search/SearchResults'
+import SearchFilters from '@/app/components/features/search/SearchFilters'
+import Header from '@/app/components/shared/Header'
 import { Album } from '@/lib/types'
+import { logger } from '@/lib/logger'
 import { Filter, X } from 'lucide-react'
 
 interface SearchFilters {
@@ -74,24 +75,31 @@ export default function SearchPage() {
       params.set('sortOrder', order)
 
       const searchUrl = `/api/search?${params.toString()}`
-      console.log('Fetching:', searchUrl)
+      logger.debug('Fetching search results', { searchUrl, searchQuery, searchFilters, page, sort, order })
 
       const response = await fetch(searchUrl)
       
       if (response.ok) {
         const data: SearchResponse = await response.json()
-        console.log('Search response:', data)
+        logger.info('Search completed successfully', { 
+          query: searchQuery, 
+          resultsCount: data.results.length,
+          totalResults: data.pagination.total 
+        })
         setResults(data.results)
         setPagination(data.pagination)
       } else {
-        console.error('Search failed:', response.status, response.statusText)
         const errorText = await response.text()
-        console.error('Error details:', errorText)
+        logger.apiError(searchUrl, new Error(`HTTP ${response.status}: ${response.statusText}`), {
+          errorDetails: errorText,
+          searchQuery,
+          searchFilters
+        })
         setResults([])
         setPagination({ page: 1, limit: 20, total: 0, totalPages: 0 })
       }
     } catch (error) {
-      console.error('Search error:', error)
+      logger.error('Search request failed', { searchQuery, searchFilters }, error as Error)
       setResults([])
       setPagination({ page: 1, limit: 20, total: 0, totalPages: 0 })
     } finally {
@@ -157,7 +165,7 @@ export default function SearchPage() {
       try {
         parsedFilters = JSON.parse(urlFilters)
       } catch (e) {
-        console.error('Error parsing URL filters:', e)
+        logger.warn('Failed to parse URL filters', { urlFilters }, e as Error)
       }
     }
 
