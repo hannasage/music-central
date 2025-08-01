@@ -233,15 +233,14 @@ export default function SearchResults({
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {results.map((album) => (
-              <div key={album.id} className="p-2">
-                <AlbumCard
-                  album={album}
-                  size="medium"
-                  className="transform hover:scale-105 transition-transform duration-200"
-                />
-              </div>
+              <AlbumCard
+                key={album.id}
+                album={album}
+                layout="horizontal"
+                className="transform hover:scale-[1.01] transition-transform duration-200"
+              />
             ))}
           </div>
         )}

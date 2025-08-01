@@ -117,11 +117,13 @@ export default function AlbumsPageClient({
                 ))}
               </div>
             ) : (
-              <div className="space-y-4 mb-8">
+              <div className="space-y-3 mb-8">
                 {albums.map((album) => (
-                  <div key={album.id} className="p-2">
-                    <AlbumCard album={album} size="medium" />
-                  </div>
+                  <AlbumCard 
+                    key={album.id} 
+                    album={album} 
+                    layout="horizontal"
+                  />
                 ))}
               </div>
             )}

@@ -6,10 +6,11 @@ import { Music } from 'lucide-react'
 interface AlbumCardProps {
   album: Album
   size?: 'small' | 'medium' | 'large'
+  layout?: 'vertical' | 'horizontal'
   className?: string
 }
 
-export default function AlbumCard({ album, size = 'medium', className = '' }: AlbumCardProps) {
+export default function AlbumCard({ album, size = 'medium', layout = 'vertical', className = '' }: AlbumCardProps) {
   const artworkSizes = {
     small: 'aspect-square w-full',
     medium: 'aspect-square w-full',
@@ -24,6 +25,55 @@ export default function AlbumCard({ album, size = 'medium', className = '' }: Al
 
   const primaryGenre = album.genres && album.genres.length > 0 ? album.genres[0] : ''
 
+  // Horizontal layout
+  if (layout === 'horizontal') {
+    return (
+      <Link 
+        href={`/albums/${album.id}`}
+        className={`block bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-zinc-700/50 hover:bg-zinc-800/50 transition-all duration-200 group ${className}`}
+      >
+        <div className="flex items-center space-x-4 p-4">
+          {/* Album Artwork */}
+          <div className="w-16 h-16 flex-shrink-0 relative rounded overflow-hidden bg-zinc-700">
+            {album.cover_art_url ? (
+              <Image
+                src={album.cover_art_url}
+                alt={`${album.title} by ${album.artist}`}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-200"
+                sizes="64px"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
+                <Music className="w-6 h-6 text-zinc-500" />
+              </div>
+            )}
+          </div>
+
+          {/* Album Info */}
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-white text-base truncate group-hover:text-blue-400 transition-colors duration-200">
+              {album.title}
+            </h4>
+            <p className="text-zinc-400 text-sm truncate">
+              by {album.artist}
+            </p>
+            <div className="flex items-center space-x-2 text-xs text-zinc-500 mt-1">
+              <span>{album.year}</span>
+              {primaryGenre && (
+                <>
+                  <span>•</span>
+                  <span className="truncate">{primaryGenre.toLowerCase()}</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
+    )
+  }
+
+  // Vertical layout (default)
   return (
     <Link 
       href={`/albums/${album.id}`}
