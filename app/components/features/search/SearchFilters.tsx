@@ -2,7 +2,27 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Filter, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
-import { createClientSideClient } from '@/lib/supabase-client'
+import { Album } from '@/lib/types'
+
+// Hook to detect screen size
+const useResponsive = () => {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkDevice = () => {
+      setIsMobile(window.innerWidth < 1024) // lg breakpoint
+    }
+    
+    // Check initial size
+    checkDevice()
+    
+    // Listen for window resize
+    window.addEventListener('resize', checkDevice)
+    return () => window.removeEventListener('resize', checkDevice)
+  }, [])
+
+  return { isMobile }
+}
 
 interface SearchFilters {
   genres?: string[]
@@ -14,14 +34,18 @@ interface SearchFilters {
 interface SearchFiltersProps {
   filters: SearchFilters
   onFiltersChange: (filters: SearchFilters) => void
+  searchResults?: Album[]  // Add search results to extract available filters
   className?: string
 }
 
 export default function SearchFiltersComponent({
   filters,
   onFiltersChange,
+  searchResults = [],
   className = ''
 }: SearchFiltersProps) {
+  const { isMobile } = useResponsive()
+  
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     genres: true,
     years: true,
@@ -30,74 +54,54 @@ export default function SearchFiltersComponent({
   
   const [availableGenres, setAvailableGenres] = useState<string[]>([])
   const [availableVibes, setAvailableVibes] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   
   // State for showing all vs limited items
   const [showAllGenres, setShowAllGenres] = useState(false)
   const [showAllVibes, setShowAllVibes] = useState(false)
   
-  // Constants for limiting displayed items
-  const INITIAL_DISPLAY_COUNT = 3
+  // Responsive display counts
+  const getInitialDisplayCount = () => isMobile ? 6 : 10
 
-  // Fetch available genres and vibes from database
+  // Extract available genres and vibes from search results
   useEffect(() => {
-    const fetchFilterOptions = async () => {
-      setIsLoading(true)
-      const supabase = createClientSideClient()
-      
-      try {
-        // Fetch all albums to get unique genres and vibes (only active albums)
-        const { data: albums, error } = await supabase
-          .from('albums')
-          .select('genres, personal_vibes')
-          .eq('removed', false)
-        
-        if (error) {
-          console.error('Error fetching filter options:', error)
-          return
-        }
-
-        // Extract unique genres
-        const genreSet = new Set<string>()
-        const vibeSet = new Set<string>()
-        
-        albums?.forEach(album => {
-          // Add genres
-          if (album.genres && Array.isArray(album.genres)) {
-            album.genres.forEach((genre: string) => {
-              if (genre?.trim()) {
-                // Capitalize only the first letter
-                const formatted = genre.trim().charAt(0).toUpperCase() + genre.trim().slice(1).toLowerCase()
-                genreSet.add(formatted)
-              }
-            })
-          }
-          
-          // Add personal vibes
-          if (album.personal_vibes && Array.isArray(album.personal_vibes)) {
-            album.personal_vibes.forEach((vibe: string) => {
-              if (vibe?.trim()) {
-                // Capitalize only the first letter
-                const formatted = vibe.trim().charAt(0).toUpperCase() + vibe.trim().slice(1).toLowerCase()
-                vibeSet.add(formatted)
-              }
-            })
-          }
-        })
-
-        // Sort alphabetically
-        setAvailableGenres(Array.from(genreSet).sort())
-        setAvailableVibes(Array.from(vibeSet).sort())
-        
-      } catch (error) {
-        console.error('Error fetching filter options:', error)
-      } finally {
-        setIsLoading(false)
-      }
+    if (!searchResults || searchResults.length === 0) {
+      setAvailableGenres([])
+      setAvailableVibes([])
+      return
     }
 
-    fetchFilterOptions()
-  }, [])
+    // Extract unique genres and vibes from current search results
+    const genreSet = new Set<string>()
+    const vibeSet = new Set<string>()
+    
+    searchResults.forEach(album => {
+      // Add genres
+      if (album.genres && Array.isArray(album.genres)) {
+        album.genres.forEach((genre: string) => {
+          if (genre?.trim()) {
+            // Capitalize only the first letter
+            const formatted = genre.trim().charAt(0).toUpperCase() + genre.trim().slice(1).toLowerCase()
+            genreSet.add(formatted)
+          }
+        })
+      }
+      
+      // Add personal vibes
+      if (album.personal_vibes && Array.isArray(album.personal_vibes)) {
+        album.personal_vibes.forEach((vibe: string) => {
+          if (vibe?.trim()) {
+            // Capitalize only the first letter
+            const formatted = vibe.trim().charAt(0).toUpperCase() + vibe.trim().slice(1).toLowerCase()
+            vibeSet.add(formatted)
+          }
+        })
+      }
+    })
+
+    // Sort alphabetically
+    setAvailableGenres(Array.from(genreSet).sort())
+    setAvailableVibes(Array.from(vibeSet).sort())
+  }, [searchResults])
 
   // Toggle section
   const toggleSection = (sectionId: string) => {
@@ -163,12 +167,14 @@ export default function SearchFiltersComponent({
 
   // Get displayed genres (limited or all)
   const getDisplayedGenres = () => {
-    return showAllGenres ? availableGenres : availableGenres.slice(0, INITIAL_DISPLAY_COUNT)
+    const displayCount = getInitialDisplayCount()
+    return showAllGenres ? availableGenres : availableGenres.slice(0, displayCount)
   }
 
   // Get displayed vibes (limited or all)
   const getDisplayedVibes = () => {
-    return showAllVibes ? availableVibes : availableVibes.slice(0, INITIAL_DISPLAY_COUNT)
+    const displayCount = getInitialDisplayCount()
+    return showAllVibes ? availableVibes : availableVibes.slice(0, displayCount)
   }
 
   // Animated Collapsible component
@@ -258,14 +264,7 @@ export default function SearchFiltersComponent({
           <AnimatedCollapsible isOpen={openSections.genres}>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
-                {isLoading ? (
-                  <div className="col-span-2 text-center py-4">
-                    <div className="inline-flex items-center space-x-2 text-zinc-400">
-                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm">Loading genres...</span>
-                    </div>
-                  </div>
-                ) : availableGenres.length > 0 ? (
+                {availableGenres.length > 0 ? (
                   getDisplayedGenres().map((genre) => (
                     <label
                       key={genre}
@@ -284,13 +283,13 @@ export default function SearchFiltersComponent({
                   ))
                 ) : (
                   <div className="col-span-2 text-center py-4 text-sm text-zinc-500">
-                    No genres found
+                    {searchResults.length === 0 ? 'No search results' : 'No genres found in results'}
                   </div>
                 )}
               </div>
               
               {/* See All / Show Less button for genres */}
-              {!isLoading && availableGenres.length > INITIAL_DISPLAY_COUNT && (
+              {availableGenres.length > getInitialDisplayCount() && (
                 <button
                   onClick={() => setShowAllGenres(!showAllGenres)}
                   className="w-full text-center py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200 border-t border-zinc-800/50 mt-3 pt-3"
@@ -375,14 +374,7 @@ export default function SearchFiltersComponent({
           <AnimatedCollapsible isOpen={openSections.vibes}>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-2">
-                {isLoading ? (
-                  <div className="col-span-2 text-center py-4">
-                    <div className="inline-flex items-center space-x-2 text-zinc-400">
-                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm">Loading vibes...</span>
-                    </div>
-                  </div>
-                ) : availableVibes.length > 0 ? (
+                {availableVibes.length > 0 ? (
                   getDisplayedVibes().map((vibe) => (
                     <label
                       key={vibe}
@@ -401,13 +393,13 @@ export default function SearchFiltersComponent({
                   ))
                 ) : (
                   <div className="col-span-2 text-center py-4 text-sm text-zinc-500">
-                    No personal vibes found
+                    {searchResults.length === 0 ? 'No search results' : 'No vibes found in results'}
                   </div>
                 )}
               </div>
               
               {/* See All / Show Less button for vibes */}
-              {!isLoading && availableVibes.length > INITIAL_DISPLAY_COUNT && (
+              {availableVibes.length > getInitialDisplayCount() && (
                 <button
                   onClick={() => setShowAllVibes(!showAllVibes)}
                   className="w-full text-center py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200 border-t border-zinc-800/50 mt-3 pt-3"

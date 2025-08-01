@@ -201,6 +201,7 @@ export default function SearchPage() {
               <SearchFilters
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
+                searchResults={results}
               />
             </div>
           </div>
@@ -241,6 +242,7 @@ export default function SearchPage() {
                       handleFiltersChange(newFilters)
                       setShowMobileFilters(false)
                     }}
+                    searchResults={results}
                   />
                 </div>
               </div>
