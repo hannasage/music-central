@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Filter, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
 import { createClientSideClient } from '@/lib/supabase-client'
 
@@ -31,6 +31,13 @@ export default function SearchFiltersComponent({
   const [availableGenres, setAvailableGenres] = useState<string[]>([])
   const [availableVibes, setAvailableVibes] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  
+  // State for showing all vs limited items
+  const [showAllGenres, setShowAllGenres] = useState(false)
+  const [showAllVibes, setShowAllVibes] = useState(false)
+  
+  // Constants for limiting displayed items
+  const INITIAL_DISPLAY_COUNT = 3
 
   // Fetch available genres and vibes from database
   useEffect(() => {
@@ -154,6 +161,61 @@ export default function SearchFiltersComponent({
     return count
   }
 
+  // Get displayed genres (limited or all)
+  const getDisplayedGenres = () => {
+    return showAllGenres ? availableGenres : availableGenres.slice(0, INITIAL_DISPLAY_COUNT)
+  }
+
+  // Get displayed vibes (limited or all)
+  const getDisplayedVibes = () => {
+    return showAllVibes ? availableVibes : availableVibes.slice(0, INITIAL_DISPLAY_COUNT)
+  }
+
+  // Animated Collapsible component
+  const AnimatedCollapsible = ({ 
+    isOpen, 
+    children 
+  }: { 
+    isOpen: boolean
+    children: React.ReactNode 
+  }) => {
+    const contentRef = useRef<HTMLDivElement>(null)
+    const [height, setHeight] = useState<number | undefined>(undefined)
+
+    useEffect(() => {
+      if (!contentRef.current) return
+
+      const resizeObserver = new ResizeObserver(() => {
+        if (contentRef.current) {
+          setHeight(contentRef.current.scrollHeight)
+        }
+      })
+
+      resizeObserver.observe(contentRef.current)
+      return () => resizeObserver.disconnect()
+    }, [])
+
+    useEffect(() => {
+      if (contentRef.current) {
+        setHeight(contentRef.current.scrollHeight)
+      }
+    }, [children])
+
+    return (
+      <div
+        style={{
+          height: isOpen ? height : 0,
+          overflow: 'hidden',
+          transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
+      >
+        <div ref={contentRef}>
+          {children}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={`bg-zinc-900/50 backdrop-blur-sm rounded-xl border border-zinc-800/50 ${className}`}>
       {/* Header */}
@@ -193,39 +255,61 @@ export default function SearchFiltersComponent({
             )}
           </button>
           
-          {openSections.genres && (
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-              {isLoading ? (
-                <div className="col-span-2 text-center py-4">
-                  <div className="inline-flex items-center space-x-2 text-zinc-400">
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm">Loading genres...</span>
+          <AnimatedCollapsible isOpen={openSections.genres}>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                {isLoading ? (
+                  <div className="col-span-2 text-center py-4">
+                    <div className="inline-flex items-center space-x-2 text-zinc-400">
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm">Loading genres...</span>
+                    </div>
                   </div>
-                </div>
-              ) : availableGenres.length > 0 ? (
-                availableGenres.map((genre) => (
-                  <label
-                    key={genre}
-                    className="flex items-center space-x-2 cursor-pointer group"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.genres?.includes(genre) || false}
-                      onChange={() => handleGenreChange(genre)}
-                      className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                      {genre.toLowerCase()}
+                ) : availableGenres.length > 0 ? (
+                  getDisplayedGenres().map((genre) => (
+                    <label
+                      key={genre}
+                      className="flex items-center space-x-2 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.genres?.includes(genre) || false}
+                        onChange={() => handleGenreChange(genre)}
+                        className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
+                        {genre.toLowerCase()}
+                      </span>
+                    </label>
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-4 text-sm text-zinc-500">
+                    No genres found
+                  </div>
+                )}
+              </div>
+              
+              {/* See All / Show Less button for genres */}
+              {!isLoading && availableGenres.length > INITIAL_DISPLAY_COUNT && (
+                <button
+                  onClick={() => setShowAllGenres(!showAllGenres)}
+                  className="w-full text-center py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200 border-t border-zinc-800/50 mt-3 pt-3"
+                >
+                  {showAllGenres ? (
+                    <span className="flex items-center justify-center space-x-1">
+                      <span>Show less</span>
+                      <ChevronUp className="w-3 h-3" />
                     </span>
-                  </label>
-                ))
-              ) : (
-                <div className="col-span-2 text-center py-4 text-sm text-zinc-500">
-                  No genres found
-                </div>
+                  ) : (
+                    <span className="flex items-center justify-center space-x-1">
+                      <span>See all {availableGenres.length} genres</span>
+                      <ChevronDown className="w-3 h-3" />
+                    </span>
+                  )}
+                </button>
               )}
             </div>
-          )}
+          </AnimatedCollapsible>
         </div>
 
         {/* Year Range */}
@@ -242,7 +326,7 @@ export default function SearchFiltersComponent({
             )}
           </button>
           
-          {openSections.years && (
+          <AnimatedCollapsible isOpen={openSections.years}>
             <div className="space-y-3">
               <div className="flex space-x-3">
                 <div className="flex-1">
@@ -271,7 +355,7 @@ export default function SearchFiltersComponent({
                 </div>
               </div>
             </div>
-          )}
+          </AnimatedCollapsible>
         </div>
 
         {/* Personal Vibes */}
@@ -288,39 +372,61 @@ export default function SearchFiltersComponent({
             )}
           </button>
           
-          {openSections.vibes && (
-            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
-              {isLoading ? (
-                <div className="col-span-2 text-center py-4">
-                  <div className="inline-flex items-center space-x-2 text-zinc-400">
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm">Loading vibes...</span>
+          <AnimatedCollapsible isOpen={openSections.vibes}>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                {isLoading ? (
+                  <div className="col-span-2 text-center py-4">
+                    <div className="inline-flex items-center space-x-2 text-zinc-400">
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm">Loading vibes...</span>
+                    </div>
                   </div>
-                </div>
-              ) : availableVibes.length > 0 ? (
-                availableVibes.map((vibe) => (
-                  <label
-                    key={vibe}
-                    className="flex items-center space-x-2 cursor-pointer group"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.vibes?.includes(vibe) || false}
-                      onChange={() => handleVibeChange(vibe)}
-                      className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                      {vibe.toLowerCase()}
+                ) : availableVibes.length > 0 ? (
+                  getDisplayedVibes().map((vibe) => (
+                    <label
+                      key={vibe}
+                      className="flex items-center space-x-2 cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={filters.vibes?.includes(vibe) || false}
+                        onChange={() => handleVibeChange(vibe)}
+                        className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
+                        {vibe.toLowerCase()}
+                      </span>
+                    </label>
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-4 text-sm text-zinc-500">
+                    No personal vibes found
+                  </div>
+                )}
+              </div>
+              
+              {/* See All / Show Less button for vibes */}
+              {!isLoading && availableVibes.length > INITIAL_DISPLAY_COUNT && (
+                <button
+                  onClick={() => setShowAllVibes(!showAllVibes)}
+                  className="w-full text-center py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200 border-t border-zinc-800/50 mt-3 pt-3"
+                >
+                  {showAllVibes ? (
+                    <span className="flex items-center justify-center space-x-1">
+                      <span>Show less</span>
+                      <ChevronUp className="w-3 h-3" />
                     </span>
-                  </label>
-                ))
-              ) : (
-                <div className="col-span-2 text-center py-4 text-sm text-zinc-500">
-                  No personal vibes found
-                </div>
+                  ) : (
+                    <span className="flex items-center justify-center space-x-1">
+                      <span>See all {availableVibes.length} vibes</span>
+                      <ChevronDown className="w-3 h-3" />
+                    </span>
+                  )}
+                </button>
               )}
             </div>
-          )}
+          </AnimatedCollapsible>
         </div>
 
       </div>
