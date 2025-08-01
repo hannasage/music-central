@@ -1,8 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Album } from '@/lib/types'
 import AlbumCard from './AlbumCard'
+import AlbumsControls from './AlbumsControls'
 import { Search, SortAsc, SortDesc, ChevronLeft, ChevronRight } from 'lucide-react'
 import { LoadingWithText } from '@/app/components/ui'
 
@@ -34,6 +35,7 @@ export default function SearchResults({
   sortOrder = 'desc',
   className = ''
 }: SearchResultsProps) {
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   // Highlight search terms in text
   const highlightText = (text: string, searchTerm: string): React.JSX.Element => {
@@ -176,6 +178,12 @@ export default function SearchResults({
         </div>
 
         <div className="flex items-center space-x-3">
+          {/* View Mode Toggle - Mobile Only */}
+          <AlbumsControls
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+          
           {/* Sort Options */}
           <div className="flex space-x-2">
             {['year', 'artist', 'title'].map((option) => (
@@ -198,8 +206,9 @@ export default function SearchResults({
         </div>
       </div>
 
-      {/* Results Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {/* Results Grid/List */}
+      {/* Desktop - Always Grid */}
+      <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {results.map((album) => (
           <AlbumCard
             key={album.id}
@@ -208,6 +217,34 @@ export default function SearchResults({
             className="transform hover:scale-105 transition-transform duration-200"
           />
         ))}
+      </div>
+
+      {/* Mobile - Toggle between Grid and List */}
+      <div className="md:hidden">
+        {viewMode === 'grid' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {results.map((album) => (
+              <AlbumCard
+                key={album.id}
+                album={album}
+                size="small"
+                className="transform hover:scale-105 transition-transform duration-200"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {results.map((album) => (
+              <div key={album.id} className="p-2">
+                <AlbumCard
+                  album={album}
+                  size="medium"
+                  className="transform hover:scale-105 transition-transform duration-200"
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Pagination */}

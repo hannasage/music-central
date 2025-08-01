@@ -12,7 +12,7 @@ export default function AlbumsControls({
   onViewModeChange 
 }: AlbumsControlsProps) {
   return (
-    <div className="flex items-center mt-4 sm:mt-0 md:hidden">
+    <div className="flex items-center md:hidden">
       {/* View Mode Toggle */}
       <div className="flex items-center bg-zinc-800/50 border border-zinc-700/50 rounded-lg p-1">
         <button
