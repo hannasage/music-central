@@ -3,12 +3,12 @@
 import { BattleChoice } from '@/app/hooks/useBattleSession'
 import { BarChart3, Music2, Palette } from 'lucide-react'
 
-interface BattleChartsProps {
+interface CuratorChartsProps {
   battleHistory: BattleChoice[]
   className?: string
 }
 
-export default function BattleCharts({ battleHistory, className = '' }: BattleChartsProps) {
+export default function CuratorCharts({ battleHistory, className = '' }: CuratorChartsProps) {
   if (battleHistory.length === 0) return null
 
   // Extract chosen albums

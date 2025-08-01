@@ -3,18 +3,18 @@
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { Album } from '@/lib/types'
-import AlbumBattleCard from './AlbumBattleCard'
+import AICuratorCard from './AICuratorCard'
 import MusicTastePanel from './MusicTastePanel'
-import BattlefieldSkeleton from './BattlefieldSkeleton'
-import BattleCharts from './BattleCharts'
+import CuratorSkeleton from './CuratorSkeleton'
+import CuratorCharts from './CuratorCharts'
 import { TrendingUp, Music } from 'lucide-react'
 import { useBattleSession, BattleChoice } from '@/app/hooks/useBattleSession'
 
-interface AlbumBattleInterfaceProps {
+interface AICuratorInterfaceProps {
   className?: string
 }
 
-export default function AlbumBattleInterface({ className = '' }: AlbumBattleInterfaceProps) {
+export default function AICuratorInterface({ className = '' }: AICuratorInterfaceProps) {
   const {
     battleHistory,
     insights,
@@ -38,7 +38,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
   const loadNextBattle = useCallback(async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/album-battle', {
+      const response = await fetch('/api/ai-curator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -76,7 +76,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
 
     // Submit choice for analysis
     try {
-      const response = await fetch('/api/album-battle', {
+      const response = await fetch('/api/ai-curator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -145,13 +145,13 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
 
           {/* Battle Arena */}
           {isLoading || !albumPair ? (
-            <BattlefieldSkeleton />
+            <CuratorSkeleton />
           ) : (
             <div className="relative">
               {/* Desktop View - Side by side cards */}
               <div className="hidden md:block">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                  <AlbumBattleCard
+                  <AICuratorCard
                     album={albumPair[0]}
                     onChoose={() => handleChoice(albumPair[0])}
                     isChosen={chosenAlbum?.id === albumPair[0].id}
@@ -163,7 +163,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
                     <div className="text-4xl font-bold text-zinc-600">VS</div>
                   </div>
 
-                  <AlbumBattleCard
+                  <AICuratorCard
                     album={albumPair[1]}
                     onChoose={() => handleChoice(albumPair[1])}
                     isChosen={chosenAlbum?.id === albumPair[1].id}
@@ -183,7 +183,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
               {/* Mobile View - Horizontal cards with checkboxes */}
               <div className="md:hidden space-y-4">
                 <div className="space-y-3">
-                  <AlbumBattleCard
+                  <AICuratorCard
                     album={albumPair[0]}
                     onChoose={() => handleMobileSelection(albumPair[0])}
                     isChosen={selectedMobileAlbum?.id === albumPair[0].id}
@@ -192,7 +192,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
                     mobile={true}
                   />
                   
-                  <AlbumBattleCard
+                  <AICuratorCard
                     album={albumPair[1]}
                     onChoose={() => handleMobileSelection(albumPair[1])}
                     isChosen={selectedMobileAlbum?.id === albumPair[1].id}
@@ -220,7 +220,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
           <div className="lg:hidden space-y-6">
             <MusicTastePanel insights={insights} round={round} onStartOver={handleStartOver} />
             {battleHistory.length > 0 && (
-              <BattleCharts battleHistory={battleHistory} />
+              <CuratorCharts battleHistory={battleHistory} />
             )}
           </div>
 
@@ -274,7 +274,7 @@ export default function AlbumBattleInterface({ className = '' }: AlbumBattleInte
         <div className="hidden lg:block w-80 space-y-6">
           <MusicTastePanel insights={insights} round={round} onStartOver={handleStartOver} />
           {battleHistory.length > 0 && (
-            <BattleCharts battleHistory={battleHistory} />
+            <CuratorCharts battleHistory={battleHistory} />
           )}
         </div>
       </div>

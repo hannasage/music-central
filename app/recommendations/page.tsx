@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import AlbumBattleInterface from '@/app/components/AlbumBattleInterface'
+import AICuratorInterface from '@/app/components/AICuratorInterface'
 import Header from '@/app/components/Header'
 import BetaBanner from '@/app/components/BetaBanner'
 
@@ -24,7 +24,7 @@ export default function RecommendationsPage() {
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <BetaBanner />
-        <AlbumBattleInterface />
+        <AICuratorInterface />
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-export default function BattlefieldSkeleton() {
+export default function CuratorSkeleton() {
   return (
     <div className="relative">
       {/* Desktop View - Side by side skeleton cards */}
