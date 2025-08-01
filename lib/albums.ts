@@ -9,6 +9,7 @@ export async function getFeaturedAlbums(limit = 4): Promise<Album[]> {
     .from('albums')
     .select('*')
     .eq('featured', true)
+    .eq('removed', false)
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -27,6 +28,7 @@ export async function getRecentlyAddedAlbums(limit = 12): Promise<Album[]> {
   const { data: albums, error } = await supabase
     .from('albums')
     .select('*')
+    .eq('removed', false)
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -45,6 +47,7 @@ export async function getRandomAlbums(limit = 4): Promise<Album[]> {
   const { data: albums, error } = await supabase
     .from('albums')
     .select('*')
+    .eq('removed', false)
     .order('random()')
     .limit(limit)
 
@@ -56,23 +59,8 @@ export async function getRandomAlbums(limit = 4): Promise<Album[]> {
   return albums || []
 }
 
-export async function searchAlbums(query: string, limit = 20): Promise<Album[]> {
-  const supabase = createClient()
-  
-  const { data: albums, error } = await supabase
-    .from('albums')
-    .select('*')
-    .or(`title.ilike.%${query}%,artist.ilike.%${query}%`)
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
-  if (error) {
-    console.error('Error searching albums:', error)
-    return []
-  }
-
-  return albums || []
-}
+// Note: searchAlbums functionality moved to /lib/search-service.ts
+// Import { searchAlbums } from './search-service' for album search functionality
 
 export async function getAllAlbums(
   page: number = 1,
@@ -80,10 +68,11 @@ export async function getAllAlbums(
 ): Promise<{ albums: Album[]; total: number; totalPages: number }> {
   const supabase = await createServerComponentClient()
   
-  // Get total count
+  // Get total count (only non-removed albums)
   const { count } = await supabase
     .from('albums')
     .select('*', { count: 'exact', head: true })
+    .eq('removed', false)
 
   if (!count) {
     return { albums: [], total: 0, totalPages: 0 }
@@ -98,6 +87,7 @@ export async function getAllAlbums(
     const { data: allAlbums, error } = await supabase
       .from('albums')
       .select('*')
+      .eq('removed', false)
 
     if (error) {
       console.error('Error fetching albums:', error)
@@ -130,6 +120,7 @@ export async function getAllAlbums(
     const { data: albums, error } = await supabase
       .from('albums')
       .select('*')
+      .eq('removed', false)
       .order('artist')
       .order('year')
       .range(offset, offset + limit - 1)
@@ -147,14 +138,20 @@ export async function getAllAlbums(
   }
 }
 
-export async function getAlbumById(id: string): Promise<Album | null> {
+export async function getAlbumById(id: string, includeRemoved = false): Promise<Album | null> {
   const supabase = createClient()
   
-  const { data: album, error } = await supabase
+  let query = supabase
     .from('albums')
     .select('*')
     .eq('id', id)
-    .single()
+  
+  // Filter out removed albums unless explicitly requested
+  if (!includeRemoved) {
+    query = query.eq('removed', false)
+  }
+  
+  const { data: album, error } = await query.single()
 
   if (error) {
     console.error('Error fetching album:', error)

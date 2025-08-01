@@ -10,11 +10,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : 4
 
-    // Get featured albums
+    // Get featured albums (exclude removed albums)
     const { data: albums, error } = await supabase
       .from('albums')
       .select('*')
       .eq('featured', true)
+      .eq('removed', false)
       .order('created_at', { ascending: false })
       .limit(limit)
 

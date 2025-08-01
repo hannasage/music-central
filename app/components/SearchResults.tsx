@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import { Album } from '@/lib/types'
 import AlbumCard from './AlbumCard'
-import { Search, SortAsc, SortDesc, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, SortAsc, SortDesc, ChevronLeft, ChevronRight } from 'lucide-react'
 import { LoadingWithText } from '@/app/components/ui'
 
 interface SearchResultsProps {
@@ -23,8 +23,6 @@ interface SearchResultsProps {
   className?: string
 }
 
-type ViewMode = 'grid' | 'list'
-
 export default function SearchResults({
   results,
   query,
@@ -36,13 +34,6 @@ export default function SearchResults({
   sortOrder = 'desc',
   className = ''
 }: SearchResultsProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    // Default to list view on mobile
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      return 'list'
-    }
-    return 'grid'
-  })
 
   // Highlight search terms in text
   const highlightText = (text: string, searchTerm: string): React.JSX.Element => {
@@ -185,32 +176,6 @@ export default function SearchResults({
         </div>
 
         <div className="flex items-center space-x-3">
-          {/* View Mode Toggle */}
-          <div className="flex bg-zinc-800/50 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded transition-colors duration-200 ${
-                viewMode === 'grid' 
-                  ? 'bg-zinc-700 text-white' 
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-              title="Grid view"
-            >
-              <Grid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded transition-colors duration-200 ${
-                viewMode === 'list' 
-                  ? 'bg-zinc-700 text-white' 
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-              title="List view"
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
-
           {/* Sort Options */}
           <div className="flex space-x-2">
             {['year', 'artist', 'title'].map((option) => (
@@ -233,47 +198,17 @@ export default function SearchResults({
         </div>
       </div>
 
-      {/* Results Grid/List */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {results.map((album) => (
-            <AlbumCard
-              key={album.id}
-              album={album}
-              size="medium"
-              className="transform hover:scale-105 transition-transform duration-200"
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {results.map((album) => (
-            <div
-              key={album.id}
-              className="flex items-center space-x-4 p-4 bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-zinc-700/50 transition-colors duration-200"
-            >
-              <AlbumCard album={album} size="small" className="flex-shrink-0" />
-              <div className="flex-1 min-w-0 space-y-2">
-                <h3 className="text-lg font-semibold text-white truncate">
-                  {highlightText(album.title, query)}
-                </h3>
-                <p className="text-zinc-400 truncate">
-                  by {highlightText(album.artist, query)}
-                </p>
-                <div className="flex items-center space-x-2 text-sm text-zinc-500">
-                  <span>{album.year}</span>
-                  {album.genres.length > 0 && (
-                    <>
-                      <span>•</span>
-                      <span>{highlightText(album.genres[0], query)}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Results Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {results.map((album) => (
+          <AlbumCard
+            key={album.id}
+            album={album}
+            size="medium"
+            className="transform hover:scale-105 transition-transform duration-200"
+          />
+        ))}
+      </div>
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (

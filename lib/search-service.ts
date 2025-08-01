@@ -14,6 +14,7 @@ export interface SearchOptions {
   limit?: number
   sortBy?: 'relevance' | 'year' | 'artist' | 'title'
   sortOrder?: 'asc' | 'desc'
+  includeRemoved?: boolean // For agent searches to see removed albums
 }
 
 export interface SearchResult {
@@ -39,27 +40,36 @@ export async function searchAlbums(
     page = 1,
     limit = 20,
     sortBy = 'relevance',
-    sortOrder = 'desc'
+    sortOrder = 'desc',
+    includeRemoved = false
   } = options
 
   let dbQuery = supabase.from('albums').select('*', { count: 'exact' })
+  
+  // Filter by removed status unless explicitly requested to include removed albums
+  if (!includeRemoved) {
+    dbQuery = dbQuery.eq('removed', false)
+  }
 
   // Text search with multiple strategies
   if (query && query.trim()) {
     const searchTerm = query.trim()
+    const words = searchTerm.split(' ').filter(word => word.length > 0)
     
-    // Try multiple search patterns for better matching
-    const searchQueries = [
-      // Exact phrase match
-      `title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%`,
-      // Individual words
-      ...searchTerm.split(' ').map(word => `title.ilike.%${word}%,artist.ilike.%${word}%`),
-      // Combined with wildcards
-      `title.ilike.%${searchTerm.split(' ').join('%')}%,artist.ilike.%${searchTerm.split(' ').join('%')}%`
-    ]
-
-    // Use the first (most specific) search pattern
-    dbQuery = dbQuery.or(searchQueries[0])
+    if (words.length === 1) {
+      // Single word: search in title or artist
+      dbQuery = dbQuery.or(`title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%`)
+    } else if (words.length === 2) {
+      // Two words: try exact phrase OR cross-field matching (word1 in title, word2 in artist OR vice versa)
+      const [word1, word2] = words
+      const searchPattern = `or(title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%,and(title.ilike.%${word1}%,artist.ilike.%${word2}%),and(title.ilike.%${word2}%,artist.ilike.%${word1}%))`
+      dbQuery = dbQuery.or(searchPattern)
+    } else {
+      // Multiple words: try exact phrase match first, then all-words-must-appear approach
+      const allWordsPattern = words.map(word => `or(title.ilike.%${word}%,artist.ilike.%${word}%)`).join(',')
+      const searchPattern = `or(title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%,and(${allWordsPattern}))`
+      dbQuery = dbQuery.or(searchPattern)
+    }
   }
 
   // Apply filters
@@ -133,16 +143,20 @@ export async function searchAlbumsForAgent(
     const result = await searchAlbums(supabase, {
       query,
       limit,
-      page: 1
+      page: 1,
+      includeRemoved: true // Agent searches should see removed albums
     })
 
     if (result.albums.length === 0) {
       return `No albums found matching "${query}". Try searching for individual words like the artist name or part of the album title.`
     }
 
-    const results = result.albums.map(album => 
-      `"${album.title}" by ${album.artist} (${album.year})\n  Database ID: ${album.id}\n  Featured: ${album.featured ? 'Yes' : 'No'}`
-    ).join('\n\n')
+    const results = result.albums.map(album => {
+      const status = album.removed ? 'REMOVED (previously owned)' : 'In Collection'
+      const featuredStatus = album.removed ? 'N/A' : (album.featured ? 'Yes' : 'No')
+      
+      return `"${album.title}" by ${album.artist} (${album.year})\n  Database ID: ${album.id}\n  Status: ${status}\n  Featured: ${featuredStatus}`
+    }).join('\n\n')
     
     return `Found ${result.albums.length} album(s):\n\n${results}\n\nTo feature/unfeature an album, use the Database ID shown above.`
   } catch (error) {

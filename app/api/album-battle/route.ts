@@ -29,11 +29,12 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.OPENAI_API_KEY
     })
 
-    // Get all albums from collection
+    // Get all albums from collection (exclude removed albums)
     const supabase = createClient()
     const { data: allAlbums, error } = await supabase
       .from('albums')
       .select('*')
+      .eq('removed', false)
     
     // Sort albums by artist (ignoring articles)
     const albums = allAlbums ? sortAlbumsByArtist(allAlbums) : []

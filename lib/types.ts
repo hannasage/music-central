@@ -42,6 +42,7 @@ export interface Album {
   streaming_links: StreamingLinks
   tracks?: Track[]
   featured: boolean
+  removed: boolean
   created_at: string
   updated_at: string
 }

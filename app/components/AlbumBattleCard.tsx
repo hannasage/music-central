@@ -90,7 +90,7 @@ export default function AlbumBattleCard({
               {primaryGenre && (
                 <>
                   <span>•</span>
-                  <span className="truncate">{primaryGenre}</span>
+                  <span className="truncate">{primaryGenre.toLowerCase()}</span>
                 </>
               )}
             </div>

@@ -132,7 +132,8 @@ class VinylImporter {
         cover_art_url: album.artwork_url,
         streaming_links: {},
         tracks: undefined,
-        featured: false // Default to not featured
+        featured: false,
+        removed: false // Default to not removed
       }
 
       // Enrich with Spotify data

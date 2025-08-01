@@ -39,10 +39,11 @@ export default function SearchFiltersComponent({
       const supabase = createClientSideClient()
       
       try {
-        // Fetch all albums to get unique genres and vibes
+        // Fetch all albums to get unique genres and vibes (only active albums)
         const { data: albums, error } = await supabase
           .from('albums')
           .select('genres, personal_vibes')
+          .eq('removed', false)
         
         if (error) {
           console.error('Error fetching filter options:', error)
@@ -214,7 +215,7 @@ export default function SearchFiltersComponent({
                       className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
                     />
                     <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                      {genre}
+                      {genre.toLowerCase()}
                     </span>
                   </label>
                 ))
@@ -309,7 +310,7 @@ export default function SearchFiltersComponent({
                       className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
                     />
                     <span className="text-sm text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200">
-                      {vibe}
+                      {vibe.toLowerCase()}
                     </span>
                   </label>
                 ))
