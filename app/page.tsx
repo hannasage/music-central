@@ -126,10 +126,10 @@ function Footer() {
         
         <div className="border-t border-zinc-800/50 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-zinc-400 text-sm">
-            © 2025 Music Central. Powered by Spotify & Supabase.
+            © 2025 Music Central. Powered by Spotify & AI.
           </p>
           <p className="text-zinc-500 text-xs mt-2 sm:mt-0">
-            Built with Next.js & TypeScript
+            Built using modern AI practices & cutting-edge technology
           </p>
         </div>
       </div>
