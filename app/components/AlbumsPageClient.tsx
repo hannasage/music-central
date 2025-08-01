@@ -27,10 +27,7 @@ export default function AlbumsPageClient({
 }: AlbumsPageClientProps) {
   const [albums, setAlbums] = useState<Album[]>(initialAlbums)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
-    // Default to list view on mobile, grid on desktop
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      return 'list'
-    }
+    // Default to grid view on both mobile and desktop
     return 'grid'
   })
   const [isLoading, setIsLoading] = useState(false)
