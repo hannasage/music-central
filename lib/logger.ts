@@ -1,4 +1,6 @@
 
+import { logStorageService } from './services/log-storage.service'
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 interface LogEntry {
@@ -68,6 +70,20 @@ class Logger {
       if (entry.level === 'error' || entry.level === 'warn') {
         console[entry.level](fullMessage, entry.context || '', entry.error || '')
       }
+    }
+
+    // Store warn and error logs in database (async, non-blocking)
+    if (entry.level === 'warn' || entry.level === 'error') {
+      logStorageService.storeLog({
+        timestamp: entry.timestamp,
+        level: entry.level,
+        message: entry.message,
+        context: entry.context,
+        error: entry.error
+      }).catch(error => {
+        // Don't let database errors break the application
+        console.error('Failed to store log in database:', error)
+      })
     }
   }
 
