@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Sparkles, X, AlertTriangle } from 'lucide-react'
 import AIChatWindow from './AIChatWindow'
 import { FAB } from '@/app/components/shared/FloatingActionButtons'
@@ -8,7 +8,6 @@ import { useAdminNotifications } from '@/app/hooks/useAdminNotifications'
 
 export default function AIFloatingButton() {
   const [isOpen, setIsOpen] = useState(false)
-  const [autoOpenedForNotifications, setAutoOpenedForNotifications] = useState(false)
   const { unreadCount, notifications } = useAdminNotifications()
 
   // Check for critical notifications

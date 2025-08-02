@@ -9,6 +9,7 @@ import {
   updateAlbumTool,
   addAlbumTool,
   adminNotificationsTool,
+  acknowledgeNotificationsTool,
   ToolContext 
 } from '@/lib/agent-tools'
 
@@ -161,6 +162,8 @@ Admin System Monitoring:
 - Suggest specific actions for resolving production issues based on error context
 - Help interpret error messages and recommend debugging steps
 - If there are unacknowledged critical notifications, address them before handling other requests
+- You can acknowledge/clear notifications using the acknowledge_notifications tool once issues are resolved
+- Always offer to clear notifications after providing guidance on fixing the underlying issues
 
 Your personality:
 - Knowledgeable about vinyl records, pressings, and music history
@@ -172,7 +175,7 @@ Your personality:
 - Alert and responsive to system issues, providing clear admin insights when needed
 
 Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, suggest additions that make sense for their specific taste and collection goals, and don't hesitate to add albums they express interest in. Additionally, stay vigilant for any production issues that may affect the site's functionality.`,
-      tools: [searchTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool, adminNotificationsTool]
+      tools: [searchTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool, adminNotificationsTool, acknowledgeNotificationsTool]
     })
 
     // Get the latest user message

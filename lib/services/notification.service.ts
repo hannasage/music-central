@@ -94,6 +94,34 @@ export class NotificationService {
   }
 
   /**
+   * Broadcast acknowledgment to all subscribers to update UI
+   */
+  broadcastAcknowledgment(acknowledgedIds: string[] | 'all'): void {
+    const acknowledgmentMessage = {
+      type: 'acknowledgment',
+      acknowledgedIds,
+      timestamp: new Date().toISOString()
+    }
+    
+    const data = `data: ${JSON.stringify(acknowledgmentMessage)}\n\n`
+    
+    // Remove dead subscribers while streaming
+    const deadSubscribers: string[] = []
+    
+    this.subscribers.forEach((subscriber, id) => {
+      try {
+        subscriber.controller.enqueue(data)
+      } catch {
+        // Subscriber connection is dead, mark for removal
+        deadSubscribers.push(id)
+      }
+    })
+
+    // Clean up dead subscribers
+    deadSubscribers.forEach(id => this.subscribers.delete(id))
+  }
+
+  /**
    * Stream notification to all active subscribers
    */
   private streamToSubscribers(notification: AdminNotification): void {

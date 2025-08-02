@@ -201,6 +201,43 @@ export function useAdminNotifications(): UseAdminNotificationsReturn {
               return
             }
 
+            // Handle acknowledgment message
+            if (data.type === 'acknowledgment') {
+              console.log('Acknowledgment received:', data)
+              setState(prev => {
+                if (data.acknowledgedIds === 'all') {
+                  // Mark all notifications as acknowledged
+                  return {
+                    ...prev,
+                    notifications: prev.notifications.map(n => ({ ...n, acknowledged: true })),
+                    unreadCount: 0,
+                    lastUpdate: new Date()
+                  }
+                } else if (Array.isArray(data.acknowledgedIds)) {
+                  // Mark specific notifications as acknowledged
+                  const acknowledgedSet = new Set(data.acknowledgedIds)
+                  let newUnreadCount = prev.unreadCount
+                  
+                  const updatedNotifications = prev.notifications.map(n => {
+                    if (acknowledgedSet.has(n.id) && !n.acknowledged) {
+                      newUnreadCount--
+                      return { ...n, acknowledged: true }
+                    }
+                    return n
+                  })
+                  
+                  return {
+                    ...prev,
+                    notifications: updatedNotifications,
+                    unreadCount: Math.max(0, newUnreadCount),
+                    lastUpdate: new Date()
+                  }
+                }
+                return prev
+              })
+              return
+            }
+
             // Handle new notification
             const newNotification = data as AdminNotification
             console.log('New notification received:', newNotification)
