@@ -75,34 +75,50 @@ const AICuratorCard = React.memo(function AICuratorCard({
   // Helper function to render streaming links based on preference
   const renderStreamingLinks = (size: 'sm' | 'md' = 'md', isMobile = false) => {
     if (preferredService && preferredService !== 'all') {
-      // Show only preferred service
+      // Show full button with label for single service preference
       const serviceData = getStreamingServiceData(preferredService)
+      const serviceLabels: Record<StreamingService, string> = {
+        spotify: 'Spotify',
+        apple_music: 'Apple Music', 
+        youtube_music: 'YouTube'
+      }
+      
       return (
         <a
           href={serviceData.url}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${isMobile ? 'p-2' : 'p-1.5'} ${serviceData.className} rounded-md transition-colors duration-200`}
+          className={`
+            inline-flex items-center space-x-2 px-3 py-2 rounded-lg font-medium text-white
+            transition-all duration-200 shadow-md hover:shadow-lg
+            ${serviceData.className}
+          `}
           title={serviceData.title}
           onClick={(e) => e.stopPropagation()}
         >
           <StreamingIcon service={preferredService} size={size} />
+          <span className="text-sm">{serviceLabels[preferredService]}</span>
         </a>
       )
     }
 
     if (!preferredService) {
-      // Show YouTube search as default when no preference set
+      // Show YouTube search as default when no preference set (full button)
       return (
         <a
           href={generateYouTubeSearchUrl(album)}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${isMobile ? 'p-2' : 'p-1.5'} bg-red-500 hover:bg-red-400 rounded-md transition-colors duration-200`}
+          className={`
+            inline-flex items-center space-x-2 px-3 py-2 rounded-lg font-medium text-white
+            transition-all duration-200 shadow-md hover:shadow-lg
+            bg-red-500 hover:bg-red-400
+          `}
           title="Search on YouTube"
           onClick={(e) => e.stopPropagation()}
         >
           <StreamingIcon service="youtube_music" size={size} />
+          <span className="text-sm">YouTube</span>
         </a>
       )
     }
@@ -200,8 +216,8 @@ const AICuratorCard = React.memo(function AICuratorCard({
             </div>
             
             {/* Streaming Links - Moved below song info */}
-            <div className="flex items-center space-x-2 mt-2">
-              {renderStreamingLinks('md', true)}
+            <div className="flex items-center justify-start mt-2">
+              {renderStreamingLinks('sm', true)}
             </div>
           </div>
         </div>
@@ -289,7 +305,7 @@ const AICuratorCard = React.memo(function AICuratorCard({
                 <span className="text-xs font-medium">Listen</span>
               </div>
               
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center justify-end">
                 {renderStreamingLinks('sm', false)}
               </div>
             </div>

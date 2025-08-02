@@ -69,13 +69,13 @@ export default function StreamingLinksComponent({ album, showLabels = true, clas
 
   // Helper function to render a single service
   const renderSingleService = (service: StreamingService, url: string, copyKey: string) => (
-    <div className="flex flex-col space-y-3">
+    <div className="flex flex-col space-y-4">
       <StreamingButton
         service={service}
         url={url}
-        showLabel={showLabels}
+        showLabel={true}
         size="lg"
-        className="text-lg py-4 shadow-xl"
+        className="text-lg py-4 shadow-xl justify-center"
       />
       {showLabels && (
         <div className="flex items-center justify-center space-x-4">
@@ -103,13 +103,13 @@ export default function StreamingLinksComponent({ album, showLabels = true, clas
 
   // Helper function to render YouTube search as default
   const renderYouTubeDefault = () => (
-    <div className="flex flex-col space-y-3">
+    <div className="flex flex-col space-y-4">
       <StreamingButton
         service="youtube_music"
         url={generateYouTubeSearchUrl(album)}
-        showLabel={showLabels}
+        showLabel={true}
         size="lg"
-        className="text-lg py-4 shadow-xl"
+        className="text-lg py-4 shadow-xl justify-center"
       />
       {showLabels && (
         <div className="flex items-center justify-center space-x-4">
