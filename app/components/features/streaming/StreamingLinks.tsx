@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Album, StreamingLinks } from '@/lib/types'
 import { Copy, Check, Share2 } from 'lucide-react'
-import { StreamingButton, IconButton } from '@/app/components/ui'
+import { StreamingButton, IconButton } from '../../ui'
 
 interface StreamingLinksProps {
   album: Album

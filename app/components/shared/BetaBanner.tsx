@@ -26,14 +26,17 @@ export default function BetaBanner({ className = '' }: BetaBannerProps) {
           </div>
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
-              <h3 className="font-semibold text-yellow-300">AI Curator - Beta Feature</h3>
+              <h3 className="font-semibold text-yellow-300">AI Curator - Beta v0.2.0</h3>
               <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-300 text-xs font-medium rounded-full border border-yellow-500/30">
                 BETA
               </span>
             </div>
-            <p className="text-zinc-300 text-sm leading-relaxed">
-              This feature is currently in beta testing. You may experience slower performance and a less polished interface while we optimize the experience. Thank you for your patience!
+            <p className="text-zinc-300 text-sm leading-relaxed mb-2">
+              This feature is currently in beta testing. You may experience slower performance and a less polished interface while we optimize the experience.
             </p>
+            <div className="text-zinc-400 text-xs">
+              <strong className="text-zinc-300">New in v0.2.0:</strong> Enhanced music data charts with expand/collapse functionality to view all your genre and vibe preferences.
+            </div>
           </div>
         </div>
       </div>

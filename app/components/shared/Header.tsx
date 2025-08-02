@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { Search, Menu, X, Disc3, Sparkles, LogOut } from 'lucide-react'
 import { createClientSideClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
-import RandomButton from './RandomButton'
+import RandomButton from '../ui/buttons/RandomButton'
 import type { User } from '@supabase/supabase-js'
 
 export default function Header() {

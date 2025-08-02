@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Brain, Zap, Music, TrendingUp, RotateCcw } from 'lucide-react'
-import ConfirmationModal from './ConfirmationModal'
+import ConfirmationModal from '../../ui/feedback/ConfirmationModal'
 
 interface PreferenceInsight {
   summary: string

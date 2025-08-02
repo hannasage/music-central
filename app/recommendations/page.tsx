@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import AICuratorInterface from '@/app/components/AICuratorInterface'
-import Header from '@/app/components/Header'
-import BetaBanner from '@/app/components/BetaBanner'
+import AICuratorInterface from '@/app/components/features/ai-curator/AICuratorInterface'
+import Header from '@/app/components/shared/Header'
+import BetaBanner from '@/app/components/shared/BetaBanner'
 
 export const metadata: Metadata = {
   title: "AI Curator - Discover Your Next Favorite Album | Hanna's Record Collection",

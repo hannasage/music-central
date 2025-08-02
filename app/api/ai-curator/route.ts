@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'get_pair') {
-      const pair = await getAlbumPairWithAI(albums, history, round, openai)
+      const pair = await getBattlePair(albums, history, round, openai)
       const insights = history.length > 0 ? await analyzePreferencesWithAI(history, openai) : []
       
       return NextResponse.json({
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function getAlbumPairWithAI(
+async function getBattlePair(
   albums: Album[], 
   history: BattleChoice[], 
   round: number,
@@ -122,14 +122,14 @@ async function getAlbumPairWithAI(
 
   if (round === 1 || history.length === 0) {
     // First round: Use AI to select strategically opposing albums
-    return await selectFirstPairWithAI(availableAlbums, openai)
+    return await selectStrategicOpenerPair(availableAlbums, openai)
   }
 
   // Use AI to select the most interesting album pair
-  return await selectPairWithAI(availableAlbums, history, openai)
+  return await selectPersonalizedPair(availableAlbums, history, openai)
 }
 
-async function selectPairWithAI(
+async function selectPersonalizedPair(
   availableAlbums: Album[], 
   history: BattleChoice[],
   openai: OpenAI
@@ -214,7 +214,7 @@ Respond with ONLY a JSON object:
   }
 }
 
-async function selectFirstPairWithAI(
+async function selectStrategicOpenerPair(
   availableAlbums: Album[], 
   openai: OpenAI
 ): Promise<[Album, Album]> {

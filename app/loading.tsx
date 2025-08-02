@@ -1,4 +1,4 @@
-import { PageHeaderSkeleton, ContentSkeleton } from './components/LoadingSkeleton'
+import { PageHeaderSkeleton, ContentSkeleton } from './components/ui/feedback/LoadingSkeleton'
 
 export default function Loading() {
   return (
