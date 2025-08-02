@@ -10,11 +10,11 @@ interface CuratorChartsProps {
 }
 
 export default function CuratorCharts({ battleHistory, className = '' }: CuratorChartsProps) {
-  if (battleHistory.length === 0) return null
-
-  // State for expanding/collapsing charts
+  // State for expanding/collapsing charts (must be before any conditional returns)
   const [showAllGenres, setShowAllGenres] = useState(false)
   const [showAllVibes, setShowAllVibes] = useState(false)
+
+  if (battleHistory.length === 0) return null
   
   // Constants for limiting displayed items
   const INITIAL_DISPLAY_COUNT = 3
