@@ -1,7 +1,5 @@
-import { AdminNotification } from './notification.service'
-
-export type ErrorType = AdminNotification['type']
-export type ErrorSeverity = AdminNotification['severity']
+export type ErrorType = 'database_connection' | 'spotify_api_limit' | 'auth_failure' | 'memory_leak' | 'deployment_failure' | 'api_error' | 'ai_agent' | 'unknown'
+export type ErrorSeverity = 'critical' | 'warning' | 'info'
 
 /**
  * Service for analyzing errors and providing intelligent classification
