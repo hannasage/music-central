@@ -14,8 +14,6 @@ export default function AboutThisPair({ albumPair, reasoning, className = '' }: 
     return null
   }
 
-  const [album1, album2] = albumPair
-
   return (
     <div className={`bg-zinc-900/40 backdrop-blur-sm rounded-xl p-4 border border-zinc-800/40 ${className}`}>
       <div className="flex items-start space-x-3">
