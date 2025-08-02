@@ -50,6 +50,14 @@ const TEST_ERRORS = [
  * - severity: override severity level (optional) 
  */
 export const POST = withTestAuth(async (request) => {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json(
+      { error: 'Test errors endpoint is only available in development environment' },
+      { status: 403 }
+    )
+  }
+
   try {
     const url = new URL(request.url)
     const errorType = url.searchParams.get('errorType')
@@ -130,6 +138,14 @@ export const POST = withTestAuth(async (request) => {
  * List available test error types
  */
 export const GET = withTestAuth(async () => {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return NextResponse.json(
+      { error: 'Test errors endpoint is only available in development environment' },
+      { status: 403 }
+    )
+  }
+
   try {
     return NextResponse.json({
       availableErrorTypes: TEST_ERRORS.map(error => ({
