@@ -125,7 +125,7 @@ const AICuratorCard = React.memo(function AICuratorCard({
 
     // Show all services ('all' preference)
     return (
-      <>
+      <div className={`flex items-center ${isMobile ? 'space-x-2' : 'space-x-1'}`}>
         <a
           href={streamingLinks.spotify}
           target="_blank"
@@ -146,19 +146,17 @@ const AICuratorCard = React.memo(function AICuratorCard({
         >
           <StreamingIcon service="apple_music" size={size} />
         </a>
-        {!isMobile && (
-          <a
-            href={streamingLinks.youtube_music}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1.5 bg-red-500 hover:bg-red-400 rounded-md transition-colors duration-200"
-            title="Listen on YouTube Music"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <StreamingIcon service="youtube_music" size={size} />
-          </a>
-        )}
-      </>
+        <a
+          href={streamingLinks.youtube_music}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${isMobile ? 'p-2' : 'p-1.5'} bg-red-500 hover:bg-red-400 rounded-md transition-colors duration-200`}
+          title="Listen on YouTube Music"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <StreamingIcon service="youtube_music" size={size} />
+        </a>
+      </div>
     )
   }
 
