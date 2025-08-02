@@ -1,3 +1,5 @@
+import { notificationService, NotificationService, AdminNotification } from './services/notification.service'
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 interface LogEntry {
@@ -98,6 +100,82 @@ class Logger {
   // Convenience method for database errors  
   dbError(operation: string, error: Error, context?: Record<string, unknown>): void {
     this.error(`Database Error: ${operation}`, { ...context, operation }, error)
+    this.notifyAdmin(error, 'critical', { operation, type: 'database' })
+  }
+
+  /**
+   * Notify admin of critical production errors
+   * Only triggers in production and for server-side errors
+   */
+  notifyAdmin(
+    error: Error, 
+    severity: AdminNotification['severity'] = 'warning',
+    context?: Record<string, unknown>
+  ): void {
+    // Only notify in production and on server-side (allow in dev for testing)
+    if (this.isClient) {
+      return
+    }
+    
+    // Allow notifications in development for testing
+    const allowDevNotifications = process.env.ALLOW_DEV_NOTIFICATIONS === 'true'
+    if (this.isDevelopment && !allowDevNotifications) {
+      return
+    }
+
+    // Determine error type and details
+    const errorType = NotificationService.classifyError(error, context?.endpoint as string)
+    const userImpact = NotificationService.assessUserImpact(errorType, severity)
+    const suggestedAction = NotificationService.suggestAction(errorType, severity)
+
+    // Create notification
+    notificationService.addNotification({
+      type: errorType,
+      severity,
+      message: error.message,
+      context,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      },
+      endpoint: context?.endpoint as string,
+      userImpact,
+      suggestedAction
+    })
+  }
+
+  /**
+   * Enhanced API error logging with admin notification
+   */
+  criticalApiError(endpoint: string, error: Error, context?: Record<string, unknown>): void {
+    this.error(`Critical API Error: ${endpoint}`, { ...context, endpoint }, error)
+    this.notifyAdmin(error, 'critical', { ...context, endpoint, type: 'api' })
+  }
+
+  /**
+   * Enhanced database error logging with admin notification
+   */
+  criticalDbError(operation: string, error: Error, context?: Record<string, unknown>): void {
+    this.error(`Critical Database Error: ${operation}`, { ...context, operation }, error)
+    this.notifyAdmin(error, 'critical', { ...context, operation, type: 'database' })
+  }
+
+  /**
+   * Authentication error with admin notification
+   */
+  authError(error: Error, context?: Record<string, unknown>): void {
+    this.error('Authentication Error', context, error)
+    this.notifyAdmin(error, 'critical', { ...context, type: 'auth' })
+  }
+
+  /**
+   * External service error with admin notification
+   */
+  serviceError(service: string, error: Error, context?: Record<string, unknown>): void {
+    this.error(`External Service Error: ${service}`, { ...context, service }, error)
+    const severity = service.toLowerCase().includes('spotify') ? 'warning' : 'critical'
+    this.notifyAdmin(error, severity, { ...context, service, type: 'external_service' })
   }
 }
 

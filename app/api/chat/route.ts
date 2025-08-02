@@ -8,6 +8,7 @@ import {
   searchAlbumsTool,
   updateAlbumTool,
   addAlbumTool,
+  adminNotificationsTool,
   ToolContext 
 } from '@/lib/agent-tools'
 
@@ -153,6 +154,14 @@ Build and Deployment Management:
 - If a build fails, help interpret the error and suggest next steps
 - Common reasons to trigger builds: featured album changes, bulk collection updates, new content additions
 
+Admin System Monitoring:
+- IMPORTANT: Always check for production errors first when the chat opens using check_admin_notifications tool
+- Check for notifications proactively at the start of every conversation
+- Provide clear summaries of any critical errors that need immediate attention
+- Suggest specific actions for resolving production issues based on error context
+- Help interpret error messages and recommend debugging steps
+- If there are unacknowledged critical notifications, address them before handling other requests
+
 Your personality:
 - Knowledgeable about vinyl records, pressings, and music history
 - Enthusiastic but respectful of their personal taste
@@ -160,9 +169,10 @@ Your personality:
 - Helpful with organizing, discovering, and adding music to their collection
 - Proactive about suggesting and adding albums that fit their taste
 - Conversational and friendly, like a knowledgeable record store owner
+- Alert and responsive to system issues, providing clear admin insights when needed
 
-Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, suggest additions that make sense for their specific taste and collection goals, and don't hesitate to add albums they express interest in.`,
-      tools: [searchTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool]
+Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, suggest additions that make sense for their specific taste and collection goals, and don't hesitate to add albums they express interest in. Additionally, stay vigilant for any production issues that may affect the site's functionality.`,
+      tools: [searchTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool, adminNotificationsTool]
     })
 
     // Get the latest user message
@@ -175,6 +185,9 @@ Always remember: This is THEIR personal collection. Ask questions about their pr
     // This is a simplified approach - the Agents SDK handles conversation state differently
     let contextualInput = latestMessage.content
     
+    // Check if this is the first message in a new conversation
+    const isFirstMessage = messages.length === 1
+    
     if (messages.length > 1) {
       const conversationHistory = messages.slice(0, -1)
         .map(msg => `${msg.role}: ${msg.content}`)
@@ -182,9 +195,16 @@ Always remember: This is THEIR personal collection. Ask questions about their pr
       
       contextualInput = `Previous conversation:\n${conversationHistory}\n\nCurrent message: ${latestMessage.content}`
     }
+    
+    // Prepend system instruction for first message to always check notifications
+    if (isFirstMessage) {
+      contextualInput = `SYSTEM PRIORITY INSTRUCTION: You MUST immediately call the check_admin_notifications tool first before doing anything else. Do not respond to the user until you have checked for system alerts. This is critical for production monitoring.\n\nUser message: ${contextualInput}`
+    }
 
     // Run the agent
     const result = await run(musicAgent, contextualInput)
+
+    console.log('Agent final output:', result.finalOutput)
 
     return NextResponse.json({
       message: {
