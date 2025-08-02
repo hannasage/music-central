@@ -38,6 +38,12 @@ const TEST_ERRORS = [
     error: new Error('Vercel build pipeline failed: TypeScript compilation errors'),
     severity: 'critical' as const,
     context: { buildId: 'build_67890', failedStep: 'typescript_check', deploymentId: 'dpl_abc123' }
+  },
+  {
+    type: 'ai_agent',
+    error: new Error('AI selected invalid album IDs'),
+    severity: 'warning' as const,
+    context: { operation: 'album_selection', availableAlbumsCount: 50, endpoint: '/api/ai-curator' }
   }
 ]
 
@@ -105,6 +111,9 @@ export const POST = withTestAuth(async (request) => {
       case 'deployment_failure':
         logger.criticalApiError('/api/admin/test-errors', selectedError.error, testContext)
         break
+      case 'ai_agent':
+        logger.agentError('test_ai_operation', selectedError.error, testContext)
+        break
       default:
         // Generic notification for memory_leak and other types
         logger.notifyAdmin(selectedError.error, severity, testContext)
@@ -120,7 +129,7 @@ export const POST = withTestAuth(async (request) => {
         severity,
         errorMessage: selectedError.error.message,
         timestamp: new Date().toISOString(),
-        willTriggerNotification: process.env.NODE_ENV === 'production'
+        willTriggerNotification: process.env.ALLOW_DEV_NOTIFICATIONS === 'true'
       }
     })
 

@@ -11,8 +11,13 @@ export class ErrorAnalyzer {
   /**
    * Classify error type based on error message and context
    */
-  static classifyError(error: Error, endpoint?: string): ErrorType {
+  static classifyError(error: Error, endpoint?: string, context?: Record<string, unknown>): ErrorType {
     const message = error.message.toLowerCase()
+    
+    // Check context for explicit AI agent error type
+    if (context?.type === 'ai_agent') {
+      return 'ai_agent'
+    }
     
     if (message.includes('supabase') || message.includes('database') || message.includes('connection')) {
       return 'database_connection'
@@ -71,6 +76,11 @@ export class ErrorAnalyzer {
         warning: 'Some API endpoints experiencing issues',
         info: 'Minor API performance impact'
       },
+      ai_agent: {
+        critical: 'AI-powered features completely unavailable',
+        warning: 'AI features using fallback logic, reduced quality',
+        info: 'Minor AI performance degradation'
+      },
       unknown: {
         critical: 'Unknown error with potential severe impact',
         warning: 'Unknown error with moderate impact',
@@ -116,6 +126,11 @@ export class ErrorAnalyzer {
         warning: 'Review API logs and error patterns',
         info: 'Monitor API performance metrics'
       },
+      ai_agent: {
+        critical: 'Check AI service availability and API keys immediately',
+        warning: 'Review AI agent prompts and fallback logic',
+        info: 'Monitor AI response quality and performance'
+      },
       unknown: {
         critical: 'Investigate error details and check application logs immediately',
         warning: 'Review error context and monitor for related issues',
@@ -158,6 +173,7 @@ export class ErrorAnalyzer {
       memory_leak: 'warning',
       deployment_failure: 'critical',
       api_error: 'warning',
+      ai_agent: 'warning',
       unknown: 'warning'
     }
 
@@ -177,7 +193,7 @@ export class ErrorAnalyzer {
     userImpact: string
     suggestedAction: string
   } {
-    const type = this.classifyError(error, endpoint)
+    const type = this.classifyError(error, endpoint, context)
     const severity = this.determineSeverity(type, context)
     const userImpact = this.assessUserImpact(type, severity)
     const suggestedAction = this.suggestAction(type, severity)

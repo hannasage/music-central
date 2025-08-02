@@ -1,7 +1,7 @@
 export interface AdminNotification {
   id: string
   timestamp: string
-  type: 'database_connection' | 'spotify_api_limit' | 'auth_failure' | 'memory_leak' | 'deployment_failure' | 'api_error' | 'unknown'
+  type: 'database_connection' | 'spotify_api_limit' | 'auth_failure' | 'memory_leak' | 'deployment_failure' | 'api_error' | 'ai_agent' | 'unknown'
   severity: 'critical' | 'warning' | 'info'
   message: string
   context?: Record<string, unknown>

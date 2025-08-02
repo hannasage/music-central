@@ -179,6 +179,15 @@ class Logger {
     const severity = service.toLowerCase().includes('spotify') ? 'warning' : 'critical'
     this.notifyAdmin(error, severity, { ...context, service, type: 'external_service' })
   }
+
+  /**
+   * AI agent error with medium-severity admin notification
+   * These are technical failures that have graceful fallbacks
+   */
+  agentError(operation: string, error: Error, context?: Record<string, unknown>): void {
+    this.error(`AI Agent Error: ${operation}`, { ...context, operation }, error)
+    this.notifyAdmin(error, 'warning', { ...context, operation, type: 'ai_agent' })
+  }
 }
 
 // Export singleton instance
