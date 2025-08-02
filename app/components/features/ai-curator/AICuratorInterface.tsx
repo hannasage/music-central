@@ -7,6 +7,7 @@ import AICuratorCard from './AICuratorCard'
 import MusicTastePanel from './MusicTastePanel'
 import CuratorSkeleton from './CuratorSkeleton'
 import CuratorCharts from './CuratorCharts'
+import AboutThisPair from './AboutThisPair'
 import { TrendingUp, Music } from 'lucide-react'
 import { useBattleSession, BattleChoice } from '@/app/hooks/useBattleSession'
 
@@ -22,10 +23,12 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
     gameStarted,
     isLoaded,
     currentAlbumPair,
+    pairReasoning,
     addBattleChoice,
     updateInsights,
     updateRound,
     updateCurrentAlbumPair,
+    updatePairReasoning,
     startOver
   } = useBattleSession()
   
@@ -52,12 +55,13 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
       
       const data = await response.json()
       updateCurrentAlbumPair([data.album1, data.album2])
+      updatePairReasoning(data.pairReasoning || null)
     } catch (error) {
       console.error('Error loading battle:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [battleHistory, round, updateCurrentAlbumPair])
+  }, [battleHistory, round, updateCurrentAlbumPair, updatePairReasoning])
 
   const handleChoice = async (chosenAlbum: Album) => {
     if (!albumPair || isTransitioning) return
@@ -103,6 +107,7 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
     setTimeout(() => {
       updateRound(round + 1)
       updateCurrentAlbumPair(null)
+      updatePairReasoning(null)
       setChosenAlbum(null)
       setSelectedMobileAlbum(null)
       setIsTransitioning(false)
@@ -213,6 +218,20 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
                   </button>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* About This Pair Panel - Desktop */}
+          {albumPair && pairReasoning && (
+            <div className="hidden md:block max-w-4xl mx-auto">
+              <AboutThisPair albumPair={albumPair} reasoning={pairReasoning} />
+            </div>
+          )}
+
+          {/* About This Pair Panel - Mobile */}
+          {albumPair && pairReasoning && (
+            <div className="md:hidden">
+              <AboutThisPair albumPair={albumPair} reasoning={pairReasoning} />
             </div>
           )}
 

@@ -54,13 +54,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'get_pair') {
-      const pair = await getBattlePair(albums, history, round, openai)
+      const { pair, reasoning } = await getBattlePair(albums, history, round, openai)
       const insights = history.length > 0 ? await analyzePreferencesWithAI(history, openai) : []
       
       return NextResponse.json({
         album1: pair[0],
         album2: pair[1],
-        insights
+        insights,
+        pairReasoning: reasoning
       })
     }
 
@@ -93,7 +94,7 @@ async function getBattlePair(
   history: BattleChoice[], 
   round: number,
   openai: OpenAI
-): Promise<[Album, Album]> {
+): Promise<{ pair: [Album, Album], reasoning: string }> {
   // Get list of albums already shown
   const shownAlbumIds = new Set<string>()
   history.forEach(choice => {
@@ -133,7 +134,7 @@ async function selectPersonalizedPair(
   availableAlbums: Album[], 
   history: BattleChoice[],
   openai: OpenAI
-): Promise<[Album, Album]> {
+): Promise<{ pair: [Album, Album], reasoning: string }> {
   const chosenAlbums = history.map(choice => choice.chosenAlbum)
   const rejectedAlbums = history.map(choice => choice.rejectedAlbum)
 
@@ -177,7 +178,8 @@ Respond with ONLY a JSON object:
 {
   "album1_id": "album_id_here",
   "album2_id": "album_id_here",
-  "reasoning": "Brief explanation of why this pairing will reveal your preferences"
+  "reasoning": "Brief explanation of why this pairing will reveal your preferences",
+  "user_reasoning": "One sentence explaining this pairing in context of the user's taste and these albums' characteristics - written for the user to read"
 }`
 
   try {
@@ -204,20 +206,26 @@ Respond with ONLY a JSON object:
     }
 
     console.log('AI Album Selection Reasoning:', selection.reasoning)
-    return [album1, album2]
+    return { 
+      pair: [album1, album2], 
+      reasoning: selection.user_reasoning || selection.reasoning 
+    }
 
   } catch (error) {
     console.error('Error with AI album selection:', error)
     // Fallback to random selection
     const shuffled = [...availableAlbums].sort(() => Math.random() - 0.5)
-    return [shuffled[0], shuffled[1]]
+    return { 
+      pair: [shuffled[0], shuffled[1]], 
+      reasoning: `These two albums offer an interesting contrast to help us learn your preferences.` 
+    }
   }
 }
 
 async function selectStrategicOpenerPair(
   availableAlbums: Album[], 
   openai: OpenAI
-): Promise<[Album, Album]> {
+): Promise<{ pair: [Album, Album], reasoning: string }> {
   // Create simplified album descriptions for AI and shuffle them
   const shuffledAlbums = [...availableAlbums].sort(() => Math.random() - 0.5)
   const albumDescriptions = shuffledAlbums.map(album => ({
@@ -248,7 +256,8 @@ Respond with ONLY a JSON object:
 {
   "album1_id": "album_id_here",
   "album2_id": "album_id_here",
-  "reasoning": "Brief explanation of why this first pairing will kickstart effective preference learning"
+  "reasoning": "Brief explanation of why this first pairing will kickstart effective preference learning",
+  "user_reasoning": "One sentence explaining this pairing to help the user understand why these two albums were chosen - written for the user to read"
 }`
 
   try {
@@ -275,12 +284,19 @@ Respond with ONLY a JSON object:
     }
 
     console.log('AI First Pair Selection Reasoning:', selection.reasoning)
-    return [album1, album2]
+    return { 
+      pair: [album1, album2], 
+      reasoning: selection.user_reasoning || selection.reasoning 
+    }
 
   } catch (error) {
     console.error('Error with AI first pair selection:', error)
     // Fallback to strategic manual selection
-    return selectStrategicFirstPair(availableAlbums)
+    const fallbackPair = selectStrategicFirstPair(availableAlbums)
+    return { 
+      pair: fallbackPair, 
+      reasoning: `These albums represent different musical styles to help us discover your preferences.` 
+    }
   }
 }
 
