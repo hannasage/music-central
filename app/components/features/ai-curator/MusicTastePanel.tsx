@@ -36,14 +36,14 @@ export default function MusicTastePanel({ insights, round, className = '', onSta
           <Brain className="w-4 h-4 text-purple-400" />
           <h3 className="font-semibold text-white text-sm">Your Music Taste</h3>
         </div>
-        {onStartOver && round > 1 && (
+        {onStartOver && (
           <button
             onClick={handleStartOverClick}
             className="flex items-center space-x-1 px-2 py-1 text-xs text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-700/50 rounded-md transition-colors duration-200"
-            title="Start Over (clears all saved progress)"
+            title={round === 1 ? "Get a new first pair" : "Start Over (clears all saved progress)"}
           >
             <RotateCcw className="w-3 h-3" />
-            <span>Start Over</span>
+            <span>{round === 1 ? "New First Pair" : "Start Over"}</span>
           </button>
         )}
       </div>
@@ -133,11 +133,14 @@ export default function MusicTastePanel({ insights, round, className = '', onSta
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleConfirmStartOver}
-        title="Start Over?"
-        message="This will permanently delete all your battle history, insights, and progress. This action cannot be undone."
-        confirmText="Yes, Start Over"
-        cancelText="Keep My Progress"
-        isDangerous={true}
+        title={round === 1 ? "Get New First Pair?" : "Start Over?"}
+        message={round === 1 
+          ? "This will give you a different starting album pair to choose from."
+          : "This will permanently delete all your battle history, insights, and progress. This action cannot be undone."
+        }
+        confirmText={round === 1 ? "Get New Pair" : "Yes, Start Over"}
+        cancelText={round === 1 ? "Keep Current Pair" : "Keep My Progress"}
+        isDangerous={round > 1}
       />
     </div>
   )

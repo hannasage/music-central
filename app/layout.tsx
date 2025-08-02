@@ -3,6 +3,10 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AccessibilityProvider from "./components/shared/AccessibilityProvider";
 import AuthenticatedAIChat from "./components/features/ai-curator/AuthenticatedAIChat";
+import { StreamingPreferenceProvider } from "./contexts/StreamingPreferenceContext";
+import StreamingPreferenceModal from "./components/features/streaming/StreamingPreferenceModal";
+import FloatingActionButtons from "./components/shared/FloatingActionButtons";
+import StreamingSettingsFAB from "./components/features/streaming/StreamingSettingsFAB";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,9 +43,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AccessibilityProvider />
-        {children}
-        <AuthenticatedAIChat />
+        <StreamingPreferenceProvider>
+          <AccessibilityProvider />
+          {children}
+          <FloatingActionButtons>
+            <AuthenticatedAIChat />
+            <StreamingSettingsFAB />
+          </FloatingActionButtons>
+          <StreamingPreferenceModal />
+        </StreamingPreferenceProvider>
       </body>
     </html>
   );

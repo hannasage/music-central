@@ -3,8 +3,9 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import { Album } from '@/lib/types'
-import { StreamingIcon } from '../../ui/icons'
+import { StreamingIcon, StreamingService } from '../../ui/icons'
 import { Music, Play } from 'lucide-react'
+import { useStreamingPreference } from '@/app/contexts/StreamingPreferenceContext'
 
 interface AICuratorCardProps {
   album: Album
@@ -24,6 +25,7 @@ const AICuratorCard = React.memo(function AICuratorCard({
   mobile = false
 }: AICuratorCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
+  const { preferredService } = useStreamingPreference()
 
   const generateStreamingLinks = (album: Album) => {
     const searchQuery = encodeURIComponent(`${album.artist} ${album.title}`)
@@ -41,6 +43,122 @@ const AICuratorCard = React.memo(function AICuratorCard({
 
   const streamingLinks = generateStreamingLinks(album)
   const primaryGenre = album.genres && album.genres.length > 0 ? album.genres[0] : ''
+
+  // Generate YouTube search URL as default fallback
+  const generateYouTubeSearchUrl = (album: Album): string => {
+    const searchQuery = encodeURIComponent(`${album.artist} ${album.title}`)
+    return `https://www.youtube.com/results?search_query=${searchQuery}`
+  }
+
+  // Helper function to get the appropriate streaming service data
+  const getStreamingServiceData = (service: StreamingService) => {
+    const serviceConfigs = {
+      spotify: {
+        url: streamingLinks.spotify,
+        className: "bg-green-500 hover:bg-green-400",
+        title: "Listen on Spotify"
+      },
+      apple_music: {
+        url: streamingLinks.apple_music,
+        className: "bg-gradient-to-r from-[#fa5a72] to-[#fa253e] hover:from-[#fb6b7f] hover:to-[#fb3651]",
+        title: "Listen on Apple Music"
+      },
+      youtube_music: {
+        url: streamingLinks.youtube_music,
+        className: "bg-red-500 hover:bg-red-400",
+        title: "Listen on YouTube Music"
+      }
+    }
+    return serviceConfigs[service]
+  }
+
+  // Helper function to render streaming links based on preference
+  const renderStreamingLinks = (size: 'sm' | 'md' = 'md', isMobile = false) => {
+    if (preferredService && preferredService !== 'all') {
+      // Show full button with label for single service preference
+      const serviceData = getStreamingServiceData(preferredService)
+      const serviceLabels: Record<StreamingService, string> = {
+        spotify: 'Spotify',
+        apple_music: 'Apple Music', 
+        youtube_music: 'YouTube'
+      }
+      
+      return (
+        <a
+          href={serviceData.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`
+            inline-flex items-center space-x-2 px-3 py-2 rounded-lg font-medium text-white
+            transition-all duration-200 shadow-md hover:shadow-lg
+            ${serviceData.className}
+          `}
+          title={serviceData.title}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <StreamingIcon service={preferredService} size={size} />
+          <span className="text-sm">{serviceLabels[preferredService]}</span>
+        </a>
+      )
+    }
+
+    if (!preferredService) {
+      // Show YouTube search as default when no preference set (full button)
+      return (
+        <a
+          href={generateYouTubeSearchUrl(album)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`
+            inline-flex items-center space-x-2 px-3 py-2 rounded-lg font-medium text-white
+            transition-all duration-200 shadow-md hover:shadow-lg
+            bg-red-500 hover:bg-red-400
+          `}
+          title="Search on YouTube"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <StreamingIcon service="youtube_music" size={size} />
+          <span className="text-sm">YouTube</span>
+        </a>
+      )
+    }
+
+    // Show all services ('all' preference)
+    return (
+      <div className={`flex items-center ${isMobile ? 'space-x-2' : 'space-x-1'}`}>
+        <a
+          href={streamingLinks.spotify}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${isMobile ? 'p-2' : 'p-1.5'} bg-green-500 hover:bg-green-400 rounded-md transition-colors duration-200`}
+          title="Listen on Spotify"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <StreamingIcon service="spotify" size={size} />
+        </a>
+        <a
+          href={streamingLinks.apple_music}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${isMobile ? 'p-2' : 'p-1.5'} bg-gradient-to-r from-[#fa5a72] to-[#fa253e] hover:from-[#fb6b7f] hover:to-[#fb3651] rounded-md transition-colors duration-200`}
+          title="Listen on Apple Music"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <StreamingIcon service="apple_music" size={size} />
+        </a>
+        <a
+          href={streamingLinks.youtube_music}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${isMobile ? 'p-2' : 'p-1.5'} bg-red-500 hover:bg-red-400 rounded-md transition-colors duration-200`}
+          title="Listen on YouTube Music"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <StreamingIcon service="youtube_music" size={size} />
+        </a>
+      </div>
+    )
+  }
 
   // Mobile layout - horizontal card with checkbox
   if (mobile) {
@@ -96,27 +214,8 @@ const AICuratorCard = React.memo(function AICuratorCard({
             </div>
             
             {/* Streaming Links - Moved below song info */}
-            <div className="flex items-center space-x-2 mt-2">
-              <a
-                href={streamingLinks.spotify}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-green-500 hover:bg-green-400 rounded-md transition-colors duration-200"
-                title="Listen on Spotify"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <StreamingIcon service="spotify" size="md" />
-              </a>
-              <a
-                href={streamingLinks.apple_music}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-gradient-to-r from-[#fa5a72] to-[#fa253e] hover:from-[#fb6b7f] hover:to-[#fb3651] rounded-md transition-colors duration-200"
-                title="Listen on Apple Music"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <StreamingIcon service="apple_music" size="md" />
-              </a>
+            <div className="flex items-center justify-start mt-2">
+              {renderStreamingLinks('sm', true)}
             </div>
           </div>
         </div>
@@ -204,34 +303,8 @@ const AICuratorCard = React.memo(function AICuratorCard({
                 <span className="text-xs font-medium">Listen</span>
               </div>
               
-              <div className="flex items-center space-x-1">
-                <a
-                  href={streamingLinks.spotify}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 bg-green-500 hover:bg-green-400 rounded-md transition-colors duration-200"
-                  title="Listen on Spotify"
-                >
-                  <StreamingIcon service="spotify" size="sm" />
-                </a>
-                <a
-                  href={streamingLinks.apple_music}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 bg-gradient-to-r from-[#fa5a72] to-[#fa253e] hover:from-[#fb6b7f] hover:to-[#fb3651] rounded-md transition-colors duration-200"
-                  title="Listen on Apple Music"
-                >
-                  <StreamingIcon service="apple_music" size="sm" />
-                </a>
-                <a
-                  href={streamingLinks.youtube_music}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-1.5 bg-red-500 hover:bg-red-400 rounded-md transition-colors duration-200"
-                  title="Listen on YouTube Music"
-                >
-                  <StreamingIcon service="youtube_music" size="sm" />
-                </a>
+              <div className="flex items-center justify-end">
+                {renderStreamingLinks('sm', false)}
               </div>
             </div>
           </div>

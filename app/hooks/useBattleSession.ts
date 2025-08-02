@@ -21,6 +21,7 @@ interface BattleState {
   round: number
   gameStarted: boolean
   currentAlbumPair: [Album, Album] | null
+  pairReasoning: string | null
 }
 
 const STORAGE_KEY = 'music-central-battle-session'
@@ -30,7 +31,8 @@ const defaultState: BattleState = {
   insights: [],
   round: 1,
   gameStarted: true,
-  currentAlbumPair: null
+  currentAlbumPair: null,
+  pairReasoning: null
 }
 
 export function useBattleSession() {
@@ -92,6 +94,10 @@ export function useBattleSession() {
     setSessionState(prev => ({ ...prev, currentAlbumPair: albumPair }))
   }, [])
 
+  const updatePairReasoning = useCallback((reasoning: string | null) => {
+    setSessionState(prev => ({ ...prev, pairReasoning: reasoning }))
+  }, [])
+
   const startOver = useCallback(() => {
     setSessionState(defaultState)
     localStorage.removeItem(STORAGE_KEY)
@@ -105,6 +111,7 @@ export function useBattleSession() {
     updateRound,
     addBattleChoice,
     updateCurrentAlbumPair,
+    updatePairReasoning,
     startOver
   }
 }
