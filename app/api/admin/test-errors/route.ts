@@ -53,7 +53,10 @@ const TEST_ERRORS = [
  * Trigger a random error to test the notification system
  * Query params:
  * - errorType: specific error type to trigger (optional)
- * - severity: override severity level (optional) 
+ * - severity: override severity level (optional)
+ * Headers:
+ * - X-Custom-Error: custom error message to trigger (optional)
+ * - X-Error-Type: error type when using custom error (optional, defaults to 'ai_agent')
  */
 export const POST = withTestAuth(async (request) => {
   // Only allow in development environment
@@ -69,20 +72,50 @@ export const POST = withTestAuth(async (request) => {
     const errorType = url.searchParams.get('errorType')
     const severityOverride = url.searchParams.get('severity') as 'critical' | 'warning' | 'info' | null
 
-    // Select error to trigger
+    // Check for custom error headers
+    const customErrorMessage = request.headers.get('X-Custom-Error')
+    const customErrorType = (request.headers.get('X-Error-Type') as 'database_connection' | 'spotify_api_limit' | 'auth_failure' | 'memory_leak' | 'deployment_failure' | 'api_error' | 'ai_agent' | 'unknown') || 'ai_agent'
+
+    // Determine selected error
     let selectedError
-    if (errorType) {
-      selectedError = TEST_ERRORS.find(e => e.type === errorType)
-      if (!selectedError) {
+
+    // Handle custom error from header
+    if (customErrorMessage) {
+      // Validate custom error type
+      const validTypes = ['database_connection', 'spotify_api_limit', 'auth_failure', 'memory_leak', 'deployment_failure', 'api_error', 'ai_agent', 'unknown']
+      if (!validTypes.includes(customErrorType)) {
         return NextResponse.json(
-          { error: `Invalid errorType. Available types: ${TEST_ERRORS.map(e => e.type).join(', ')}` },
+          { error: `Invalid X-Error-Type header. Valid types: ${validTypes.join(', ')}` },
           { status: 400 }
         )
       }
+
+      selectedError = {
+        type: customErrorType,
+        error: new Error(customErrorMessage),
+        severity: severityOverride || 'warning' as const,
+        context: { 
+          operation: 'custom_test_error', 
+          endpoint: '/api/admin/test-errors',
+          triggeredVia: 'custom_header'
+        }
+      }
     } else {
-      // Random selection
-      const randomIndex = Math.floor(Math.random() * TEST_ERRORS.length)
-      selectedError = TEST_ERRORS[randomIndex]
+      // Select error to trigger from predefined list
+      if (errorType) {
+        const foundError = TEST_ERRORS.find(e => e.type === errorType)
+        if (!foundError) {
+          return NextResponse.json(
+            { error: `Invalid errorType. Available types: ${TEST_ERRORS.map(e => e.type).join(', ')}` },
+            { status: 400 }
+          )
+        }
+        selectedError = foundError
+      } else {
+        // Random selection
+        const randomIndex = Math.floor(Math.random() * TEST_ERRORS.length)
+        selectedError = TEST_ERRORS[randomIndex]
+      }
     }
 
     // Apply severity override if provided
@@ -123,13 +156,15 @@ export const POST = withTestAuth(async (request) => {
     // Return test result
     return NextResponse.json({
       success: true,
-      message: 'Test error triggered successfully',
+      message: customErrorMessage ? 'Custom test error triggered successfully' : 'Test error triggered successfully',
       testDetails: {
         errorType: selectedError.type,
         severity,
         errorMessage: selectedError.error.message,
         timestamp: new Date().toISOString(),
-        willTriggerNotification: process.env.ALLOW_DEV_NOTIFICATIONS === 'true'
+        willTriggerNotification: process.env.ALLOW_DEV_NOTIFICATIONS === 'true',
+        triggeredVia: customErrorMessage ? 'custom_header' : 'predefined_error',
+        customError: !!customErrorMessage
       }
     })
 
@@ -169,10 +204,16 @@ export const GET = withTestAuth(async () => {
           errorType: 'Optional - specific error type to trigger',
           severity: 'Optional - override severity (critical, warning, info)'
         },
+        headers: {
+          'X-Custom-Error': 'Optional - custom error message to trigger',
+          'X-Error-Type': 'Optional - error type for custom error (defaults to ai_agent)'
+        },
         examples: [
           'POST /api/admin/test-errors (random error)',
           'POST /api/admin/test-errors?errorType=database_connection',
-          'POST /api/admin/test-errors?errorType=spotify_api_limit&severity=critical'
+          'POST /api/admin/test-errors?errorType=spotify_api_limit&severity=critical',
+          'POST /api/admin/test-errors -H "X-Custom-Error: AI selected invalid album IDs"',
+          'POST /api/admin/test-errors -H "X-Custom-Error: Custom failure" -H "X-Error-Type: api_error"'
         ]
       }
     })
