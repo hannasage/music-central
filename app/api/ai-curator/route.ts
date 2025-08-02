@@ -141,14 +141,15 @@ async function selectPersonalizedPair(
 
   // Create simplified album descriptions for AI and shuffle them
   const shuffledAlbums = [...availableAlbums].sort(() => Math.random() - 0.5)
-  const albumDescriptions = shuffledAlbums.map(album => ({
+  const limitedAlbums = shuffledAlbums.slice(0, 50) // Limit to prevent token overflow
+  const albumDescriptions = limitedAlbums.map(album => ({
     id: album.id,
     artist: album.artist,
     title: album.title,
     year: album.year,
     genres: album.genres,
     vibes: album.personal_vibes || []
-  })).slice(0, 50) // Limit to prevent token overflow
+  }))
 
   const chosenDescriptions = chosenAlbums.map(album => 
     `"${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.personal_vibes?.length ? `, Vibes: ${album.personal_vibes.join(', ')}` : ''}`
@@ -199,11 +200,11 @@ Respond with ONLY a JSON object:
 
     const selection = JSON.parse(content)
     
-    const album1 = availableAlbums.find(a => a.id === selection.album1_id)
-    const album2 = availableAlbums.find(a => a.id === selection.album2_id)
+    const album1 = limitedAlbums.find(a => a.id === selection.album1_id)
+    const album2 = limitedAlbums.find(a => a.id === selection.album2_id)
 
     if (!album1 || !album2) {
-      throw new Error('AI selected invalid album IDs')
+      throw new Error(`AI selected invalid album IDs: ${selection.album1_id}${!album1 ? ' (not found)' : ''}, ${selection.album2_id}${!album2 ? ' (not found)' : ''}`)
     }
 
     console.log('AI Album Selection Reasoning:', selection.reasoning)
@@ -218,8 +219,8 @@ Respond with ONLY a JSON object:
       operation: 'selectPersonalizedPair',
       availableAlbumsCount: availableAlbums.length 
     })
-    // Fallback to random selection
-    const shuffled = [...availableAlbums].sort(() => Math.random() - 0.5)
+    // Fallback to random selection from limited albums
+    const shuffled = [...limitedAlbums].sort(() => Math.random() - 0.5)
     return { 
       pair: [shuffled[0], shuffled[1]], 
       reasoning: `These two albums offer an interesting contrast to help us learn your preferences.` 
@@ -233,14 +234,15 @@ async function selectStrategicOpenerPair(
 ): Promise<{ pair: [Album, Album], reasoning: string }> {
   // Create simplified album descriptions for AI and shuffle them
   const shuffledAlbums = [...availableAlbums].sort(() => Math.random() - 0.5)
-  const albumDescriptions = shuffledAlbums.map(album => ({
+  const limitedAlbums = shuffledAlbums.slice(0, 50) // Limit to prevent token overflow
+  const albumDescriptions = limitedAlbums.map(album => ({
     id: album.id,
     artist: album.artist,
     title: album.title,
     year: album.year,
     genres: album.genres,
     vibes: album.personal_vibes || []
-  })).slice(0, 50) // Limit to prevent token overflow
+  }))
 
   const systemPrompt = `You are an expert music curator selecting the perfect first pair of albums for a music preference discovery game.
 
@@ -281,11 +283,11 @@ Respond with ONLY a JSON object:
 
     const selection = JSON.parse(content)
     
-    const album1 = availableAlbums.find(a => a.id === selection.album1_id)
-    const album2 = availableAlbums.find(a => a.id === selection.album2_id)
+    const album1 = limitedAlbums.find(a => a.id === selection.album1_id)
+    const album2 = limitedAlbums.find(a => a.id === selection.album2_id)
 
     if (!album1 || !album2) {
-      throw new Error('AI selected invalid album IDs')
+      throw new Error(`AI selected invalid album IDs: ${selection.album1_id}${!album1 ? ' (not found)' : ''}, ${selection.album2_id}${!album2 ? ' (not found)' : ''}`)
     }
 
     console.log('AI First Pair Selection Reasoning:', selection.reasoning)
