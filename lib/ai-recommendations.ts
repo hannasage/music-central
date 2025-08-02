@@ -1,6 +1,7 @@
 import OpenAI from 'openai'
 import { Album } from './types'
 import { RecommendationEngine } from './recommendation-engine'
+import { logger } from './logger'
 
 export interface ChatMessage {
   id: string
@@ -102,7 +103,7 @@ Only include fields that are clearly mentioned or implied. Return valid JSON onl
 
       return JSON.parse(content)
     } catch (error) {
-      console.error('Error parsing preferences:', error)
+      logger.agentError('parse user preferences', error as Error, { userMessage })
       // Fallback: simple keyword extraction
       return {
         genres: [],
@@ -164,7 +165,7 @@ Only include fields that are clearly mentioned or implied. Return valid JSON onl
       }
 
     } catch (error) {
-      console.error('Error generating recommendations:', error)
+      logger.agentError('generate AI recommendations', error as Error, { userMessage, albumCount: this.albums.length })
       
       // Fallback to random albums
       const fallbackAlbums = this.recommendationEngine.getDiscoveryAlbums(3)
@@ -224,7 +225,7 @@ Write a warm, conversational response (2-3 sentences) explaining why these album
         "Based on your preferences, I found some great matches in your collection!"
 
     } catch (error) {
-      console.error('Error generating conversational response:', error)
+      logger.agentError('generate conversational response', error as Error, { albumCount: this.albums.length })
       return "I found some albums in your collection that should match what you're looking for!"
     }
   }

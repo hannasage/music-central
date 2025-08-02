@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
 import { Album } from '@/lib/types'
 import { sortAlbumsByArtist } from '@/lib/sorting'
+import { logger } from '@/lib/logger'
 import OpenAI from 'openai'
 
 interface BattleChoice {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     const albums = allAlbums ? sortAlbumsByArtist(allAlbums) : []
 
     if (error) {
-      console.error('Error fetching albums:', error)
+      logger.dbError('fetch albums for AI curator', error, { action: 'get_pair' })
       return NextResponse.json(
         { error: 'Failed to fetch album collection' },
         { status: 500 }
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
-    console.error('AI Curator API error:', error)
+    logger.criticalApiError('/api/ai-curator', error as Error, { action: 'ai_curator_request' })
     
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -140,14 +141,15 @@ async function selectPersonalizedPair(
 
   // Create simplified album descriptions for AI and shuffle them
   const shuffledAlbums = [...availableAlbums].sort(() => Math.random() - 0.5)
-  const albumDescriptions = shuffledAlbums.map(album => ({
+  const limitedAlbums = shuffledAlbums.slice(0, 50) // Limit to prevent token overflow
+  const albumDescriptions = limitedAlbums.map(album => ({
     id: album.id,
     artist: album.artist,
     title: album.title,
     year: album.year,
     genres: album.genres,
     vibes: album.personal_vibes || []
-  })).slice(0, 50) // Limit to prevent token overflow
+  }))
 
   const chosenDescriptions = chosenAlbums.map(album => 
     `"${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.personal_vibes?.length ? `, Vibes: ${album.personal_vibes.join(', ')}` : ''}`
@@ -198,11 +200,11 @@ Respond with ONLY a JSON object:
 
     const selection = JSON.parse(content)
     
-    const album1 = availableAlbums.find(a => a.id === selection.album1_id)
-    const album2 = availableAlbums.find(a => a.id === selection.album2_id)
+    const album1 = limitedAlbums.find(a => a.id === selection.album1_id)
+    const album2 = limitedAlbums.find(a => a.id === selection.album2_id)
 
     if (!album1 || !album2) {
-      throw new Error('AI selected invalid album IDs')
+      throw new Error(`AI selected invalid album IDs: ${selection.album1_id}${!album1 ? ' (not found)' : ''}, ${selection.album2_id}${!album2 ? ' (not found)' : ''}`)
     }
 
     console.log('AI Album Selection Reasoning:', selection.reasoning)
@@ -212,9 +214,13 @@ Respond with ONLY a JSON object:
     }
 
   } catch (error) {
-    console.error('Error with AI album selection:', error)
-    // Fallback to random selection
-    const shuffled = [...availableAlbums].sort(() => Math.random() - 0.5)
+    logger.agentError('AI album selection', error as Error, { 
+      endpoint: '/api/ai-curator',
+      operation: 'selectPersonalizedPair',
+      availableAlbumsCount: availableAlbums.length 
+    })
+    // Fallback to random selection from limited albums
+    const shuffled = [...limitedAlbums].sort(() => Math.random() - 0.5)
     return { 
       pair: [shuffled[0], shuffled[1]], 
       reasoning: `These two albums offer an interesting contrast to help us learn your preferences.` 
@@ -228,14 +234,15 @@ async function selectStrategicOpenerPair(
 ): Promise<{ pair: [Album, Album], reasoning: string }> {
   // Create simplified album descriptions for AI and shuffle them
   const shuffledAlbums = [...availableAlbums].sort(() => Math.random() - 0.5)
-  const albumDescriptions = shuffledAlbums.map(album => ({
+  const limitedAlbums = shuffledAlbums.slice(0, 50) // Limit to prevent token overflow
+  const albumDescriptions = limitedAlbums.map(album => ({
     id: album.id,
     artist: album.artist,
     title: album.title,
     year: album.year,
     genres: album.genres,
     vibes: album.personal_vibes || []
-  })).slice(0, 50) // Limit to prevent token overflow
+  }))
 
   const systemPrompt = `You are an expert music curator selecting the perfect first pair of albums for a music preference discovery game.
 
@@ -276,11 +283,11 @@ Respond with ONLY a JSON object:
 
     const selection = JSON.parse(content)
     
-    const album1 = availableAlbums.find(a => a.id === selection.album1_id)
-    const album2 = availableAlbums.find(a => a.id === selection.album2_id)
+    const album1 = limitedAlbums.find(a => a.id === selection.album1_id)
+    const album2 = limitedAlbums.find(a => a.id === selection.album2_id)
 
     if (!album1 || !album2) {
-      throw new Error('AI selected invalid album IDs')
+      throw new Error(`AI selected invalid album IDs: ${selection.album1_id}${!album1 ? ' (not found)' : ''}, ${selection.album2_id}${!album2 ? ' (not found)' : ''}`)
     }
 
     console.log('AI First Pair Selection Reasoning:', selection.reasoning)
@@ -290,7 +297,11 @@ Respond with ONLY a JSON object:
     }
 
   } catch (error) {
-    console.error('Error with AI first pair selection:', error)
+    logger.agentError('AI first pair selection', error as Error, { 
+      endpoint: '/api/ai-curator',
+      operation: 'selectStrategicOpenerPair',
+      availableAlbumsCount: availableAlbums.length 
+    })
     // Fallback to strategic manual selection
     const fallbackPair = selectStrategicFirstPair(availableAlbums)
     return { 
@@ -411,7 +422,11 @@ Respond with ONLY a JSON object:
     throw new Error('Invalid insight format')
 
   } catch (error) {
-    console.error('Error with AI preference analysis:', error)
+    logger.agentError('AI preference analysis', error as Error, { 
+      endpoint: '/api/ai-curator',
+      operation: 'analyzePreferencesWithAI',
+      historyLength: history.length 
+    })
     
     // Fallback to basic analysis
     return getFallbackInsights(history)
