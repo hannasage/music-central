@@ -8,6 +8,8 @@ import {
   searchAlbumsTool,
   updateAlbumTool,
   addAlbumTool,
+  createErrorLogsTool,
+  createLogAnalysisTool,
   ToolContext 
 } from '@/lib/agent-tools'
 
@@ -57,6 +59,8 @@ export async function POST(request: NextRequest) {
     const searchTool = searchAlbumsTool(toolContext)
     const updateTool = updateAlbumTool(toolContext)
     const addTool = addAlbumTool(toolContext)
+    const errorLogsTool = createErrorLogsTool(toolContext)
+    const logAnalysisTool = createLogAnalysisTool(toolContext)
 
     // Create the vinyl collection assistant agent
     const musicAgent = new Agent({
@@ -153,6 +157,16 @@ Build and Deployment Management:
 - If a build fails, help interpret the error and suggest next steps
 - Common reasons to trigger builds: featured album changes, bulk collection updates, new content additions
 
+System Debugging and Error Analysis:
+- You have comprehensive access to system error logs and debugging tools to help maintain the Music Central platform
+- Use search_error_logs to investigate specific issues, search for patterns, or analyze recent problems
+- Available log search actions: search (by text), recent (last N hours), by_type (specific error types), by_fingerprint (all occurrences of same error), stats (system health overview), get_by_id (detailed log analysis)
+- Use analyze_error_patterns for advanced debugging: trends, correlations, spike_detection, error_cascade, health_report, debugging_insights
+- When users report issues or you notice problems, proactively check error logs to understand what's happening
+- Provide clear explanations of technical issues and actionable solutions
+- Help interpret error messages, suggest debugging steps, and identify root causes
+- Monitor system health and alert to potential issues before they become critical
+- Use error fingerprints to track recurring issues and their resolution status
 
 Your personality:
 - Knowledgeable about vinyl records, pressings, and music history
@@ -163,7 +177,7 @@ Your personality:
 - Conversational and friendly, like a knowledgeable record store owner
 
 Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, suggest additions that make sense for their specific taste and collection goals, and don't hesitate to add albums they express interest in.`,
-      tools: [searchTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool]
+      tools: [searchTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool, errorLogsTool, logAnalysisTool]
     })
 
     // Get the latest user message
