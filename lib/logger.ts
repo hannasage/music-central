@@ -1,4 +1,5 @@
-import { notificationService, NotificationService, AdminNotification } from './services/notification.service'
+import { notificationService, AdminNotification } from './services/notification.service'
+import { ErrorAnalyzer } from './services/error-analyzer.service'
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -123,15 +124,16 @@ class Logger {
       return
     }
 
-    // Determine error type and details
-    const errorType = NotificationService.classifyError(error, context?.endpoint as string)
-    const userImpact = NotificationService.assessUserImpact(errorType, severity)
-    const suggestedAction = NotificationService.suggestAction(errorType, severity)
+    // Analyze error for comprehensive details
+    const analysis = ErrorAnalyzer.analyzeError(error, context?.endpoint as string, context)
+    
+    // Use provided severity or fallback to analyzed severity
+    const finalSeverity = severity !== 'warning' ? severity : analysis.severity
 
     // Create notification
     notificationService.addNotification({
-      type: errorType,
-      severity,
+      type: analysis.type,
+      severity: finalSeverity,
       message: error.message,
       context,
       error: {
@@ -140,8 +142,8 @@ class Logger {
         stack: error.stack
       },
       endpoint: context?.endpoint as string,
-      userImpact,
-      suggestedAction
+      userImpact: analysis.userImpact,
+      suggestedAction: analysis.suggestedAction
     })
   }
 

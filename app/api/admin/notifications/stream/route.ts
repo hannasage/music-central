@@ -1,38 +1,12 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { notificationService } from '@/lib/services/notification.service'
+import { withAdminAuthGet } from '@/lib/api/admin-auth'
 
 /**
  * Server-Sent Events endpoint for real-time admin notifications
  * Streams critical production errors to authenticated admin users
  */
-export async function GET() {
+export const GET = withAdminAuthGet(async () => {
   try {
-    // Check authentication
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return new Response('Unauthorized', { status: 401 })
-    }
-
     // Create SSE stream directly
     const stream = new ReadableStream({
       start(controller) {
@@ -85,4 +59,4 @@ export async function GET() {
     console.error('Admin notification stream error:', error)
     return new Response('Internal Server Error', { status: 500 })
   }
-}
+})

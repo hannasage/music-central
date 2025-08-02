@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 import { notificationService } from '@/lib/services/notification.service'
+import { withAdminAuthGet, withAdminAuthPost } from '@/lib/api/admin-auth'
 
 /**
  * Admin notification management API
@@ -10,40 +9,12 @@ import { notificationService } from '@/lib/services/notification.service'
  * DELETE: Clear acknowledged notifications
  */
 
-async function checkAuthentication() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
-}
-
 /**
  * GET /api/admin/notifications
  * Retrieve all pending notifications and counts
  */
-export async function GET() {
+export const GET = withAdminAuthGet(async () => {
   try {
-    const user = await checkAuthentication()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const pendingNotifications = notificationService.getPendingNotifications()
     const unacknowledgedCount = notificationService.getUnacknowledgedCount()
 
@@ -60,20 +31,15 @@ export async function GET() {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * POST /api/admin/notifications
  * Mark notifications as acknowledged
  * Body: { notificationIds?: string[], acknowledgeAll?: boolean }
  */
-export async function POST(request: NextRequest) {
+export const POST = withAdminAuthPost(async (request) => {
   try {
-    const user = await checkAuthentication()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const body = await request.json()
     const { notificationIds, acknowledgeAll } = body
 
@@ -113,19 +79,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * DELETE /api/admin/notifications
  * Clear acknowledged notifications
  */
-export async function DELETE() {
+export const DELETE = withAdminAuthGet(async () => {
   try {
-    const user = await checkAuthentication()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const clearedCount = notificationService.clearAcknowledgedNotifications()
 
     return NextResponse.json({
@@ -141,4 +102,4 @@ export async function DELETE() {
       { status: 500 }
     )
   }
-}
+})

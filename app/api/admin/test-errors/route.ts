@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
+import { withTestAuth } from '@/lib/api/admin-auth'
 
 /**
  * Test Error Endpoint - Generates random errors for testing the notification system
@@ -42,28 +41,6 @@ const TEST_ERRORS = [
   }
 ]
 
-async function checkAuthentication() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-  return user
-}
 
 /**
  * POST /api/admin/test-errors
@@ -72,16 +49,8 @@ async function checkAuthentication() {
  * - errorType: specific error type to trigger (optional)
  * - severity: override severity level (optional) 
  */
-export async function POST(request: NextRequest) {
+export const POST = withTestAuth(async (request) => {
   try {
-    // Only allow in development or with admin authentication
-    if (process.env.NODE_ENV === 'production') {
-      const user = await checkAuthentication()
-      if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-    }
-
     const url = new URL(request.url)
     const errorType = url.searchParams.get('errorType')
     const severityOverride = url.searchParams.get('severity') as 'critical' | 'warning' | 'info' | null
@@ -154,22 +123,14 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 /**
  * GET /api/admin/test-errors
  * List available test error types
  */
-export async function GET() {
+export const GET = withTestAuth(async () => {
   try {
-    // Only allow in development or with admin authentication
-    if (process.env.NODE_ENV === 'production') {
-      const user = await checkAuthentication()
-      if (!user) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      }
-    }
-
     return NextResponse.json({
       availableErrorTypes: TEST_ERRORS.map(error => ({
         type: error.type,
@@ -198,4 +159,4 @@ export async function GET() {
       { status: 500 }
     )
   }
-}
+})
