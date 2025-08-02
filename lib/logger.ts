@@ -156,14 +156,6 @@ class Logger {
   }
 
   /**
-   * Enhanced database error logging with admin notification
-   */
-  criticalDbError(operation: string, error: Error, context?: Record<string, unknown>): void {
-    this.error(`Critical Database Error: ${operation}`, { ...context, operation }, error)
-    this.notifyAdmin(error, 'critical', { ...context, operation, type: 'database' })
-  }
-
-  /**
    * Authentication error with admin notification
    */
   authError(error: Error, context?: Record<string, unknown>): void {

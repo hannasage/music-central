@@ -133,7 +133,7 @@ export const POST = withTestAuth(async (request) => {
     // Trigger the appropriate logging method based on error type
     switch (selectedError.type) {
       case 'database_connection':
-        logger.criticalDbError('test_operation', selectedError.error, testContext)
+        logger.dbError('test_operation', selectedError.error, testContext)
         break
       case 'spotify_api_limit':
         logger.serviceError('spotify', selectedError.error, testContext)
@@ -169,7 +169,7 @@ export const POST = withTestAuth(async (request) => {
     })
 
   } catch (error) {
-    console.error('Test error endpoint failed:', error)
+    logger.criticalApiError('/api/admin/test-errors', error as Error, { operation: 'trigger_test_error' })
     return NextResponse.json(
       { error: 'Failed to trigger test error' },
       { status: 500 }
@@ -219,7 +219,7 @@ export const GET = withTestAuth(async () => {
     })
 
   } catch (error) {
-    console.error('Test error endpoint GET failed:', error)
+    logger.criticalApiError('/api/admin/test-errors', error as Error, { operation: 'get_test_error_types' })
     return NextResponse.json(
       { error: 'Failed to get test error types' },
       { status: 500 }

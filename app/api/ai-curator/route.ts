@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const albums = allAlbums ? sortAlbumsByArtist(allAlbums) : []
 
     if (error) {
-      console.error('Error fetching albums:', error)
+      logger.dbError('fetch albums for AI curator', error, { action: 'get_pair' })
       return NextResponse.json(
         { error: 'Failed to fetch album collection' },
         { status: 500 }
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
-    console.error('AI Curator API error:', error)
+    logger.criticalApiError('/api/ai-curator', error as Error, { action: 'ai_curator_request' })
     
     return NextResponse.json(
       { error: 'Internal server error' },
