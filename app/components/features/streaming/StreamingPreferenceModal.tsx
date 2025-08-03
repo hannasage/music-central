@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { StreamingIcon, StreamingService } from '@/app/components/ui/icons/StreamingIcons'
 import { useStreamingPreference } from '@/app/contexts/StreamingPreferenceContext'
+import { trapFocus } from '@/lib/accessibility'
 import { X } from 'lucide-react'
 
 const STREAMING_SERVICES: { 
@@ -33,8 +34,9 @@ const STREAMING_SERVICES: {
 
 export default function StreamingPreferenceModal() {
   const { isModalOpen, setPreferredService, hideModal } = useStreamingPreference()
+  const modalRef = useRef<HTMLDivElement>(null)
 
-  // Handle escape key to close modal
+  // Handle escape key to close modal and focus trapping
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isModalOpen) {
@@ -46,6 +48,16 @@ export default function StreamingPreferenceModal() {
       document.addEventListener('keydown', handleEscape)
       // Prevent body scroll when modal is open
       document.body.style.overflow = 'hidden'
+      
+      // Implement focus trap
+      if (modalRef.current) {
+        const cleanup = trapFocus(modalRef.current)
+        return () => {
+          cleanup()
+          document.removeEventListener('keydown', handleEscape)
+          document.body.style.overflow = ''
+        }
+      }
     }
 
     return () => {
@@ -78,7 +90,10 @@ export default function StreamingPreferenceModal() {
       aria-modal="true"
       aria-labelledby="streaming-modal-title"
     >
-      <div className="relative w-full max-w-lg bg-zinc-900/95 backdrop-blur-sm border border-zinc-800/50 rounded-2xl shadow-2xl">
+      <div 
+        ref={modalRef}
+        className="relative w-full max-w-lg bg-zinc-900/95 backdrop-blur-sm border border-zinc-800/50 rounded-2xl shadow-2xl"
+      >
         {/* Close button */}
         <button
           onClick={hideModal}

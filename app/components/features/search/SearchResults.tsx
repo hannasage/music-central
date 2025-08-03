@@ -165,12 +165,14 @@ const SearchResults = React.memo(function SearchResults({
           <h2 className="text-xl font-semibold text-white">
             {pagination?.total ? (
               <>
-                {pagination.total.toLocaleString()} result{pagination.total !== 1 ? 's' : ''}
-                {query && (
-                  <span className="text-zinc-400 font-normal">
-                    {' '}for &quot;{highlightText(query, query)}&quot;
-                  </span>
-                )}
+                <span aria-live="polite" aria-atomic="true">
+                  {pagination.total.toLocaleString()} result{pagination.total !== 1 ? 's' : ''}
+                  {query && (
+                    <span className="text-zinc-400 font-normal">
+                      {' '}for &quot;{highlightText(query, query)}&quot;
+                    </span>
+                  )}
+                </span>
               </>
             ) : (
               'Search Results'

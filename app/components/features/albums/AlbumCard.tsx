@@ -29,11 +29,14 @@ const AlbumCard = React.memo(function AlbumCard({ album, size = 'medium', layout
   // Horizontal layout
   if (layout === 'horizontal') {
     return (
-      <Link 
-        href={`/albums/${album.id}`}
-        className={`block bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-zinc-700/50 hover:bg-zinc-800/50 transition-all duration-200 group ${className}`}
-      >
-        <div className="flex items-center space-x-4 p-4">
+      <article className={`bg-zinc-900/50 backdrop-blur-sm rounded-lg border border-zinc-800/50 hover:border-zinc-700/50 hover:bg-zinc-800/50 transition-all duration-200 group ${className}`}>
+        <Link 
+          href={`/albums/${album.id}`}
+          className="block"
+          aria-labelledby={`album-title-${album.id}`}
+          aria-describedby={`album-artist-${album.id}`}
+        >
+          <div className="flex items-center space-x-4 p-4">
           {/* Album Artwork */}
           <div className="w-16 h-16 flex-shrink-0 relative rounded overflow-hidden bg-zinc-700">
             {album.cover_art_url ? (
@@ -53,10 +56,10 @@ const AlbumCard = React.memo(function AlbumCard({ album, size = 'medium', layout
 
           {/* Album Info */}
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-white text-base truncate group-hover:text-blue-400 transition-colors duration-200">
+            <h4 id={`album-title-${album.id}`} className="font-semibold text-white text-base truncate group-hover:text-blue-400 transition-colors duration-200">
               {album.title}
             </h4>
-            <p className="text-zinc-400 text-sm truncate">
+            <p id={`album-artist-${album.id}`} className="text-zinc-400 text-sm truncate">
               by {album.artist}
             </p>
             <div className="flex items-center space-x-2 text-xs text-zinc-500 mt-1">
@@ -69,18 +72,22 @@ const AlbumCard = React.memo(function AlbumCard({ album, size = 'medium', layout
               )}
             </div>
           </div>
-        </div>
-      </Link>
+          </div>
+        </Link>
+      </article>
     )
   }
 
   // Vertical layout (default)
   return (
-    <Link 
-      href={`/albums/${album.id}`}
-      className={`group block transition-transform duration-300 hover:scale-105 ${className}`}
-    >
-      <div className="w-full bg-zinc-900/50 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-zinc-800/50 hover:border-zinc-700/50">
+    <article className={`group transition-transform duration-300 hover:scale-105 ${className}`}>
+      <Link 
+        href={`/albums/${album.id}`}
+        className="block"
+        aria-labelledby={`album-title-${album.id}`}
+        aria-describedby={`album-artist-${album.id}`}
+      >
+        <div className="w-full bg-zinc-900/50 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 border border-zinc-800/50 hover:border-zinc-700/50">
         {/* Album Artwork - Edge to Edge Square */}
         <div className={`relative ${artworkSizes[size]} bg-zinc-800/50 overflow-hidden`}>
           {album.cover_art_url ? (
@@ -103,11 +110,11 @@ const AlbumCard = React.memo(function AlbumCard({ album, size = 'medium', layout
 
         {/* Album Info */}
         <div className="p-4 space-y-2">
-          <h3 className={`font-semibold text-white line-clamp-2 group-hover:text-blue-400 transition-colors duration-200 ${textSizeClasses[size]}`}>
+          <h3 id={`album-title-${album.id}`} className={`font-semibold text-white line-clamp-2 group-hover:text-blue-400 transition-colors duration-200 ${textSizeClasses[size]}`}>
             {album.title}
           </h3>
           
-          <p className={`text-zinc-400 line-clamp-1 ${textSizeClasses[size] === 'text-lg' ? 'text-base' : 'text-sm'}`}>
+          <p id={`album-artist-${album.id}`} className={`text-zinc-400 line-clamp-1 ${textSizeClasses[size] === 'text-lg' ? 'text-base' : 'text-sm'}`}>
             {album.artist}
           </p>
           
@@ -120,8 +127,9 @@ const AlbumCard = React.memo(function AlbumCard({ album, size = 'medium', layout
             )}
           </div>
         </div>
-      </div>
-    </Link>
+        </div>
+      </Link>
+    </article>
   )
 })
 

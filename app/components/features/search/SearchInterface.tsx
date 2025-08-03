@@ -214,12 +214,19 @@ export default function SearchInterface({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onFocus={() => query.trim() && setIsOpen(true)}
+            aria-label="Search albums, artists, and songs"
+            aria-expanded={isOpen && showSuggestions && hasContent}
+            aria-autocomplete="list"
+            aria-owns={hasContent ? "search-suggestions" : undefined}
+            aria-activedescendant={selectedIndex >= 0 ? `suggestion-${selectedIndex}` : undefined}
+            role="combobox"
             className="w-full pl-12 pr-12 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
           />
           {query && (
             <button
               type="button"
               onClick={clearSearch}
+              aria-label="Clear search"
               className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-zinc-400 hover:text-white transition-colors duration-200"
             >
               <X className="w-4 h-4" />
@@ -232,6 +239,9 @@ export default function SearchInterface({
       {isOpen && showSuggestions && hasContent && (
         <div
           ref={suggestionsRef}
+          id="search-suggestions"
+          role="listbox"
+          aria-label="Search suggestions"
           className="absolute top-full left-0 right-0 mt-2 bg-zinc-900/95 backdrop-blur-sm border border-zinc-700/50 rounded-xl shadow-2xl z-50 max-h-80 overflow-y-auto"
         >
           {/* Search History */}
@@ -243,6 +253,9 @@ export default function SearchInterface({
               {searchHistory.slice(0, 3).map((item, index) => (
                 <button
                   key={`history-${index}`}
+                  id={`suggestion-${index}`}
+                  role="option"
+                  aria-selected={selectedIndex === index}
                   onClick={() => handleSuggestionClick(item)}
                   className={`w-full flex items-center space-x-3 px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800/50 rounded-lg transition-colors duration-200 ${
                     selectedIndex === index ? 'bg-zinc-800/50' : ''
@@ -266,6 +279,9 @@ export default function SearchInterface({
                 return (
                   <button
                     key={`suggestion-${index}`}
+                    id={`suggestion-${actualIndex}`}
+                    role="option"
+                    aria-selected={selectedIndex === actualIndex}
                     onClick={() => handleSuggestionClick(suggestion)}
                     className={`w-full flex items-center space-x-3 px-3 py-2 text-left text-zinc-300 hover:bg-zinc-800/50 rounded-lg transition-colors duration-200 ${
                       selectedIndex === actualIndex ? 'bg-zinc-800/50' : ''

@@ -59,6 +59,8 @@ export default function AdminLogin() {
                 type="email"
                 autoComplete="email"
                 required
+                aria-describedby={error ? "login-error" : undefined}
+                aria-invalid={error ? "true" : "false"}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={email}
@@ -75,6 +77,8 @@ export default function AdminLogin() {
                 type="password"
                 autoComplete="current-password"
                 required
+                aria-describedby={error ? "login-error" : undefined}
+                aria-invalid={error ? "true" : "false"}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
@@ -84,8 +88,8 @@ export default function AdminLogin() {
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            <div className="rounded-md bg-red-50 p-4" role="alert">
+              <div id="login-error" className="text-sm text-red-700">{error}</div>
             </div>
           )}
 
