@@ -80,6 +80,30 @@ export interface SpotifyArtist {
 }
 
 
+export interface ErrorLog {
+  id: string
+  timestamp: string
+  level: 'warn' | 'error'
+  message: string
+  error_type: string
+  severity: 'critical' | 'warning' | 'info'
+  context: Record<string, unknown>
+  error_details: {
+    name: string
+    message: string
+    stack?: string
+  } | null
+  endpoint: string | null
+  user_impact: string | null
+  suggested_action: string | null
+  fingerprint: string
+  occurrence_count: number
+  first_seen: string
+  last_seen: string
+  created_at: string
+  updated_at: string
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -87,6 +111,11 @@ export type Database = {
         Row: Album
         Insert: Omit<Album, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Album, 'id' | 'created_at'>>
+      }
+      error_logs: {
+        Row: ErrorLog
+        Insert: Omit<ErrorLog, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<ErrorLog, 'id' | 'created_at'>>
       }
     }
   }

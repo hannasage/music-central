@@ -148,8 +148,8 @@ export const POST = withTestAuth(async (request) => {
         logger.agentError('test_ai_operation', selectedError.error, testContext)
         break
       default:
-        // Generic notification for memory_leak and other types
-        logger.notifyAdmin(selectedError.error, severity, testContext)
+        // Generic error logging for memory_leak and other types
+        logger.error(`Test Error: ${selectedError.error.message}`, testContext, selectedError.error)
         break
     }
 
@@ -162,7 +162,7 @@ export const POST = withTestAuth(async (request) => {
         severity,
         errorMessage: selectedError.error.message,
         timestamp: new Date().toISOString(),
-        willTriggerNotification: process.env.ALLOW_DEV_NOTIFICATIONS === 'true',
+        loggedToConsole: true,
         triggeredVia: customErrorMessage ? 'custom_header' : 'predefined_error',
         customError: !!customErrorMessage
       }
