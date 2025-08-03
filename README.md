@@ -84,7 +84,6 @@ music-central/
 │   ├── ai-recommendations.ts     # AI recommendation engine
 │   ├── recommendation-engine.ts  # Core recommendation logic
 │   └── types.ts                  # TypeScript type definitions
-├── scripts/                      # Database and maintenance scripts
 ├── supabase/                     # Database schema and migrations
 │   ├── migrations/               # SQL migration files
 │   └── seed.sql                  # Initial data seeding
@@ -132,11 +131,6 @@ npm run lint            # ESLint 9 with strict TypeScript rules
 npx supabase start      # Local development with real-time subscriptions
 npx supabase db reset   # Schema migrations and data seeding
 npx supabase gen types  # Auto-generated TypeScript types
-
-# Custom Data Pipeline
-npm run export-data     # Export my vinyl collection data
-npm run import-enrich   # AI-powered metadata enhancement
-npm run test-spotify    # Spotify API integration testing
 ```
 
 ## 🌐 Production Deployment

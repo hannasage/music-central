@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { trapFocus } from '@/lib/accessibility'
 
 interface ChatMessage {
   id: string
@@ -27,6 +28,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const chatWindowRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -35,6 +37,14 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Focus trap for chat window
+  useEffect(() => {
+    if (isOpen && chatWindowRef.current) {
+      const cleanup = trapFocus(chatWindowRef.current)
+      return cleanup
+    }
+  }, [isOpen])
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return
@@ -110,13 +120,16 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
       />
       
       {/* Chat Window */}
-      <div className={`
-        fixed bottom-24 right-6 w-96 h-[32rem] bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50
-        transform transition-all duration-300 origin-bottom-right
-        ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}
-        max-md:fixed max-md:inset-4 max-md:w-auto max-md:h-auto max-md:bottom-6 max-md:top-20
-        flex flex-col
-      `}>
+      <div 
+        ref={chatWindowRef}
+        className={`
+          fixed bottom-24 right-6 w-96 h-[32rem] bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50
+          transform transition-all duration-300 origin-bottom-right
+          ${isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'}
+          max-md:fixed max-md:inset-4 max-md:w-auto max-md:h-auto max-md:bottom-6 max-md:top-20
+          flex flex-col
+        `}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-zinc-700">
           <div className="flex items-center space-x-2">
@@ -140,7 +153,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+        <div className="flex-1 p-4 space-y-4 overflow-y-auto" aria-live="polite" aria-label="Chat messages">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -166,7 +179,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           {/* Loading indicator */}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm">
+              <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm" aria-live="polite">
                 <div className="flex items-center space-x-1">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce"></div>
@@ -182,7 +195,7 @@ export default function AIChatWindow({ isOpen, onClose }: AIChatWindowProps) {
           {/* Error message */}
           {error && (
             <div className="flex justify-center">
-              <div className="bg-red-900/20 border border-red-700 rounded-lg px-3 py-2 text-sm text-red-200">
+              <div className="bg-red-900/20 border border-red-700 rounded-lg px-3 py-2 text-sm text-red-200" role="alert" aria-live="assertive">
                 {error}
               </div>
             </div>
