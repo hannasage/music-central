@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
-import { Album } from '@/lib/types'
+import { Album, CuratorCriteria, CollectionMetadata } from '@/lib/types'
 import { sortAlbumsByArtist } from '@/lib/sorting'
 import { logger } from '@/lib/logger'
+import {
+  extractCollectionMetadata,
+  selectAlbumPair,
+  createExclusionSet
+} from '@/lib/curator-criteria'
 import OpenAI from 'openai'
 
 interface BattleChoice {
@@ -55,14 +60,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'get_pair') {
-      const { pair, reasoning } = await getBattlePair(albums, history, round, openai)
+      const { selection, reasoning } = await getBattlePairWithCriteria(albums, history, round, openai)
       const insights = history.length > 0 ? await analyzePreferencesWithAI(history, openai) : []
       
+      if (!selection.album1 || !selection.album2) {
+        return NextResponse.json({
+          error: 'Unable to find suitable album pair'
+        }, { status: 400 })
+      }
+      
       return NextResponse.json({
-        album1: pair[0],
-        album2: pair[1],
+        album1: selection.album1,
+        album2: selection.album2,
         insights,
-        pairReasoning: reasoning
+        pairReasoning: reasoning,
+        selectionMetadata: selection.metadata
       })
     }
 
@@ -90,66 +102,55 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function getBattlePair(
+async function getBattlePairWithCriteria(
   albums: Album[], 
   history: BattleChoice[], 
   round: number,
   openai: OpenAI
-): Promise<{ pair: [Album, Album], reasoning: string }> {
-  // Get list of albums already shown
-  const shownAlbumIds = new Set<string>()
-  history.forEach(choice => {
-    shownAlbumIds.add(choice.chosenAlbum.id)
-    shownAlbumIds.add(choice.rejectedAlbum.id)
+): Promise<{ selection: { album1: Album | null, album2: Album | null, metadata: { primaryMatches: number, secondaryMatches: number, totalAvailable: number } }, reasoning: string }> {
+  // Extract collection metadata
+  const collectionMetadata = extractCollectionMetadata(albums)
+  
+  // Create exclusion set from history
+  const excludeIds = createExclusionSet(history, albums, {
+    keepRecentChoices: Math.floor(albums.length / 3),
+    enableArtistDiversity: true
   })
 
-  // Filter out already shown albums
-  let availableAlbums = albums.filter(album => !shownAlbumIds.has(album.id))
-
-  // If we're running out of albums, reset the pool but keep recent choices
-  if (availableAlbums.length < 2) {
-    const recentChoices = history.slice(-Math.floor(albums.length / 3))
-    const recentIds = new Set<string>()
-    recentChoices.forEach(choice => {
-      recentIds.add(choice.chosenAlbum.id)
-      recentIds.add(choice.rejectedAlbum.id)
-    })
-    
-    availableAlbums = albums.filter(album => !recentIds.has(album.id))
-    if (availableAlbums.length < 2) {
-      // Last resort: use all albums
-      availableAlbums = albums
-    }
-  }
-
+  let criteria: CuratorCriteria
+  let selection: { album1: Album | null, album2: Album | null, metadata: { primaryMatches: number, secondaryMatches: number, totalAvailable: number } }
+  
   if (round === 1 || history.length === 0) {
-    // First round: Use AI to select strategically opposing albums
-    return await selectStrategicOpenerPair(availableAlbums, openai)
+    // First round: Use AI to select strategic criteria
+    criteria = await generateStrategicOpenerCriteria(collectionMetadata, openai)
+    selection = selectAlbumPair(albums, criteria, excludeIds)
+  } else {
+    // Use AI to generate personalized criteria
+    criteria = await generatePersonalizedCriteria(collectionMetadata, history, openai)
+    selection = selectAlbumPair(albums, criteria, excludeIds)
   }
-
-  // Use AI to select the most interesting album pair
-  return await selectPersonalizedPair(availableAlbums, history, openai)
+  
+  // Generate reasoning based on actual selected albums
+  if (selection.album1 && selection.album2) {
+    const albumSpecificReasoning = await generateAlbumPairReasoning(
+      selection.album1, 
+      selection.album2, 
+      history.length === 0,
+      openai
+    )
+    return { selection, reasoning: albumSpecificReasoning }
+  }
+  
+  return { selection, reasoning: "These albums offer an interesting contrast to explore your music preferences." }
 }
 
-async function selectPersonalizedPair(
-  availableAlbums: Album[], 
+async function generatePersonalizedCriteria(
+  metadata: CollectionMetadata,
   history: BattleChoice[],
   openai: OpenAI
-): Promise<{ pair: [Album, Album], reasoning: string }> {
+): Promise<CuratorCriteria> {
   const chosenAlbums = history.map(choice => choice.chosenAlbum)
   const rejectedAlbums = history.map(choice => choice.rejectedAlbum)
-
-  // Create simplified album descriptions for AI and shuffle them
-  const shuffledAlbums = [...availableAlbums].sort(() => Math.random() - 0.5)
-  const limitedAlbums = shuffledAlbums.slice(0, 50) // Limit to prevent token overflow
-  const albumDescriptions = limitedAlbums.map(album => ({
-    id: album.id,
-    artist: album.artist,
-    title: album.title,
-    year: album.year,
-    genres: album.genres,
-    vibes: album.personal_vibes || []
-  }))
 
   const chosenDescriptions = chosenAlbums.map(album => 
     `"${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.personal_vibes?.length ? `, Vibes: ${album.personal_vibes.join(', ')}` : ''}`
@@ -159,29 +160,42 @@ async function selectPersonalizedPair(
     `"${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.personal_vibes?.length ? `, Vibes: ${album.personal_vibes.join(', ')}` : ''}`
   )
 
-  const systemPrompt = `You are an expert music curator selecting album pairs for a preference learning game.
+  const systemPrompt = `You are an expert music curator creating selection criteria for a preference learning game.
 
-CHOSEN ALBUMS (you liked these):
+CHOSEN ALBUMS (user liked these):
 ${chosenDescriptions.join('\n')}
 
-REJECTED ALBUMS (you didn't prefer these):
+REJECTED ALBUMS (user didn't prefer these):
 ${rejectedDescriptions.join('\n')}
 
-AVAILABLE ALBUMS:
-${albumDescriptions.map((album, i) => `${i + 1}. "${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.vibes.length ? `, Vibes: ${album.vibes.join(', ')}` : ''} [ID: ${album.id}]`).join('\n')}
+AVAILABLE GENRES: ${metadata.availableGenres.join(', ')}
+AVAILABLE VIBES: ${metadata.availableVibes.join(', ')}
+YEAR RANGE: ${metadata.yearRange.min} - ${metadata.yearRange.max}
 
-Select TWO albums that will create an interesting choice for learning your preferences. Consider:
-1. One album that aligns with emerging patterns from your chosen albums
-2. One album that offers contrast or discovery potential
-3. Make choices meaningful - avoid albums that are too similar or obviously different
-4. Consider genre, era, vibe, and style patterns
+Based on the user's preferences, create criteria to select two interesting albums. Think about:
+1. What patterns do you see in their chosen albums?
+2. What would create a meaningful choice that reveals more about their taste?
+3. Balance familiarity with discovery potential
+
+Create PRIMARY criteria (for one album that matches their preferences) and SECONDARY criteria (for contrast/discovery).
 
 Respond with ONLY a JSON object:
 {
-  "album1_id": "album_id_here",
-  "album2_id": "album_id_here",
-  "reasoning": "Brief explanation of why this pairing will reveal your preferences",
-  "user_reasoning": "One sentence explaining this pairing in context of the user's taste and these albums' characteristics - written for the user to read"
+  "primary": {
+    "genres": ["genre1", "genre2"],
+    "vibes": ["vibe1", "vibe2"],
+    "weight": 0.8
+  },
+  "secondary": {
+    "genres": ["different_genre"],
+    "vibes": ["different_vibe"],
+    "weight": 0.6
+  },
+  "constraints": {
+    "excludeGenres": ["genre_to_avoid"],
+    "artistDiversity": true
+  },
+  "reasoning": "One sentence explaining this pairing strategy for the user"
 }`
 
   try {
@@ -189,82 +203,68 @@ Respond with ONLY a JSON object:
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: 'Select the best album pair for this user.' }
+        { role: 'user', content: 'Generate selection criteria for this user.' }
       ],
       temperature: 0.7,
-      max_tokens: 300
+      max_tokens: 400
     })
 
     const content = response.choices[0]?.message?.content?.trim()
     if (!content) throw new Error('No response from OpenAI')
 
-    const selection = JSON.parse(content)
-    
-    const album1 = limitedAlbums.find(a => a.id === selection.album1_id)
-    const album2 = limitedAlbums.find(a => a.id === selection.album2_id)
-
-    if (!album1 || !album2) {
-      throw new Error(`AI selected invalid album IDs: ${selection.album1_id}${!album1 ? ' (not found)' : ''}, ${selection.album2_id}${!album2 ? ' (not found)' : ''}`)
-    }
-
-    console.log('AI Album Selection Reasoning:', selection.reasoning)
-    return { 
-      pair: [album1, album2], 
-      reasoning: selection.user_reasoning || selection.reasoning 
-    }
+    const criteria = JSON.parse(content) as CuratorCriteria
+    console.log('AI Generated Criteria:', criteria.reasoning)
+    return criteria
 
   } catch (error) {
-    logger.agentError('AI album selection', error as Error, { 
+    logger.agentError('AI criteria generation', error as Error, { 
       endpoint: '/api/ai-curator',
-      operation: 'selectPersonalizedPair',
-      availableAlbumsCount: availableAlbums.length 
+      operation: 'generatePersonalizedCriteria',
+      historyLength: history.length 
     })
-    // Fallback to random selection from limited albums
-    const shuffled = [...limitedAlbums].sort(() => Math.random() - 0.5)
-    return { 
-      pair: [shuffled[0], shuffled[1]], 
-      reasoning: `These two albums offer an interesting contrast to help us learn your preferences.` 
-    }
+    
+    // Fallback to basic criteria based on user's choices
+    return generateFallbackPersonalizedCriteria(chosenAlbums, metadata)
   }
 }
 
-async function selectStrategicOpenerPair(
-  availableAlbums: Album[], 
+async function generateStrategicOpenerCriteria(
+  metadata: CollectionMetadata,
   openai: OpenAI
-): Promise<{ pair: [Album, Album], reasoning: string }> {
-  // Create simplified album descriptions for AI and shuffle them
-  const shuffledAlbums = [...availableAlbums].sort(() => Math.random() - 0.5)
-  const limitedAlbums = shuffledAlbums.slice(0, 50) // Limit to prevent token overflow
-  const albumDescriptions = limitedAlbums.map(album => ({
-    id: album.id,
-    artist: album.artist,
-    title: album.title,
-    year: album.year,
-    genres: album.genres,
-    vibes: album.personal_vibes || []
-  }))
+): Promise<CuratorCriteria> {
+  const systemPrompt = `You are an expert music curator creating selection criteria for the first round of a music preference discovery game.
 
-  const systemPrompt = `You are an expert music curator selecting the perfect first pair of albums for a music preference discovery game.
+AVAILABLE GENRES: ${metadata.availableGenres.join(', ')}
+AVAILABLE VIBES: ${metadata.availableVibes.join(', ')}
+YEAR RANGE: ${metadata.yearRange.min} - ${metadata.yearRange.max}
+TOTAL ALBUMS: ${metadata.totalAlbums}
 
-AVAILABLE ALBUMS:
-${albumDescriptions.map((album, i) => `${i + 1}. "${album.title}" by ${album.artist} (${album.year}) - Genres: ${album.genres.join(', ')}${album.vibes.length ? `, Vibes: ${album.vibes.join(', ')}` : ''} [ID: ${album.id}]`).join('\n')}
+For the FIRST ROUND, create criteria that will select two albums representing different "listening journeys". The goal is to set up a meaningful choice that reveals significant preference information.
 
-For the FIRST ROUND, select TWO albums that will maximize the learning potential by being strategically different. Consider:
+Consider:
+1. Different genres, eras, or styles that appeal to different types of music lovers
+2. Avoid criteria that are too similar (same genre family)
+3. Avoid criteria that are so different the choice is obvious
+4. Create distinct paths that will inform future selections
 
-1. Choose albums from different genres, eras, or styles that represent distinct listening paths
-2. Avoid albums that are too similar (same artist, same genre, same era)
-3. Avoid albums that are so different the choice is obvious (underground experimental vs mainstream pop)
-4. Pick albums that could each appeal to different types of music lovers
-5. Create a meaningful choice that will reveal significant preference information
-
-The goal is to set up two different "listening journeys" - if someone picks Album A, what does that suggest about their taste vs if they pick Album B?
+Create PRIMARY criteria (one direction) and SECONDARY criteria (different direction) to maximize learning potential.
 
 Respond with ONLY a JSON object:
 {
-  "album1_id": "album_id_here",
-  "album2_id": "album_id_here",
-  "reasoning": "Brief explanation of why this first pairing will kickstart effective preference learning",
-  "user_reasoning": "One sentence explaining this pairing to help the user understand why these two albums were chosen - written for the user to read"
+  "primary": {
+    "genres": ["genre1", "genre2"],
+    "vibes": ["vibe1", "vibe2"],
+    "weight": 0.8
+  },
+  "secondary": {
+    "genres": ["different_genre"],
+    "vibes": ["different_vibe"],
+    "weight": 0.8
+  },
+  "constraints": {
+    "artistDiversity": true
+  },
+  "reasoning": "One sentence explaining this strategic first pairing to the user"
 }`
 
   try {
@@ -272,91 +272,163 @@ Respond with ONLY a JSON object:
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: 'Select the best first pair of albums to start learning music preferences.' }
+        { role: 'user', content: 'Generate strategic opener criteria.' }
       ],
       temperature: 0.8,
-      max_tokens: 300
+      max_tokens: 400
     })
 
     const content = response.choices[0]?.message?.content?.trim()
     if (!content) throw new Error('No response from OpenAI')
 
-    const selection = JSON.parse(content)
-    
-    const album1 = limitedAlbums.find(a => a.id === selection.album1_id)
-    const album2 = limitedAlbums.find(a => a.id === selection.album2_id)
-
-    if (!album1 || !album2) {
-      throw new Error(`AI selected invalid album IDs: ${selection.album1_id}${!album1 ? ' (not found)' : ''}, ${selection.album2_id}${!album2 ? ' (not found)' : ''}`)
-    }
-
-    console.log('AI First Pair Selection Reasoning:', selection.reasoning)
-    return { 
-      pair: [album1, album2], 
-      reasoning: selection.user_reasoning || selection.reasoning 
-    }
+    const criteria = JSON.parse(content) as CuratorCriteria
+    console.log('AI Strategic Criteria:', criteria.reasoning)
+    return criteria
 
   } catch (error) {
-    logger.agentError('AI first pair selection', error as Error, { 
+    logger.agentError('AI strategic criteria generation', error as Error, { 
       endpoint: '/api/ai-curator',
-      operation: 'selectStrategicOpenerPair',
-      availableAlbumsCount: availableAlbums.length 
+      operation: 'generateStrategicOpenerCriteria'
     })
-    // Fallback to strategic manual selection
-    const fallbackPair = selectStrategicFirstPair(availableAlbums)
-    return { 
-      pair: fallbackPair, 
-      reasoning: `These albums represent different musical styles to help us discover your preferences.` 
-    }
+    
+    // Fallback to strategic criteria based on available genres/vibes
+    return generateFallbackStrategicCriteria(metadata)
   }
 }
 
-function selectStrategicFirstPair(availableAlbums: Album[]): [Album, Album] {
-  // Group albums by decade and genre for strategic selection
-  const albumsByDecade = new Map<number, Album[]>()
-  const albumsByGenre = new Map<string, Album[]>()
+// Fallback criteria generation functions
+function generateFallbackPersonalizedCriteria(chosenAlbums: Album[], metadata: CollectionMetadata): CuratorCriteria {
+  // Analyze user's chosen albums to create basic criteria
+  const favoriteGenres = new Set<string>()
+  const favoriteVibes = new Set<string>()
   
-  availableAlbums.forEach(album => {
-    const decade = Math.floor(album.year / 10) * 10
-    if (!albumsByDecade.has(decade)) {
-      albumsByDecade.set(decade, [])
-    }
-    albumsByDecade.get(decade)!.push(album)
-    
-    album.genres.forEach(genre => {
-      if (!albumsByGenre.has(genre)) {
-        albumsByGenre.set(genre, [])
-      }
-      albumsByGenre.get(genre)!.push(album)
-    })
+  chosenAlbums.forEach(album => {
+    album.genres.forEach(genre => favoriteGenres.add(genre))
+    album.personal_vibes.forEach(vibe => favoriteVibes.add(vibe))
   })
   
-  // Try to find albums from different decades and genres
-  const decades = Array.from(albumsByDecade.keys()).sort()
-  const genres = Array.from(albumsByGenre.keys())
+  const primaryGenres = Array.from(favoriteGenres).slice(0, 2)
+  const primaryVibes = Array.from(favoriteVibes).slice(0, 2)
   
-  if (decades.length >= 2 && genres.length >= 2) {
-    // Pick from different decades and genres
-    const earlyDecade = decades[0]
-    const lateDecade = decades[decades.length - 1]
+  // Create contrasting secondary criteria
+  const unusedGenres = metadata.availableGenres.filter(g => !favoriteGenres.has(g))
+  const unusedVibes = metadata.availableVibes.filter(v => !favoriteVibes.has(v))
+  
+  return {
+    primary: {
+      genres: primaryGenres,
+      vibes: primaryVibes,
+      weight: 0.8
+    },
+    secondary: {
+      genres: unusedGenres.slice(0, 1),
+      vibes: unusedVibes.slice(0, 1),
+      weight: 0.6
+    },
+    constraints: {
+      artistDiversity: true
+    },
+    reasoning: "I've selected one album that matches your taste patterns and another for discovery."
+  }
+}
+
+function generateFallbackStrategicCriteria(metadata: CollectionMetadata): CuratorCriteria {
+  // Create strategic first-round criteria using available genres/vibes
+  const genres = metadata.availableGenres
+  const vibes = metadata.availableVibes
+  
+  // Split genres into different categories for contrast
+  const primaryGenres = genres.slice(0, Math.ceil(genres.length / 2))
+  const secondaryGenres = genres.slice(Math.ceil(genres.length / 2))
+  
+  const primaryVibes = vibes.slice(0, Math.ceil(vibes.length / 2))
+  const secondaryVibes = vibes.slice(Math.ceil(vibes.length / 2))
+  
+  return {
+    primary: {
+      genres: primaryGenres.slice(0, 2),
+      vibes: primaryVibes.slice(0, 2),
+      weight: 0.8
+    },
+    secondary: {
+      genres: secondaryGenres.slice(0, 2),
+      vibes: secondaryVibes.slice(0, 2),
+      weight: 0.8
+    },
+    constraints: {
+      artistDiversity: true
+    },
+    reasoning: "These albums represent different musical directions to help discover your preferences."
+  }
+}
+
+async function generateAlbumPairReasoning(
+  album1: Album,
+  album2: Album,
+  isFirstRound: boolean,
+  openai: OpenAI
+): Promise<string> {
+  const album1Description = `"${album1.title}" by ${album1.artist} (${album1.year}) - Genres: ${album1.genres.join(', ')}${album1.personal_vibes?.length ? `, Vibes: ${album1.personal_vibes.join(', ')}` : ''}`
+  const album2Description = `"${album2.title}" by ${album2.artist} (${album2.year}) - Genres: ${album2.genres.join(', ')}${album2.personal_vibes?.length ? `, Vibes: ${album2.personal_vibes.join(', ')}` : ''}`
+
+  const systemPrompt = `You are an expert music curator explaining why these two specific albums make an interesting pairing for discovering music preferences.
+
+ALBUM 1: ${album1Description}
+ALBUM 2: ${album2Description}
+
+${isFirstRound ? 
+  'This is the FIRST pairing to kickstart preference discovery. Explain why these two albums create a meaningful choice that will reveal significant information about musical taste.' :
+  'This pairing is designed to further explore and refine music preferences based on previous choices.'
+}
+
+Write a single sentence (max 25 words) that explains what makes this pairing interesting based on the actual genres, vibes, and musical characteristics. Focus on the contrast or complementary aspects that will help discover preferences.
+
+Do NOT mention specific artist or album names.
+Do NOT mention genres that aren't actually present in these albums.
+Do NOT use generic phrases.
+Focus on the musical styles, vibes, and characteristics rather than names.
+
+Respond with ONLY the explanation sentence, no JSON or quotes.`
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: 'Generate a specific pairing explanation for these albums.' }
+      ],
+      temperature: 0.7,
+      max_tokens: 150
+    })
+
+    const content = response.choices[0]?.message?.content?.trim()
+    if (!content) throw new Error('No response from OpenAI')
+
+    return content
+
+  } catch (error) {
+    logger.agentError('Album pair reasoning generation', error as Error, { 
+      endpoint: '/api/ai-curator',
+      operation: 'generateAlbumPairReasoning',
+      album1: album1.title,
+      album2: album2.title
+    })
     
-    const earlyAlbums = albumsByDecade.get(earlyDecade) || []
-    const lateAlbums = albumsByDecade.get(lateDecade) || []
+    // Fallback reasoning based on actual albums
+    const genres1 = album1.genres.slice(0, 2).join(' and ')
+    const genres2 = album2.genres.slice(0, 2).join(' and ')
+    const yearDiff = Math.abs(album1.year - album2.year)
     
-    if (earlyAlbums.length > 0 && lateAlbums.length > 0) {
-      const album1 = earlyAlbums[Math.floor(Math.random() * earlyAlbums.length)]
-      const album2 = lateAlbums[Math.floor(Math.random() * lateAlbums.length)]
-      
-      // Make sure they're not the same album
-      if (album1.id !== album2.id) {
-        return [album1, album2]
-      }
+    // Use vibes for descriptive context if available
+    const vibe1 = album1.personal_vibes.length > 0 ? album1.personal_vibes[0] : ''
+    const vibe2 = album2.personal_vibes.length > 0 ? album2.personal_vibes[0] : ''
+    
+    if (yearDiff > 10) {
+      return `This pairing contrasts ${vibe1 ? vibe1 + ' ' : ''}${genres1} with ${vibe2 ? vibe2 + ' ' : ''}${genres2}, spanning ${yearDiff} years of musical evolution.`
+    } else {
+      return `This pairing explores the differences between ${vibe1 ? vibe1 + ' ' : ''}${genres1} and ${vibe2 ? vibe2 + ' ' : ''}${genres2} approaches.`
     }
   }
-  
-  // Fallback to random selection
-  const shuffled = [...availableAlbums].sort(() => Math.random() - 0.5)
-  return [shuffled[0], shuffled[1]]
 }
 
 async function analyzePreferencesWithAI(history: BattleChoice[], openai: OpenAI): Promise<PreferenceInsight[]> {

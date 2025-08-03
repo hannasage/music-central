@@ -104,6 +104,46 @@ export interface ErrorLog {
   updated_at: string
 }
 
+// AI Curator Types
+export interface CuratorPreference {
+  genres: string[]
+  vibes: string[]
+  weight: number
+}
+
+export interface CuratorConstraints {
+  excludeGenres?: string[]
+  excludeVibes?: string[]
+  yearRange?: { min: number, max: number }
+  artistDiversity?: boolean
+  excludeArtists?: string[]
+}
+
+export interface CuratorCriteria {
+  primary: CuratorPreference
+  secondary?: CuratorPreference
+  constraints?: CuratorConstraints
+  reasoning: string
+}
+
+export interface CollectionMetadata {
+  availableGenres: string[]
+  availableVibes: string[]
+  yearRange: { min: number, max: number }
+  totalAlbums: number
+}
+
+export interface CuratorSelection {
+  album1: Album
+  album2: Album
+  criteria: CuratorCriteria
+  metadata: {
+    primaryMatches: number
+    secondaryMatches: number
+    totalAvailable: number
+  }
+}
+
 export type Database = {
   public: {
     Tables: {
