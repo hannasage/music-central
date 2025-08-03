@@ -164,7 +164,7 @@ function formatRecentLogs(logs: ErrorLog[], hours: number): string {
     response += `🚨 **CRITICAL ISSUES (${critical.length})**\n`
     critical.slice(0, 5).forEach(log => {
       const timeAgo = getTimeAgo(new Date(log.timestamp))
-      response += `• ${log.error_type}: ${log.message} (${timeAgo}, ${log.occurrence_count}x)\n`
+      response += `  • ${log.error_type}: ${log.message} (${timeAgo}, ${log.occurrence_count}x)\n`
     })
     response += '\n'
   }
@@ -173,7 +173,7 @@ function formatRecentLogs(logs: ErrorLog[], hours: number): string {
     response += `⚠️ **WARNINGS (${warnings.length})**\n`
     warnings.slice(0, 5).forEach(log => {
       const timeAgo = getTimeAgo(new Date(log.timestamp))
-      response += `• ${log.error_type}: ${log.message} (${timeAgo}, ${log.occurrence_count}x)\n`
+      response += `  • ${log.error_type}: ${log.message} (${timeAgo}, ${log.occurrence_count}x)\n`
     })
     response += '\n'
   }
@@ -182,7 +182,7 @@ function formatRecentLogs(logs: ErrorLog[], hours: number): string {
     response += `ℹ️ **INFO (${info.length})**\n`
     info.slice(0, 3).forEach(log => {
       const timeAgo = getTimeAgo(new Date(log.timestamp))
-      response += `• ${log.error_type}: ${log.message} (${timeAgo}, ${log.occurrence_count}x)\n`
+      response += `  • ${log.error_type}: ${log.message} (${timeAgo}, ${log.occurrence_count}x)\n`
     })
     response += '\n'
   }
@@ -203,7 +203,7 @@ function formatErrorTypes(types: string[]): string {
   let response = `📋 **Available Error Types** (${types.length} types)\n\n`
   
   types.forEach((type, index) => {
-    response += `${index + 1}. **${type}**\n`
+    response += `  ${index + 1}. **${type}**\n`
   })
 
   response += `\n💡 **Usage:** Use \`by_type\` action with any of these error types to see specific occurrences.`
@@ -301,18 +301,18 @@ function formatStats(stats: {
   let response = `📊 **System Error Statistics**\n\n`
   
   response += `**📈 Overall Metrics:**\n`
-  response += `• Total Logs: ${stats.totalLogs.toLocaleString()}\n`
-  response += `• Unique Error Patterns: ${stats.uniqueErrors.toLocaleString()}\n`
-  response += `• Recent Activity (24h): ${stats.recentActivityCount.toLocaleString()}\n\n`
+  response += `  • Total Logs: ${stats.totalLogs.toLocaleString()}\n`
+  response += `  • Unique Error Patterns: ${stats.uniqueErrors.toLocaleString()}\n`
+  response += `  • Recent Activity (24h): ${stats.recentActivityCount.toLocaleString()}\n\n`
 
   response += `**📊 By Level:**\n`
-  response += `• 🔥 Errors: ${stats.totalErrors.toLocaleString()}\n`
-  response += `• ⚠️ Warnings: ${stats.totalWarnings.toLocaleString()}\n\n`
+  response += `  • 🔥 Errors: ${stats.totalErrors.toLocaleString()}\n`
+  response += `  • ⚠️ Warnings: ${stats.totalWarnings.toLocaleString()}\n\n`
 
   response += `**📊 By Severity:**\n`
-  response += `• 🚨 Critical: ${stats.criticalCount.toLocaleString()}\n`
-  response += `• ⚠️ Warning: ${stats.warningCount.toLocaleString()}\n`
-  response += `• ℹ️ Info: ${stats.infoCount.toLocaleString()}\n\n`
+  response += `  • 🚨 Critical: ${stats.criticalCount.toLocaleString()}\n`
+  response += `  • ⚠️ Warning: ${stats.warningCount.toLocaleString()}\n`
+  response += `  • ℹ️ Info: ${stats.infoCount.toLocaleString()}\n\n`
 
   response += `**🎯 Most Common Issue:** ${stats.mostCommonErrorType}\n\n`
 
@@ -368,9 +368,9 @@ function formatSingleLog(log: ErrorLog): string {
   }
 
   response += `**🔗 Related Actions:**\n`
-  response += `• Use \`by_fingerprint\` with \`${log.fingerprint}\` to see all occurrences\n`
-  response += `• Use \`by_type\` with \`${log.error_type}\` to see similar errors\n`
-  response += `• Check recent activity for patterns around this time\n`
+  response += `  • Use \`by_fingerprint\` with \`${log.fingerprint}\` to see all occurrences\n`
+  response += `  • Use \`by_type\` with \`${log.error_type}\` to see similar errors\n`
+  response += `  • Check recent activity for patterns around this time\n`
 
   return response
 }

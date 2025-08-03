@@ -107,7 +107,7 @@ async function analyzeTrends(repository: LogRepository, hours: number, compareHo
     .sort(([,a], [,b]) => (b as number) - (a as number))
     .slice(0, 10)
     .forEach(([type, count]) => {
-      response += `• **${type}**: ${count} occurrences\n`
+      response += `  • **${type}**: ${count} occurrences\n`
     })
 
   // Analyze by severity
@@ -115,7 +115,7 @@ async function analyzeTrends(repository: LogRepository, hours: number, compareHo
   response += '\n**⚠️ Severity Distribution:**\n'
   Object.entries(severityBreakdown).forEach(([severity, count]) => {
     const icon = getSeverityIcon(severity)
-    response += `• ${icon} **${severity}**: ${count} occurrences\n`
+    response += `  • ${icon} **${severity}**: ${count} occurrences\n`
   })
 
   // Compare with previous period if requested
@@ -279,10 +279,10 @@ async function generateHealthReport(repository: any, hours: number): Promise<str
 
   // Key metrics
   response += '**📊 Key Metrics:**\n'
-  response += `• Recent Errors: ${recentLogs.length}\n`
-  response += `• Critical Issues: ${recentLogs.filter((l: ErrorLog) => l.severity === 'critical').length}\n`
-  response += `• Error Rate: ${(recentLogs.length / hours).toFixed(2)} errors/hour\n`
-  response += `• Unique Error Types: ${new Set(recentLogs.map((l: ErrorLog) => l.error_type)).size}\n\n`
+  response += `  • Recent Errors: ${recentLogs.length}\n`
+  response += `  • Critical Issues: ${recentLogs.filter((l: ErrorLog) => l.severity === 'critical').length}\n`
+  response += `  • Error Rate: ${(recentLogs.length / hours).toFixed(2)} errors/hour\n`
+  response += `  • Unique Error Types: ${new Set(recentLogs.map((l: ErrorLog) => l.error_type)).size}\n\n`
 
   // Health indicators
   response += '**🚦 Health Indicators:**\n'
@@ -429,39 +429,39 @@ function generateTrendInsights(errorTypes: Record<string, number>, severities: R
   
   const topError = Object.entries(errorTypes)[0]
   if (topError) {
-    insights += `• Most frequent issue: **${topError[0]}** (${topError[1]} occurrences)\n`
+    insights += `  • Most frequent issue: **${topError[0]}** (${topError[1]} occurrences)\n`
   }
   
   const criticalCount = severities.critical || 0
   if (criticalCount > 0) {
-    insights += `• 🚨 ${criticalCount} critical issues require immediate attention\n`
+    insights += `  • 🚨 ${criticalCount} critical issues require immediate attention\n`
   }
   
-  return insights || '• System showing normal error patterns\n'
+  return insights || '  • System showing normal error patterns\n'
 }
 
 function generateCorrelationInsights(correlations: any[]): string {
   if (correlations.length === 0) {
-    return '• Errors appear to be independent events\n• No cascading failure patterns detected\n'
+    return '  • Errors appear to be independent events\n  • No cascading failure patterns detected\n'
   }
   
-  return '• Consider investigating root causes of correlated errors\n• May indicate cascading failures or shared dependencies\n'
+  return '  • Consider investigating root causes of correlated errors\n  • May indicate cascading failures or shared dependencies\n'
 }
 
 function generateSpikeInsights(spikes: any[], hourlyData: Record<string, any[]>): string {
   if (spikes.length === 0) {
-    return '• Error rate is consistent without unusual spikes\n• System load appears stable\n'
+    return '  • Error rate is consistent without unusual spikes\n  • System load appears stable\n'
   }
   
-  return '• Consider investigating deployment times or external events\n• Monitor system resources during spike periods\n'
+  return '  • Consider investigating deployment times or external events\n  • Monitor system resources during spike periods\n'
 }
 
 function generateCascadeInsights(cascades: any[]): string {
   if (cascades.length === 0) {
-    return '• No error cascades detected\n• Failures appear to be isolated\n'
+    return '  • No error cascades detected\n  • Failures appear to be isolated\n'
   }
   
-  return '• Error cascades suggest systemic issues\n• Focus on the triggering error type\n'
+  return '  • Error cascades suggest systemic issues\n  • Focus on the triggering error type\n'
 }
 
 function generateHealthIndicators(recentLogs: any[], hours: number): string {
@@ -483,16 +483,16 @@ function generateHealthRecommendations(healthScore: any, recentLogs: any[]): str
   let recommendations = ''
   
   if (healthScore.score < 70) {
-    recommendations += '• Investigate critical errors immediately\n'
-    recommendations += '• Review recent deployments or changes\n'
+    recommendations += '  • Investigate critical errors immediately\n'
+    recommendations += '  • Review recent deployments or changes\n'
   }
   
   const dbErrors = recentLogs.filter(l => l.error_type === 'database_connection').length
   if (dbErrors > 0) {
-    recommendations += '• Check database connection and performance\n'
+    recommendations += '  • Check database connection and performance\n'
   }
   
-  return recommendations || '• Continue monitoring\n• System operating normally\n'
+  return recommendations || '  • Continue monitoring\n  • System operating normally\n'
 }
 
 function generateSpecificErrorInsights(logs: any[], errorType: string): string {
