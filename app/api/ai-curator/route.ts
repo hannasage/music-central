@@ -22,6 +22,7 @@ interface PreferenceInsight {
   confidence: number
 }
 
+
 export async function POST(request: NextRequest) {
   try {
     const { action, history = [], round = 1 } = await request.json()
@@ -61,7 +62,6 @@ export async function POST(request: NextRequest) {
 
     if (action === 'get_pair') {
       const { selection, reasoning } = await getBattlePairWithCriteria(albums, history, round, openai)
-      const insights = history.length > 0 ? await analyzePreferencesWithAI(history, openai) : []
       
       if (!selection.album1 || !selection.album2) {
         return NextResponse.json({
@@ -72,7 +72,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         album1: selection.album1,
         album2: selection.album2,
-        insights,
         pairReasoning: reasoning,
         selectionMetadata: selection.metadata
       })
@@ -534,3 +533,5 @@ function getFallbackInsights(history: BattleChoice[]): PreferenceInsight[] {
     confidence: Math.min(history.length / 7, 0.7) // Slightly lower confidence for fallback
   }]
 }
+
+
