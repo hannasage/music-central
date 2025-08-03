@@ -386,6 +386,7 @@ Do NOT mention specific artist or album names.
 Do NOT mention genres that aren't actually present in these albums.
 Do NOT use generic phrases.
 Focus on the musical styles, vibes, and characteristics rather than names.
+Sound natural and conversational
 
 Respond with ONLY the explanation sentence, no JSON or quotes.`
 
