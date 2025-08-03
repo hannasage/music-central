@@ -216,6 +216,7 @@ export default function SearchInterface({
             onFocus={() => query.trim() && setIsOpen(true)}
             aria-label="Search albums, artists, and songs"
             aria-expanded={isOpen && showSuggestions && hasContent}
+            aria-controls={hasContent ? "search-suggestions" : undefined}
             aria-autocomplete="list"
             aria-owns={hasContent ? "search-suggestions" : undefined}
             aria-activedescendant={selectedIndex >= 0 ? `suggestion-${selectedIndex}` : undefined}

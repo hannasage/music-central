@@ -289,6 +289,11 @@ export const highContrast = {
 }
 
 /**
+ * Direct export of trapFocus for convenience
+ */
+export const trapFocus = focusManagement.trapFocus
+
+/**
  * Initialize accessibility features
  */
 export const initializeAccessibility = (): void => {
