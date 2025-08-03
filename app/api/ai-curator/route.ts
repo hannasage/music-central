@@ -117,17 +117,31 @@ async function getBattlePairWithCriteria(
     enableArtistDiversity: true
   })
 
+  let criteria: CuratorCriteria
+  let selection: { album1: Album | null, album2: Album | null, metadata: { primaryMatches: number, secondaryMatches: number, totalAvailable: number } }
+  
   if (round === 1 || history.length === 0) {
     // First round: Use AI to select strategic criteria
-    const criteria = await generateStrategicOpenerCriteria(collectionMetadata, openai)
-    const selection = selectAlbumPair(albums, criteria, excludeIds)
-    return { selection, reasoning: criteria.reasoning }
+    criteria = await generateStrategicOpenerCriteria(collectionMetadata, openai)
+    selection = selectAlbumPair(albums, criteria, excludeIds)
+  } else {
+    // Use AI to generate personalized criteria
+    criteria = await generatePersonalizedCriteria(collectionMetadata, history, openai)
+    selection = selectAlbumPair(albums, criteria, excludeIds)
   }
-
-  // Use AI to generate personalized criteria
-  const criteria = await generatePersonalizedCriteria(collectionMetadata, history, openai)
-  const selection = selectAlbumPair(albums, criteria, excludeIds)
-  return { selection, reasoning: criteria.reasoning }
+  
+  // Generate reasoning based on actual selected albums
+  if (selection.album1 && selection.album2) {
+    const albumSpecificReasoning = await generateAlbumPairReasoning(
+      selection.album1, 
+      selection.album2, 
+      history.length === 0,
+      openai
+    )
+    return { selection, reasoning: albumSpecificReasoning }
+  }
+  
+  return { selection, reasoning: "These albums offer an interesting contrast to explore your music preferences." }
 }
 
 async function generatePersonalizedCriteria(
@@ -345,6 +359,75 @@ function generateFallbackStrategicCriteria(metadata: CollectionMetadata): Curato
       artistDiversity: true
     },
     reasoning: "These albums represent different musical directions to help discover your preferences."
+  }
+}
+
+async function generateAlbumPairReasoning(
+  album1: Album,
+  album2: Album,
+  isFirstRound: boolean,
+  openai: OpenAI
+): Promise<string> {
+  const album1Description = `"${album1.title}" by ${album1.artist} (${album1.year}) - Genres: ${album1.genres.join(', ')}${album1.personal_vibes?.length ? `, Vibes: ${album1.personal_vibes.join(', ')}` : ''}`
+  const album2Description = `"${album2.title}" by ${album2.artist} (${album2.year}) - Genres: ${album2.genres.join(', ')}${album2.personal_vibes?.length ? `, Vibes: ${album2.personal_vibes.join(', ')}` : ''}`
+
+  const systemPrompt = `You are an expert music curator explaining why these two specific albums make an interesting pairing for discovering music preferences.
+
+ALBUM 1: ${album1Description}
+ALBUM 2: ${album2Description}
+
+${isFirstRound ? 
+  'This is the FIRST pairing to kickstart preference discovery. Explain why these two albums create a meaningful choice that will reveal significant information about musical taste.' :
+  'This pairing is designed to further explore and refine music preferences based on previous choices.'
+}
+
+Write a single sentence (max 25 words) that explains what makes this pairing interesting based on the actual genres, vibes, and musical characteristics. Focus on the contrast or complementary aspects that will help discover preferences.
+
+Do NOT mention specific artist or album names.
+Do NOT mention genres that aren't actually present in these albums.
+Do NOT use generic phrases.
+Focus on the musical styles, vibes, and characteristics rather than names.
+
+Respond with ONLY the explanation sentence, no JSON or quotes.`
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: 'Generate a specific pairing explanation for these albums.' }
+      ],
+      temperature: 0.7,
+      max_tokens: 150
+    })
+
+    const content = response.choices[0]?.message?.content?.trim()
+    if (!content) throw new Error('No response from OpenAI')
+
+    return content
+
+  } catch (error) {
+    logger.agentError('Album pair reasoning generation', error as Error, { 
+      endpoint: '/api/ai-curator',
+      operation: 'generateAlbumPairReasoning',
+      album1: album1.title,
+      album2: album2.title
+    })
+    
+    // Fallback reasoning based on actual albums
+    const genres1 = album1.genres.slice(0, 2).join(' and ')
+    const genres2 = album2.genres.slice(0, 2).join(' and ')
+    const yearDiff = Math.abs(album1.year - album2.year)
+    
+    // Use vibes for descriptive context if available
+    const vibe1 = album1.personal_vibes.length > 0 ? album1.personal_vibes[0] : ''
+    const vibe2 = album2.personal_vibes.length > 0 ? album2.personal_vibes[0] : ''
+    
+    if (yearDiff > 10) {
+      return `This pairing contrasts ${vibe1 ? vibe1 + ' ' : ''}${genres1} with ${vibe2 ? vibe2 + ' ' : ''}${genres2}, spanning ${yearDiff} years of musical evolution.`
+    } else {
+      return `This pairing explores the differences between ${vibe1 ? vibe1 + ' ' : ''}${genres1} and ${vibe2 ? vibe2 + ' ' : ''}${genres2} approaches.`
+    }
   }
 }
 
