@@ -14,23 +14,17 @@ The AI Curator transforms a personal vinyl collection into an intelligent recomm
 
 ---
 
-## 🤖 Agentic AI Architecture
+## 🤖 AI Curator Architecture
 
-### Multi-Agent System Design
+### Core AI System Design
 
 ```typescript
-// Specialized agent orchestration
-AI Curator Agent (GPT-4o-mini)
+// AI Curator Agent (GPT-4o-mini)
+AI Curator System
 ├── Strategic Album Battle Orchestration
 ├── Personal Preference Pattern Analysis  
 ├── Dynamic Criteria Generation
 └── Contextual Insight Generation
-
-Collection Management Agent (OpenAI Agents SDK)
-├── Semantic Search Tool
-├── Collection Update Tool
-├── Build Management Tool
-└── Error Analysis Tool
 ```
 
 ### Agent Workflow Patterns
@@ -45,18 +39,15 @@ if (round === 1 || history.length === 0) {
 }
 ```
 
-**Tool Factory Pattern:**
+**Album Selection Logic:**
 ```typescript
-export const createSearchAlbumsTool = (context: ToolContext) => {
-  return tool({
-    name: 'search_albums',
-    description: 'Search for albums in the collection by title, artist, or other criteria',
-    parameters: z.object({...}),
-    execute: async (input) => {
-      const { searchAlbumsForAgent } = await import('@/lib/search-service')
-      return await searchAlbumsForAgent(context.supabase, input.query, input.limit)
-    }
-  })
+// Intelligent album pair selection based on AI-generated criteria
+const selectAlbumPair = async (criteria: CuratorCriteria, availableAlbums: Album[]) => {
+  // Apply AI-generated criteria to collection
+  const filteredAlbums = applySelectionCriteria(availableAlbums, criteria)
+  
+  // Strategic pairing for maximum preference discovery
+  return selectOptimalPair(filteredAlbums, criteria.reasoning)
 }
 ```
 
@@ -149,23 +140,7 @@ What patterns emerge in this person's musical preferences?`
 
 ## 🔧 Context Engineering & State Management
 
-### Multi-Layer Context Preservation
-
-**Conversation Context Stacking:**
-```typescript
-// Layered context management for agent interactions
-let contextualInput = latestMessage.content
-if (messages.length > 1) {
-  const conversationHistory = messages.slice(0, -1)
-    .map(msg => `${msg.role}: ${msg.content}`)
-    .join('\n')
-    
-  contextualInput = `Previous conversation:
-${conversationHistory}
-
-Current message: ${latestMessage.content}`
-}
-```
+### Battle Session Context Management
 
 **Battle Session Context:**
 ```typescript
@@ -201,37 +176,9 @@ try {
 }
 ```
 
-**Error Pattern Analysis:**
-```typescript
-// Advanced debugging with fingerprint-based error tracking
-case 'by_fingerprint':
-  const fingerprintResults = await logRepository.getLogsByFingerprint(input.fingerprint)
-  return formatFingerprintResults(fingerprintResults, input.fingerprint)
-```
-
 ---
 
-## ⚙️ Advanced Tool Architecture
-
-### Context-Dependent Tool Orchestration
-
-**Granular Field Operations:**
-```typescript
-// Sophisticated array field manipulation with normalization
-if (input.operation === 'add') {
-  const normalizedToAdd = toAdd.map(v => String(v).toLowerCase())
-  const existingSet = new Set(fieldArray.map((v: string) => v.toLowerCase()))
-  const newItems = normalizedToAdd.filter(item => !existingSet.has(item))
-  updateData[input.field] = [...fieldArray, ...newItems]
-}
-```
-
-**Multi-Modal Search Integration:**
-```typescript
-// Enhanced context gathering from external sources
-const tavilyContext = await this.getTavilyContext(album)
-const suggestions = await this.generateOpenAISuggestions(album, tavilyContext)
-```
+## ⚙️ Advanced Algorithm Architecture
 
 ### Audio Feature Intelligence
 
@@ -286,10 +233,10 @@ graph TD
 
 ## 🏗️ Senior AI Engineering Patterns
 
-### 1. **Multi-Agent Orchestration**
-- Specialized agents for different cognitive tasks
-- Context sharing between agents
-- Tool-equipped agents with dynamic tool selection
+### 1. **AI-Driven Album Battle System**
+- Strategic album pairing using GPT-4o-mini intelligence
+- Context-aware criteria generation based on user patterns
+- Dynamic preference learning through battle choices
 
 ### 2. **Advanced Prompt Engineering**
 - Dynamic prompt construction with multiple context layers
@@ -302,9 +249,9 @@ graph TD
 - Real-time learning from user behavior
 
 ### 4. **Robust Context Management**
-- Multi-layer context preservation across conversations
-- Session state management with intelligent exclusion logic
-- Error pattern analysis with fingerprint-based tracking
+- Multi-layer context preservation across battle sessions
+- Intelligent exclusion logic preventing repetition
+- Advanced error handling with fallback strategies
 
 ### 5. **Production-Ready AI Integration**
 - Comprehensive error handling with fallback strategies
@@ -317,10 +264,10 @@ graph TD
 
 This AI Curator system showcases senior-level capabilities essential for AI Integration and Agentic AI Development roles:
 
-**🤖 Agentic AI Development:**
-- Multi-agent system architecture with specialized cognitive roles
-- Tool orchestration patterns with context-dependent factories
-- Advanced conversation state management across agent interactions
+**🤖 AI Curator Development:**
+- Strategic album battle orchestration using AI intelligence
+- Dynamic criteria generation based on personal collection context
+- Real-time preference learning through user battle choices
 
 **🧠 AI Workflow Engineering:**
 - Sophisticated prompt engineering with dynamic context injection
@@ -329,13 +276,13 @@ This AI Curator system showcases senior-level capabilities essential for AI Inte
 
 **🔧 Context Engineering:**
 - Personal semantic data processing through GPT transformers
-- Multi-layer context preservation and state management
-- Intelligent exclusion and diversity algorithms
+- Battle session state management with intelligent exclusion logic
+- Advanced error handling and fallback strategies
 
 **📊 AI Integration Patterns:**
 - Robust fallback strategies for production reliability
-- Performance-optimized AI API usage with caching
-- Comprehensive error analysis and pattern recognition
+- Performance-optimized AI API usage
+- Comprehensive preference pattern analysis
 
 **🎯 Personal AI Systems:**
 - Transform personal data into intelligent recommendation systems
@@ -344,4 +291,4 @@ This AI Curator system showcases senior-level capabilities essential for AI Inte
 
 ---
 
-*This project demonstrates the sophisticated AI engineering skills required for senior AI integration roles, showcasing expertise in agentic AI development, advanced prompt engineering, and production-ready AI system architecture.*
+*This project demonstrates the sophisticated AI engineering skills required for senior AI integration roles, showcasing expertise in AI curator development, advanced prompt engineering, and production-ready AI system architecture.*
