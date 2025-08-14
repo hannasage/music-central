@@ -5,15 +5,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'i.scdn.co',
-        port: '',
-        pathname: '/image/**',
+        hostname: '**',
       },
       {
-        protocol: 'https',
-        hostname: 'mosaic.scdn.co',
-        port: '',
-        pathname: '/**',
+        protocol: 'http',
+        hostname: '**',
       },
     ],
   },
