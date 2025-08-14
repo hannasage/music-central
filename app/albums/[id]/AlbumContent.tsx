@@ -136,12 +136,48 @@ export default function AlbumContent({ id }: { id: string }) {
                     </div>
                   </div>
 
-                  {/* Year & Genres */}
+                  {/* Year & Descriptors */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-start space-x-2 text-zinc-400">
                       <Calendar className="w-4 h-4" />
                       <span>{album.year}</span>
                     </div>
+                    
+                    {/* Descriptors */}
+                    {album.descriptors && album.descriptors.length > 0 && (
+                      <div className="flex justify-start">
+                        <div className="flex flex-wrap gap-2 w-full">
+                          {album.descriptors.map((descriptor, index) => {
+                            const descriptorConfig = {
+                              'vinyl-exclusive': { 
+                                label: 'Vinyl Exclusive', 
+                                color: 'bg-purple-600/20 text-purple-400 border-purple-500/30' 
+                              },
+                              'alternate-cover': { 
+                                label: 'Alternate Cover', 
+                                color: 'bg-orange-600/20 text-orange-400 border-orange-500/30' 
+                              },
+                              'bonus-tracks': { 
+                                label: 'Bonus Tracks', 
+                                color: 'bg-green-600/20 text-green-400 border-green-500/30' 
+                              }
+                            }[descriptor] || { 
+                              label: descriptor, 
+                              color: 'bg-zinc-600/20 text-zinc-400 border-zinc-500/30' 
+                            }
+                            
+                            return (
+                              <span
+                                key={index}
+                                className={`${descriptorConfig.color} px-3 py-1 rounded-full text-sm border inline-flex items-center gap-2 font-medium`}
+                              >
+                                {descriptorConfig.label}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="space-y-2">
                       <div className="flex items-center justify-start space-x-2 text-zinc-300">
@@ -192,9 +228,11 @@ export default function AlbumContent({ id }: { id: string }) {
                   </div>
 
                   {/* Streaming Links */}
-                  <div className="pt-4">
-                    <StreamingLinks album={album} />
-                  </div>
+                  {!album.descriptors?.includes('vinyl-exclusive') && (
+                    <div className="pt-4">
+                      <StreamingLinks album={album} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

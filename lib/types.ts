@@ -43,6 +43,7 @@ export interface Album {
   tracks?: Track[]
   featured: boolean
   removed: boolean
+  descriptors: string[]
   created_at: string
   updated_at: string
 }

@@ -20,6 +20,7 @@ export default function AlbumDetailsEditModal({ album, isOpen, onClose, onSave }
     personal_vibes: album.personal_vibes.join(', '),
     thoughts: album.thoughts || '',
     featured: album.featured,
+    descriptors: album.descriptors || [],
     spotify_link: album.streaming_links?.spotify || '',
     apple_music_link: album.streaming_links?.apple_music || '',
     youtube_music_link: album.streaming_links?.youtube_music || ''
@@ -29,7 +30,7 @@ export default function AlbumDetailsEditModal({ album, isOpen, onClose, onSave }
 
   if (!isOpen) return null
 
-  const handleInputChange = (field: string, value: string | number | boolean) => {
+  const handleInputChange = (field: string, value: string | number | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     setError(null)
   }
@@ -47,6 +48,7 @@ export default function AlbumDetailsEditModal({ album, isOpen, onClose, onSave }
         personal_vibes: formData.personal_vibes ? formData.personal_vibes.split(',').map(v => v.trim()).filter(Boolean) : [],
         thoughts: formData.thoughts.trim() || null,
         featured: formData.featured,
+        descriptors: formData.descriptors,
         streaming_links: {
           ...(formData.spotify_link && { spotify: formData.spotify_link }),
           ...(formData.apple_music_link && { apple_music: formData.apple_music_link }),
@@ -87,6 +89,7 @@ export default function AlbumDetailsEditModal({ album, isOpen, onClose, onSave }
       personal_vibes: album.personal_vibes.join(', '),
       thoughts: album.thoughts || '',
       featured: album.featured,
+      descriptors: album.descriptors || [],
       spotify_link: album.streaming_links?.spotify || '',
       apple_music_link: album.streaming_links?.apple_music || '',
       youtube_music_link: album.streaming_links?.youtube_music || ''
@@ -187,6 +190,39 @@ export default function AlbumDetailsEditModal({ album, isOpen, onClose, onSave }
                 className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isLoading}
               />
+            </div>
+          </div>
+
+          {/* Descriptors */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-white">Descriptors</h3>
+            <p className="text-sm text-zinc-400">Special edition flags and characteristics</p>
+            
+            <div className="space-y-3">
+              {[
+                { value: 'vinyl-exclusive', label: 'Vinyl Exclusive', description: 'Not available on streaming platforms' },
+                { value: 'alternate-cover', label: 'Alternate Cover', description: 'Different artwork from standard release' },
+                { value: 'bonus-tracks', label: 'Bonus Tracks', description: 'Includes additional unreleased content' }
+              ].map((descriptor) => (
+                <label key={descriptor.value} className="flex items-start space-x-3 p-3 bg-zinc-800/50 rounded-lg hover:bg-zinc-800/70 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={formData.descriptors.includes(descriptor.value)}
+                    onChange={(e) => {
+                      const newDescriptors = e.target.checked
+                        ? [...formData.descriptors, descriptor.value]
+                        : formData.descriptors.filter(d => d !== descriptor.value)
+                      handleInputChange('descriptors', newDescriptors)
+                    }}
+                    className="w-4 h-4 text-blue-600 bg-zinc-700 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
+                    disabled={isLoading}
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-zinc-200">{descriptor.label}</span>
+                    <p className="text-xs text-zinc-400 mt-1">{descriptor.description}</p>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
 
