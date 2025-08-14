@@ -7,14 +7,18 @@ import { createClientSideClient } from '@/lib/supabase-client'
 import StreamingLinks from '@/app/components/features/streaming/StreamingLinks'
 import AudioFeatures from '@/app/components/features/albums/AudioFeatures'
 import TrackList from '@/app/components/features/albums/TrackList'
+import ArtworkEditModal from '@/app/components/features/albums/ArtworkEditModal'
+import AlbumDetailsEditModal from '@/app/components/features/albums/AlbumDetailsEditModal'
 import Header from '@/app/components/shared/Header'
 import ScrollToTop from '@/app/components/shared/ScrollToTop'
 import { Album } from '@/lib/types'
-import { Calendar, Tag, Heart, MessageSquare, Music } from 'lucide-react'
+import { Calendar, Tag, Heart, MessageSquare, Music, Camera, Edit } from 'lucide-react'
 
 export default function AlbumContent({ id }: { id: string }) {
   const [album, setAlbum] = useState<Album | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isArtworkEditOpen, setIsArtworkEditOpen] = useState(false)
+  const [isDetailsEditOpen, setIsDetailsEditOpen] = useState(false)
 
   useEffect(() => {
     const fetchAlbum = async () => {
@@ -43,6 +47,10 @@ export default function AlbumContent({ id }: { id: string }) {
 
     fetchAlbum()
   }, [id])
+
+  const handleAlbumSaved = (updatedAlbum: Album) => {
+    setAlbum(updatedAlbum)
+  }
 
   if (isLoading || !album) {
     return <AlbumPageSkeleton />
@@ -76,10 +84,10 @@ export default function AlbumContent({ id }: { id: string }) {
 
               {/* Hero Content */}
               <div className="relative z-10 bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-zinc-800/50">
-                <div className="space-y-6 text-center lg:text-left">
+                <div className="space-y-6 text-left">
                   {/* Album Artwork */}
                   <div className="flex justify-center lg:justify-start">
-                    <div className="relative w-64 h-64 lg:w-80 lg:h-80 rounded-xl overflow-hidden shadow-2xl">
+                    <div className="relative w-64 h-64 lg:w-80 lg:h-80 rounded-xl overflow-hidden shadow-2xl group">
                       {album.cover_art_url ? (
                         <Image
                           src={album.cover_art_url}
@@ -93,32 +101,54 @@ export default function AlbumContent({ id }: { id: string }) {
                           <Music className="w-20 h-20 text-zinc-500" />
                         </div>
                       )}
+                      
+                      {/* Artwork Edit Icon */}
+                      <button
+                        onClick={() => setIsArtworkEditOpen(true)}
+                        className="absolute top-3 right-3 p-2 bg-black/60 backdrop-blur-sm text-white rounded-lg opacity-100 md:opacity-0 md:group-hover:opacity-100 hover:bg-black/80 transition-all duration-200"
+                        title="Edit artwork"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
                   {/* Title & Artist */}
                   <div className="space-y-3">
-                    <h1 className="text-3xl lg:text-5xl font-bold text-white leading-tight">
-                      {album.title}
-                    </h1>
-                    <p className="text-xl lg:text-2xl text-zinc-300">
-                      by {album.artist}
-                    </p>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h1 className="text-3xl lg:text-5xl font-bold text-white leading-tight">
+                          {album.title}
+                        </h1>
+                        <p className="text-xl lg:text-2xl text-zinc-300 mt-2">
+                          by {album.artist}
+                        </p>
+                      </div>
+                      
+                      {/* Details Edit Icon */}
+                      <button
+                        onClick={() => setIsDetailsEditOpen(true)}
+                        className="p-2 hover:bg-zinc-800/50 rounded-lg transition-colors group shrink-0 ml-4"
+                        title="Edit album details"
+                      >
+                        <Edit className="w-5 h-5 text-zinc-400 group-hover:text-white" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Year & Genres */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-center lg:justify-start space-x-2 text-zinc-400">
+                    <div className="flex items-center justify-start space-x-2 text-zinc-400">
                       <Calendar className="w-4 h-4" />
                       <span>{album.year}</span>
                     </div>
                     
                     <div className="space-y-2">
-                      <div className="flex items-center justify-center lg:justify-start space-x-2 text-zinc-300">
+                      <div className="flex items-center justify-start space-x-2 text-zinc-300">
                         <Tag className="w-4 h-4" />
                         <span className="font-medium">Genres</span>
                       </div>
-                      <div className="flex justify-center lg:justify-start">
+                      <div className="flex justify-start">
                         <div className="flex flex-wrap gap-2 w-full">
                           {album.genres.length === 0 ? (
                             <span className="text-zinc-500 italic">No genres assigned</span>
@@ -139,11 +169,11 @@ export default function AlbumContent({ id }: { id: string }) {
 
                   {/* Personal Vibes */}
                   <div className="space-y-3">
-                    <div className="flex items-center justify-center lg:justify-start space-x-2 text-zinc-300">
+                    <div className="flex items-center justify-start space-x-2 text-zinc-300">
                       <Heart className="w-4 h-4" />
                       <span className="font-medium">Personal Vibes</span>
                     </div>
-                    <div className="flex justify-center lg:justify-start">
+                    <div className="flex justify-start">
                       <div className="flex flex-wrap gap-2 w-full">
                         {album.personal_vibes.length === 0 ? (
                           <span className="text-zinc-500 italic">No personal vibes assigned</span>
@@ -202,6 +232,21 @@ export default function AlbumContent({ id }: { id: string }) {
           </div>
         </div>
       </div>
+
+      {/* Edit Modals */}
+      <ArtworkEditModal
+        album={album}
+        isOpen={isArtworkEditOpen}
+        onClose={() => setIsArtworkEditOpen(false)}
+        onSave={handleAlbumSaved}
+      />
+      
+      <AlbumDetailsEditModal
+        album={album}
+        isOpen={isDetailsEditOpen}
+        onClose={() => setIsDetailsEditOpen(false)}
+        onSave={handleAlbumSaved}
+      />
     </div>
   )
 }
