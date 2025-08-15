@@ -39,7 +39,7 @@ export default function AlbumDetailsEditModal({ album, isOpen, onClose, onSave }
       title="Edit Album Details"
       submitButtonText="Save Changes"
       showImageUpload={false}
-      showAIAssistance={false}
+      showAIAssistance={true}
     />
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { X, Save, Sparkles } from 'lucide-react'
 import { Album } from '@/lib/types'
 import ImageUpload from '@/app/components/shared/ImageUpload'
@@ -42,6 +42,27 @@ export default function AlbumFormModal({
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isAIMenuOpen, setIsAIMenuOpen] = useState(false)
+  const [aiHelpOptions, setAIHelpOptions] = useState({
+    vibes: false,
+    genres: false,
+    thoughts: false
+  })
+  const aiMenuRef = useRef<HTMLDivElement>(null)
+
+  // Close AI menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (aiMenuRef.current && !aiMenuRef.current.contains(event.target as Node)) {
+        setIsAIMenuOpen(false)
+      }
+    }
+
+    if (isAIMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isAIMenuOpen])
 
   if (!isOpen) return null
 
@@ -55,8 +76,26 @@ export default function AlbumFormModal({
   }
 
   const handleAIAssistance = () => {
+    setIsAIMenuOpen(!isAIMenuOpen)
+  }
+
+  const handleAIHelpOptionChange = (option: keyof typeof aiHelpOptions, checked: boolean) => {
+    setAIHelpOptions(prev => ({ ...prev, [option]: checked }))
+  }
+
+  const handleAIHelp = () => {
     // TODO: Implement AI assistance functionality
-    console.log('AI assistance clicked')
+    const selectedOptions = Object.entries(aiHelpOptions)
+      .filter(([_, checked]) => checked)
+      .map(([option, _]) => option)
+    
+    console.log('AI help requested for:', selectedOptions)
+    console.log('Current form data:', { title: formData.title, artist: formData.artist })
+    
+    // Close menu after submitting
+    setIsAIMenuOpen(false)
+    // Reset selections
+    setAIHelpOptions({ vibes: false, genres: false, thoughts: false })
   }
 
   const handleSave = async () => {
@@ -133,14 +172,62 @@ export default function AlbumFormModal({
           <h2 className="text-xl font-semibold text-white">{title}</h2>
           <div className="flex items-center gap-2">
             {showAIAssistance && (
-              <button
-                onClick={handleAIAssistance}
-                className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-                disabled={isLoading}
-                title="AI Assistance"
-              >
-                <Sparkles className="w-4 h-4" />
-              </button>
+              <div className="relative" ref={aiMenuRef}>
+                <button
+                  onClick={handleAIAssistance}
+                  className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                  disabled={isLoading}
+                  title="AI Assistance"
+                >
+                  <Sparkles className="w-4 h-4" />
+                </button>
+                
+                {isAIMenuOpen && (
+                  <div className="absolute top-full right-0 mt-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg p-4 w-48 z-10">
+                    <div className="space-y-3">
+                      <div className="text-sm font-medium text-zinc-200 mb-2">Get AI help with:</div>
+                      
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={aiHelpOptions.genres}
+                          onChange={(e) => handleAIHelpOptionChange('genres', e.target.checked)}
+                          className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2"
+                        />
+                        <span className="text-sm text-zinc-300">Genres</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={aiHelpOptions.vibes}
+                          onChange={(e) => handleAIHelpOptionChange('vibes', e.target.checked)}
+                          className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2"
+                        />
+                        <span className="text-sm text-zinc-300">Vibes</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={aiHelpOptions.thoughts}
+                          onChange={(e) => handleAIHelpOptionChange('thoughts', e.target.checked)}
+                          className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2"
+                        />
+                        <span className="text-sm text-zinc-300">Thoughts</span>
+                      </label>
+                      
+                      <button
+                        onClick={handleAIHelp}
+                        disabled={!Object.values(aiHelpOptions).some(Boolean)}
+                        className="w-full text-left text-sm text-purple-400 hover:text-purple-300 disabled:text-zinc-500 disabled:cursor-not-allowed mt-3 pt-2 border-t border-zinc-700"
+                      >
+                        Help
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
             <button
               onClick={handleCancel}
