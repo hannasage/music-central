@@ -1,6 +1,6 @@
 'use client'
 
-import { Album } from '@/lib/types'
+import { Album, AlbumCreateData } from '@/lib/types'
 import AlbumFormModal from './AlbumFormModal'
 
 interface AlbumDetailsEditModalProps {
@@ -11,7 +11,7 @@ interface AlbumDetailsEditModalProps {
 }
 
 export default function AlbumDetailsEditModal({ album, isOpen, onClose, onSave }: AlbumDetailsEditModalProps) {
-  const handleSave = async (albumData: any) => {
+  const handleSave = async (albumData: AlbumCreateData) => {
     const response = await fetch(`/api/albums/${album.id}`, {
       method: 'PATCH',
       headers: {

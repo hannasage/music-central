@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Upload, X, Check } from 'lucide-react'
 
@@ -22,6 +22,11 @@ export default function ImageUpload({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Update preview when currentImage prop changes (e.g., from AI assistance)
+  useEffect(() => {
+    setPreviewUrl(currentImage || null)
+  }, [currentImage])
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]

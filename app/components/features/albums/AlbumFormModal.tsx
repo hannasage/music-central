@@ -2,13 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { X, Save, Sparkles } from 'lucide-react'
-import { Album } from '@/lib/types'
+import { Album, AlbumCreateData } from '@/lib/types'
 import ImageUpload from '@/app/components/shared/ImageUpload'
 
 interface AlbumFormModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (albumData: any) => Promise<void>
+  onSave: (albumData: AlbumCreateData) => Promise<void>
   album?: Album // If provided, this is edit mode
   title: string
   submitButtonText: string
@@ -48,7 +48,8 @@ export default function AlbumFormModal({
   const [aiHelpOptions, setAIHelpOptions] = useState({
     vibes: false,
     genres: false,
-    thoughts: false
+    thoughts: false,
+    artwork: false
   })
   const aiMenuRef = useRef<HTMLDivElement>(null)
 
@@ -105,8 +106,8 @@ export default function AlbumFormModal({
     }
 
     const selectedOptions = Object.entries(aiHelpOptions)
-      .filter(([_, checked]) => checked)
-      .map(([option, _]) => option)
+      .filter(([, checked]) => checked)
+      .map(([option]) => option)
     
     if (selectedOptions.length === 0) {
       setAIError('Please select at least one field for AI assistance')
@@ -162,6 +163,11 @@ export default function AlbumFormModal({
         updates.thoughts = suggestions.thoughts
       }
 
+      if (suggestions.artwork && selectedOptions.includes('artwork')) {
+        // Set artwork URL
+        updates.cover_art_url = suggestions.artwork
+      }
+
       // Apply updates to form
       setFormData(prev => ({ ...prev, ...updates }))
 
@@ -170,7 +176,7 @@ export default function AlbumFormModal({
 
       // Close menu and reset selections
       setIsAIMenuOpen(false)
-      setAIHelpOptions({ vibes: false, genres: false, thoughts: false })
+      setAIHelpOptions({ vibes: false, genres: false, thoughts: false, artwork: false })
 
     } catch (err) {
       console.error('AI assistance error:', err)
@@ -301,6 +307,19 @@ export default function AlbumFormModal({
                         />
                         <span className="text-sm text-zinc-300">Thoughts</span>
                       </label>
+                      
+                      {showImageUpload && (
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={aiHelpOptions.artwork}
+                            onChange={(e) => handleAIHelpOptionChange('artwork', e.target.checked)}
+                            disabled={isAILoading}
+                            className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2 disabled:opacity-50"
+                          />
+                          <span className="text-sm text-zinc-300">Artwork</span>
+                        </label>
+                      )}
                       
                       {aiError && (
                         <div className="text-xs text-red-400 mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded">

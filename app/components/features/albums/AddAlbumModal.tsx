@@ -2,13 +2,14 @@
 
 import { useRouter } from 'next/navigation'
 import { useAddAlbumModal } from '@/app/contexts/AddAlbumModalContext'
+import { AlbumCreateData } from '@/lib/types'
 import AlbumFormModal from './AlbumFormModal'
 
 export default function AddAlbumModal() {
   const { isOpen, closeModal } = useAddAlbumModal()
   const router = useRouter()
 
-  const handleSave = async (albumData: any) => {
+  const handleSave = async (albumData: AlbumCreateData) => {
     const response = await fetch('/api/albums', {
       method: 'POST',
       headers: {
