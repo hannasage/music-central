@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { createClientSideClient } from '@/lib/supabase-client'
 import StreamingLinks from '@/app/components/features/streaming/StreamingLinks'
 import AudioFeatures from '@/app/components/features/albums/AudioFeatures'
-import TrackList from '@/app/components/features/albums/TrackList'
 import ArtworkEditModal from '@/app/components/features/albums/ArtworkEditModal'
 import AlbumDetailsEditModal from '@/app/components/features/albums/AlbumDetailsEditModal'
 import Header from '@/app/components/shared/Header'
@@ -62,10 +61,8 @@ export default function AlbumContent({ id }: { id: string }) {
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
 
-        {/* Main Layout: Desktop 2-column, Mobile stacked */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Left Column - Album Hero & Details */}
-          <div className="space-y-8">
+        {/* Main Layout: Full width */}
+        <div className="space-y-8">
             {/* Hero Section with Background */}
             <div className="relative">
               {/* Background Image */}
@@ -84,10 +81,10 @@ export default function AlbumContent({ id }: { id: string }) {
 
               {/* Hero Content */}
               <div className="relative z-10 bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-zinc-800/50">
-                <div className="space-y-6 text-left">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                   {/* Album Artwork */}
                   <div className="flex justify-center lg:justify-start">
-                    <div className="relative w-64 h-64 lg:w-80 lg:h-80 rounded-xl overflow-hidden shadow-2xl group">
+                    <div className="relative w-64 h-64 lg:w-full lg:aspect-square rounded-xl overflow-hidden shadow-2xl group">
                       {album.cover_art_url ? (
                         <Image
                           src={album.cover_art_url}
@@ -113,7 +110,9 @@ export default function AlbumContent({ id }: { id: string }) {
                     </div>
                   </div>
 
-                  {/* Title & Artist */}
+                  {/* Album Information */}
+                  <div className="space-y-6">
+                    {/* Title & Artist */}
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -227,30 +226,31 @@ export default function AlbumContent({ id }: { id: string }) {
                     </div>
                   </div>
 
-                  {/* Streaming Links */}
-                  {!album.descriptors?.includes('vinyl-exclusive') && (
-                    <div className="pt-4">
-                      <StreamingLinks album={album} />
-                    </div>
-                  )}
+                    {/* Streaming Links */}
+                    {!album.descriptors?.includes('vinyl-exclusive') && (
+                      <div className="pt-4">
+                        <StreamingLinks album={album} />
+                      </div>
+                    )}
+
+                    {/* Personal Thoughts */}
+                    {album.thoughts && (
+                      <div className="pt-6 border-t border-zinc-700/50">
+                        <div className="flex items-center space-x-2 mb-4">
+                          <MessageSquare className="w-5 h-5 text-zinc-400" />
+                          <h3 className="text-lg font-semibold text-white">Personal Thoughts</h3>
+                        </div>
+                        <div className="prose prose-zinc prose-invert max-w-none">
+                          <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                            {album.thoughts}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Personal Thoughts */}
-            {album.thoughts && (
-              <div className="bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-zinc-800/50">
-                <div className="flex items-center space-x-2 mb-4">
-                  <MessageSquare className="w-5 h-5 text-zinc-400" />
-                  <h2 className="text-xl font-semibold text-white">Personal Thoughts</h2>
-                </div>
-                <div className="prose prose-zinc prose-invert max-w-none">
-                  <p className="text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                    {album.thoughts}
-                  </p>
-                </div>
-              </div>
-            )}
 
             {/* Audio Features */}
             {album.audio_features && (
@@ -258,16 +258,6 @@ export default function AlbumContent({ id }: { id: string }) {
                 <AudioFeatures audioFeatures={album.audio_features} />
               </div>
             )}
-          </div>
-
-          {/* Right Column - Track List */}
-          <div className="space-y-8">
-            {album.tracks && album.tracks.length > 0 && (
-              <div className="bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-zinc-800/50 lg:sticky lg:top-8">
-                <TrackList tracks={album.tracks} />
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
