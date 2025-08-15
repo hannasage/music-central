@@ -43,6 +43,8 @@ export default function AlbumFormModal({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isAIMenuOpen, setIsAIMenuOpen] = useState(false)
+  const [isAILoading, setIsAILoading] = useState(false)
+  const [aiError, setAIError] = useState<string | null>(null)
   const [aiHelpOptions, setAIHelpOptions] = useState({
     vibes: false,
     genres: false,
@@ -69,6 +71,10 @@ export default function AlbumFormModal({
   const handleInputChange = (field: string, value: string | number | boolean | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     setError(null)
+    // Clear AI error when user types in title/artist fields
+    if ((field === 'title' || field === 'artist') && aiError) {
+      setAIError(null)
+    }
   }
 
   const handleImageUploaded = (url: string) => {
@@ -81,21 +87,97 @@ export default function AlbumFormModal({
 
   const handleAIHelpOptionChange = (option: keyof typeof aiHelpOptions, checked: boolean) => {
     setAIHelpOptions(prev => ({ ...prev, [option]: checked }))
+    // Clear AI error when user changes selections
+    if (aiError) {
+      setAIError(null)
+    }
   }
 
-  const handleAIHelp = () => {
-    // TODO: Implement AI assistance functionality
+  const handleAIHelp = async () => {
+    // Validation
+    if (!formData.title.trim()) {
+      setAIError('Album title is required for AI assistance')
+      return
+    }
+    if (!formData.artist.trim()) {
+      setAIError('Artist name is required for AI assistance')
+      return
+    }
+
     const selectedOptions = Object.entries(aiHelpOptions)
       .filter(([_, checked]) => checked)
       .map(([option, _]) => option)
     
-    console.log('AI help requested for:', selectedOptions)
-    console.log('Current form data:', { title: formData.title, artist: formData.artist })
-    
-    // Close menu after submitting
-    setIsAIMenuOpen(false)
-    // Reset selections
-    setAIHelpOptions({ vibes: false, genres: false, thoughts: false })
+    if (selectedOptions.length === 0) {
+      setAIError('Please select at least one field for AI assistance')
+      return
+    }
+
+    setIsAILoading(true)
+    setAIError(null)
+
+    try {
+      console.log(`🤖 Requesting AI help for: ${selectedOptions.join(', ')}`)
+      
+      const response = await fetch('/api/ai-assistance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: formData.title.trim(),
+          artist: formData.artist.trim(),
+          year: formData.year,
+          selectedFields: selectedOptions
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'AI assistance failed')
+      }
+
+      const { suggestions } = result
+      console.log(`✨ AI suggestions received:`, suggestions)
+
+      // Merge AI suggestions into form data
+      const updates: Partial<typeof formData> = {}
+
+      if (suggestions.genres && selectedOptions.includes('genres')) {
+        // Merge with existing genres, removing duplicates
+        const existingGenres = formData.genres ? formData.genres.split(',').map(g => g.trim()).filter(Boolean) : []
+        const combinedGenres = [...existingGenres, ...suggestions.genres]
+        const uniqueGenres = Array.from(new Set(combinedGenres))
+        updates.genres = uniqueGenres.join(', ')
+      }
+
+      if (suggestions.vibes && selectedOptions.includes('vibes')) {
+        // Replace existing vibes entirely
+        updates.personal_vibes = suggestions.vibes.join(', ')
+      }
+
+      if (suggestions.thoughts && selectedOptions.includes('thoughts')) {
+        // Replace existing thoughts entirely
+        updates.thoughts = suggestions.thoughts
+      }
+
+      // Apply updates to form
+      setFormData(prev => ({ ...prev, ...updates }))
+
+      // Show success feedback
+      console.log(`🎉 Applied AI suggestions for: ${selectedOptions.join(', ')}`)
+
+      // Close menu and reset selections
+      setIsAIMenuOpen(false)
+      setAIHelpOptions({ vibes: false, genres: false, thoughts: false })
+
+    } catch (err) {
+      console.error('AI assistance error:', err)
+      setAIError(err instanceof Error ? err.message : 'Failed to get AI assistance')
+    } finally {
+      setIsAILoading(false)
+    }
   }
 
   const handleSave = async () => {
@@ -192,7 +274,8 @@ export default function AlbumFormModal({
                           type="checkbox"
                           checked={aiHelpOptions.genres}
                           onChange={(e) => handleAIHelpOptionChange('genres', e.target.checked)}
-                          className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2"
+                          disabled={isAILoading}
+                          className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2 disabled:opacity-50"
                         />
                         <span className="text-sm text-zinc-300">Genres</span>
                       </label>
@@ -202,7 +285,8 @@ export default function AlbumFormModal({
                           type="checkbox"
                           checked={aiHelpOptions.vibes}
                           onChange={(e) => handleAIHelpOptionChange('vibes', e.target.checked)}
-                          className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2"
+                          disabled={isAILoading}
+                          className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2 disabled:opacity-50"
                         />
                         <span className="text-sm text-zinc-300">Vibes</span>
                       </label>
@@ -212,17 +296,27 @@ export default function AlbumFormModal({
                           type="checkbox"
                           checked={aiHelpOptions.thoughts}
                           onChange={(e) => handleAIHelpOptionChange('thoughts', e.target.checked)}
-                          className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2"
+                          disabled={isAILoading}
+                          className="w-4 h-4 text-purple-600 bg-zinc-700 border-zinc-600 rounded focus:ring-purple-500 focus:ring-2 disabled:opacity-50"
                         />
                         <span className="text-sm text-zinc-300">Thoughts</span>
                       </label>
                       
+                      {aiError && (
+                        <div className="text-xs text-red-400 mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded">
+                          {aiError}
+                        </div>
+                      )}
+                      
                       <button
                         onClick={handleAIHelp}
-                        disabled={!Object.values(aiHelpOptions).some(Boolean)}
-                        className="w-full text-left text-sm text-purple-400 hover:text-purple-300 disabled:text-zinc-500 disabled:cursor-not-allowed mt-3 pt-2 border-t border-zinc-700"
+                        disabled={!Object.values(aiHelpOptions).some(Boolean) || isAILoading}
+                        className="w-full text-left text-sm text-purple-400 hover:text-purple-300 disabled:text-zinc-500 disabled:cursor-not-allowed mt-3 pt-2 border-t border-zinc-700 flex items-center justify-between"
                       >
-                        Help
+                        <span>{isAILoading ? 'Getting AI help...' : 'Help'}</span>
+                        {isAILoading && (
+                          <div className="w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" />
+                        )}
                       </button>
                     </div>
                   </div>
