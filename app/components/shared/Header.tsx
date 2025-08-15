@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Search, Menu, X, Disc3, Sparkles, LogOut } from 'lucide-react'
+import { Search, Menu, X, Disc3, Sparkles, LogOut, Plus } from 'lucide-react'
 import { createClientSideClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
 import RandomButton from '../ui/buttons/RandomButton'
+import { useAddAlbumModal } from '@/app/contexts/AddAlbumModalContext'
 import type { User } from '@supabase/supabase-js'
 
 export default function Header() {
@@ -15,6 +16,7 @@ export default function Header() {
   const [user, setUser] = useState<User | null>(null)
   const supabase = createClientSideClient()
   const router = useRouter()
+  const { openModal } = useAddAlbumModal()
 
   useEffect(() => {
     // Get initial session
@@ -108,6 +110,18 @@ export default function Header() {
               </div>
             </form>
 
+            {/* Add Album Button - Desktop Only (when authenticated) */}
+            {user && (
+              <button
+                onClick={openModal}
+                className="hidden md:flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200"
+                title="Add Album"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Album</span>
+              </button>
+            )}
+
             {/* Random Button - Desktop Only */}
             <div className="hidden md:block">
               <RandomButton />
@@ -164,6 +178,20 @@ export default function Header() {
               <Sparkles className="w-4 h-4" />
               <span>AI Curator</span>
             </Link>
+
+            {/* Mobile Add Album Button - Only show when authenticated */}
+            {user && (
+              <button
+                onClick={() => {
+                  openModal()
+                  setIsMobileMenuOpen(false)
+                }}
+                className="flex items-center space-x-2 px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 w-full text-left"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Album</span>
+              </button>
+            )}
             
             {/* Mobile Random Button */}
             <div className="px-4 py-2">

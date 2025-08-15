@@ -199,6 +199,7 @@ Database ID: ${albumToRestore.id}`
           tracks,
           featured: false,
           removed: false,
+          descriptors: [],
           created_at: '',
           updated_at: ''
         }
@@ -236,6 +237,7 @@ Database ID: ${albumToRestore.id}`
           cover_art_url: coverArtUrl || null,
           streaming_links: streamingLinks,
           tracks: tracks,
+          descriptors: [],
           removed: false
         }
 

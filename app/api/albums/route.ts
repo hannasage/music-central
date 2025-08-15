@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Validate required fields
-    const { title, artist, year, spotify_id, genres, cover_art_url, tracks, personal_vibes, thoughts, streaming_links } = body
+    const { title, artist, year, spotify_id, genres, cover_art_url, tracks, personal_vibes, thoughts, streaming_links, descriptors } = body
     
     if (!title || !artist || !year) {
       return createErrorResponse('Missing required fields: title, artist, year', 400)
@@ -86,7 +86,8 @@ export async function POST(request: NextRequest) {
       streaming_links: streaming_links || {},
       tracks: Array.isArray(tracks) ? tracks : [],
       featured: false,
-      removed: false
+      removed: false,
+      descriptors: Array.isArray(descriptors) ? descriptors : []
     }
 
     // Validate year

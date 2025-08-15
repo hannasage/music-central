@@ -7,6 +7,7 @@ import { StreamingPreferenceProvider } from "./contexts/StreamingPreferenceConte
 import StreamingPreferenceModal from "./components/features/streaming/StreamingPreferenceModal";
 import FloatingActionButtons from "./components/shared/FloatingActionButtons";
 import StreamingSettingsFAB from "./components/features/streaming/StreamingSettingsFAB";
+import AddAlbumModalWrapper from "./components/features/albums/AddAlbumModalWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,13 +45,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <StreamingPreferenceProvider>
-          <AccessibilityProvider />
-          {children}
-          <FloatingActionButtons>
-            <AuthenticatedAIChat />
-            <StreamingSettingsFAB />
-          </FloatingActionButtons>
-          <StreamingPreferenceModal />
+          <AddAlbumModalWrapper>
+            <AccessibilityProvider />
+            {children}
+            <FloatingActionButtons>
+              <AuthenticatedAIChat />
+              <StreamingSettingsFAB />
+            </FloatingActionButtons>
+            <StreamingPreferenceModal />
+          </AddAlbumModalWrapper>
         </StreamingPreferenceProvider>
       </body>
     </html>

@@ -28,6 +28,23 @@ export interface StreamingLinks {
   youtube_music?: string
 }
 
+// Type for album data sent to API (subset of Album interface)
+export interface AlbumCreateData {
+  title: string
+  artist: string
+  year: number
+  spotify_id?: string
+  genres: string[]
+  personal_vibes: string[]
+  thoughts?: string | null
+  cover_art_url?: string | null
+  streaming_links: StreamingLinks
+  tracks?: Track[]
+  featured: boolean
+  descriptors: string[]
+  removed?: boolean
+}
+
 export interface Album {
   id: string
   title: string
@@ -43,6 +60,7 @@ export interface Album {
   tracks?: Track[]
   featured: boolean
   removed: boolean
+  descriptors: string[]
   created_at: string
   updated_at: string
 }
