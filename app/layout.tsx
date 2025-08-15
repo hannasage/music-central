@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AccessibilityProvider from "./components/shared/AccessibilityProvider";
-// import AuthenticatedAIChat from "./components/features/ai-curator/AuthenticatedAIChat";
+import AuthenticatedAIChat from "./components/features/ai-curator/AuthenticatedAIChat";
 import { StreamingPreferenceProvider } from "./contexts/StreamingPreferenceContext";
 import StreamingPreferenceModal from "./components/features/streaming/StreamingPreferenceModal";
 import FloatingActionButtons from "./components/shared/FloatingActionButtons";
@@ -49,7 +49,7 @@ export default function RootLayout({
             <AccessibilityProvider />
             {children}
             <FloatingActionButtons>
-              {/* <AuthenticatedAIChat /> */}
+              <AuthenticatedAIChat />
               <StreamingSettingsFAB />
             </FloatingActionButtons>
             <StreamingPreferenceModal />
