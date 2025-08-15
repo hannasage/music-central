@@ -83,8 +83,8 @@ export default function AlbumContent({ id }: { id: string }) {
               <div className="relative z-10 bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-zinc-800/50">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                   {/* Album Artwork */}
-                  <div className="flex justify-center lg:justify-start">
-                    <div className="relative w-64 h-64 lg:w-full lg:aspect-square rounded-xl overflow-hidden shadow-2xl group">
+                  <div className="flex justify-center lg:justify-start lg:items-start">
+                    <div className="relative w-full aspect-square max-w-md mx-auto lg:mx-0 lg:max-w-sm rounded-xl overflow-hidden shadow-2xl group">
                       {album.cover_art_url ? (
                         <Image
                           src={album.cover_art_url}
