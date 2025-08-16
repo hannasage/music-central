@@ -13,8 +13,53 @@ interface VerticalAlbumSlidesProps {
 export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isScrolling, setIsScrolling] = useState(false)
-  const [scrollThreshold, setScrollThreshold] = useState(0)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [progress, setProgress] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+  const autoSlideIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Auto-slide functionality
+  useEffect(() => {
+    if (!isAutoPlaying || albums.length <= 1) return
+
+    const startAutoSlide = () => {
+      // Reset progress
+      setProgress(0)
+      
+      // Start progress animation
+      progressIntervalRef.current = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            return 100
+          }
+          return prev + (100 / (8000 / 50)) // 8 seconds total, update every 50ms
+        })
+      }, 50)
+
+      // Auto advance slide after 8 seconds
+      autoSlideIntervalRef.current = setTimeout(() => {
+        setCurrentSlide(prev => {
+          const nextSlide = prev + 1
+          if (nextSlide >= albums.length) {
+            return 0 // Loop back to first slide
+          }
+          return nextSlide
+        })
+      }, 8000)
+    }
+
+    startAutoSlide()
+
+    return () => {
+      if (autoSlideIntervalRef.current) {
+        clearTimeout(autoSlideIntervalRef.current)
+      }
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current)
+      }
+    }
+  }, [isAutoPlaying, albums.length, currentSlide])
 
   useEffect(() => {
     const container = containerRef.current
@@ -25,35 +70,36 @@ export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps
       
       if (isScrolling) return
 
-      // Accumulate scroll delta for less sensitivity
-      setScrollThreshold(prev => {
-        const newThreshold = prev + e.deltaY
-        
-        // Only trigger slide change when threshold is reached
-        if (Math.abs(newThreshold) > 100) {
-          setIsScrolling(true)
-          
-          if (newThreshold > 0 && currentSlide < albums.length - 1) {
-            // Scroll down - move to next slide
-            setCurrentSlide(prev => Math.min(prev + 1, albums.length - 1))
-          } else if (newThreshold < 0 && currentSlide > 0) {
-            // Scroll up - move to previous slide
-            setCurrentSlide(prev => Math.max(prev - 1, 0))
-          }
+      // Pause auto-slide when user scrolls
+      setIsAutoPlaying(false)
+      
+      // Simple one-scroll-event = one-slide behavior
+      setIsScrolling(true)
+      
+      if (e.deltaY > 0 && currentSlide < albums.length - 1) {
+        // Scroll down - move to next slide
+        setCurrentSlide(prev => Math.min(prev + 1, albums.length - 1))
+      } else if (e.deltaY < 0 && currentSlide > 0) {
+        // Scroll up - move to previous slide
+        setCurrentSlide(prev => Math.max(prev - 1, 0))
+      }
 
-          setTimeout(() => setIsScrolling(false), 800)
-          return 0 // Reset threshold
-        }
-        
-        return newThreshold
-      })
+      // Resume auto-slide after 3 seconds of no interaction
+      setTimeout(() => {
+        setIsScrolling(false)
+        setTimeout(() => setIsAutoPlaying(true), 3000)
+      }, 500)
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' && currentSlide < albums.length - 1) {
+        setIsAutoPlaying(false)
         setCurrentSlide(prev => Math.min(prev + 1, albums.length - 1))
+        setTimeout(() => setIsAutoPlaying(true), 3000)
       } else if (e.key === 'ArrowUp' && currentSlide > 0) {
+        setIsAutoPlaying(false)
         setCurrentSlide(prev => Math.max(prev - 1, 0))
+        setTimeout(() => setIsAutoPlaying(true), 3000)
       }
     }
 
@@ -106,7 +152,11 @@ export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps
         {albums.map((_, index) => (
           <button
             key={index}
-            onClick={() => setCurrentSlide(Math.max(0, Math.min(index, albums.length - 1)))}
+            onClick={() => {
+              setIsAutoPlaying(false)
+              setCurrentSlide(Math.max(0, Math.min(index, albums.length - 1)))
+              setTimeout(() => setIsAutoPlaying(true), 3000)
+            }}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
               index === currentSlide
                 ? 'bg-white scale-125'
@@ -120,7 +170,11 @@ export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps
       {/* Navigation Arrows */}
       {currentSlide > 0 && (
         <button
-          onClick={() => setCurrentSlide(prev => Math.max(prev - 1, 0))}
+          onClick={() => {
+            setIsAutoPlaying(false)
+            setCurrentSlide(prev => Math.max(prev - 1, 0))
+            setTimeout(() => setIsAutoPlaying(true), 3000)
+          }}
           className="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 p-1.5 text-white/50 hover:text-white/80 transition-colors duration-200"
           aria-label="Previous slide"
         >
@@ -130,13 +184,27 @@ export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps
 
       {currentSlide < albums.length - 1 && (
         <button
-          onClick={() => setCurrentSlide(prev => Math.min(prev + 1, albums.length - 1))}
-          className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-50 p-1.5 text-white/50 hover:text-white/80 transition-colors duration-200"
+          onClick={() => {
+            setIsAutoPlaying(false)
+            setCurrentSlide(prev => Math.min(prev + 1, albums.length - 1))
+            setTimeout(() => setIsAutoPlaying(true), 3000)
+          }}
+          className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 p-1.5 text-white/50 hover:text-white/80 transition-colors duration-200"
           aria-label="Next slide"
         >
           <ChevronDown className="w-5 h-5" />
         </button>
       )}
+
+      {/* Progress Bar */}
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="h-1 bg-white/20">
+          <div 
+            className="h-full bg-gradient-to-r from-blue-400 to-purple-500 transition-all duration-100 ease-linear"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
 
       {/* Slide Counter */}
       <div className="fixed bottom-4 right-4 z-50 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-medium">
@@ -157,7 +225,7 @@ function AlbumSlide({ album, isActive, slideIndex }: AlbumSlideProps) {
   const secondaryGenres = album.genres?.slice(1, 3) || []
 
   return (
-    <div className="h-screen relative overflow-hidden flex items-center">
+    <div className="h-screen relative overflow-hidden flex items-center justify-center">
       {/* Background Image with Parallax Effect */}
       <div className="absolute inset-0">
         {album.cover_art_url ? (
