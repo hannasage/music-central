@@ -252,3 +252,64 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Vertical slide snap scrolling */
+.snap-container {
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.snap-slide {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Smooth transitions for slide animations */
+.slide-transition {
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Parallax effect animations */
+@keyframes parallax-slow {
+  from { transform: scale(1.1) translateY(0px); }
+  to { transform: scale(1.05) translateY(-20px); }
+}
+
+.parallax-bg {
+  animation: parallax-slow 8s ease-out infinite alternate;
+}
+
+/* Slide content animations */
+.slide-enter {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.slide-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 1s ease-out 0.3s, transform 1s ease-out 0.3s;
+}
+
+/* Navigation dots hover effects */
+.nav-dot {
+  position: relative;
+}
+
+.nav-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.nav-dot:hover::before {
+  width: 24px;
+  height: 24px;
+}
