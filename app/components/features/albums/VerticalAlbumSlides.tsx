@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Album } from '@/lib/types'
-import { Music, ExternalLink, Play, ChevronDown, ChevronUp } from 'lucide-react'
+import { Music, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface VerticalAlbumSlidesProps {
   albums: Album[]
