@@ -147,8 +147,8 @@ export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps
         ))}
       </div>
 
-      {/* Navigation Indicators - Hidden on Mobile */}
-      <div className="hidden lg:flex fixed right-4 top-1/2 transform -translate-y-1/2 z-50 flex-col space-y-2">
+      {/* Navigation Indicators - Desktop Only */}
+      <div className="hidden 2xl:flex fixed right-4 top-1/2 transform -translate-y-1/2 z-50 flex-col space-y-2">
         {albums.map((_, index) => (
           <button
             key={index}
@@ -167,7 +167,7 @@ export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps
         ))}
       </div>
 
-      {/* Navigation Arrows - Hidden on Mobile */}
+      {/* Navigation Arrows - Desktop Only */}
       {currentSlide > 0 && (
         <button
           onClick={() => {
@@ -175,7 +175,7 @@ export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps
             setCurrentSlide(prev => Math.max(prev - 1, 0))
             setTimeout(() => setIsAutoPlaying(true), 3000)
           }}
-          className="hidden lg:block fixed top-24 left-1/2 transform -translate-x-1/2 z-50 p-1.5 text-white/50 hover:text-white/80 transition-colors duration-200"
+          className="hidden 2xl:block fixed top-24 left-1/2 transform -translate-x-1/2 z-50 p-1.5 text-white/50 hover:text-white/80 transition-colors duration-200"
           aria-label="Previous slide"
         >
           <ChevronUp className="w-5 h-5" />
@@ -189,7 +189,7 @@ export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps
             setCurrentSlide(prev => Math.min(prev + 1, albums.length - 1))
             setTimeout(() => setIsAutoPlaying(true), 3000)
           }}
-          className="hidden lg:block fixed bottom-16 left-1/2 transform -translate-x-1/2 z-50 p-1.5 text-white/50 hover:text-white/80 transition-colors duration-200"
+          className="hidden 2xl:block fixed bottom-16 left-1/2 transform -translate-x-1/2 z-50 p-1.5 text-white/50 hover:text-white/80 transition-colors duration-200"
           aria-label="Next slide"
         >
           <ChevronDown className="w-5 h-5" />
@@ -251,15 +251,80 @@ function AlbumSlide({ album, isActive, slideIndex }: AlbumSlideProps) {
       </div>
 
       {/* Perfectly Centered Content Container */}
-      <div className="absolute inset-0 flex items-center justify-center px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20" style={{ transform: 'translateY(-2rem)' }}>
+      <div className="absolute inset-0 flex items-center justify-center px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20" style={{ transform: 'translateY(-3rem)' }}>
         <div className="w-full max-w-5xl">
           
           {/* Mobile-First Responsive Layout */}
-          <div className="flex flex-col items-center text-left space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-12 lg:items-center">
+          <div className="flex flex-col items-center text-left space-y-4 md:flex-row md:space-y-0 md:space-x-8 md:items-center xl:grid xl:grid-cols-2 xl:gap-12">
             
-            {/* Album Artwork - Responsive Sizing */}
+            {/* Mobile: Full Landing Page Layout */}
+            <div className="md:hidden w-full h-full flex flex-col">
+              {/* Hero Section with Album Art */}
+              <div className="flex-1 relative flex items-center justify-center px-6 py-8">
+                <Link href={`/albums/${album.id}`} className="w-full max-w-sm group">
+                  <div className="relative w-full aspect-square rounded-3xl overflow-hidden shadow-2xl">
+                    {album.cover_art_url ? (
+                      <Image
+                        src={album.cover_art_url}
+                        alt={`${album.title} by ${album.artist}`}
+                        fill
+                        className="object-cover group-active:scale-95 transition-transform duration-200"
+                        priority={slideIndex < 2}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center group-active:scale-95 transition-transform duration-200">
+                        <Music className="w-16 h-16 text-zinc-500" />
+                      </div>
+                    )}
+                    
+                    {/* Explore Overlay */}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-active:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-full p-4">
+                        <ExternalLink className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Album Information Section */}
+              <div className="px-6 pb-8 space-y-6">
+                {/* Featured Badge */}
+                <div className="flex justify-center">
+                  <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-sm font-medium text-white shadow-lg">
+                    <Music className="w-4 h-4 mr-2" />
+                    Featured Album
+                  </div>
+                </div>
+
+                {/* Title and Artist */}
+                <Link href={`/albums/${album.id}`} className="block text-center space-y-2 group">
+                  <h1 className="text-3xl font-bold text-white leading-tight group-active:text-zinc-200 transition-colors duration-200">
+                    {album.title}
+                  </h1>
+                  <p className="text-xl text-zinc-300 font-light group-active:text-zinc-400 transition-colors duration-200">
+                    by {album.artist}
+                  </p>
+                </Link>
+
+                {/* Genres */}
+                {album.genres && album.genres.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {album.genres.slice(0, 3).map((genre, idx) => (
+                      <span key={idx} className="px-3 py-1.5 bg-zinc-800/60 rounded-full border border-zinc-700/60 text-sm font-medium text-zinc-300 backdrop-blur-sm">
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+
+              </div>
+            </div>
+
+            {/* Desktop: Album Artwork */}
             <div 
-              className="w-full flex-shrink-0 lg:w-auto lg:order-1"
+              className="hidden md:block w-full flex-shrink-0 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 2xl:w-96 2xl:h-96 xl:order-1"
               style={{
                 transform: isActive ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
                 opacity: isActive ? 1 : 0.8,
@@ -267,30 +332,32 @@ function AlbumSlide({ album, isActive, slideIndex }: AlbumSlideProps) {
               }}
             >
               <div className="relative group">
-                <div className="relative w-full aspect-square lg:w-72 lg:h-72 xl:w-80 xl:h-80 2xl:w-96 2xl:h-96 rounded-2xl overflow-hidden shadow-2xl">
-                  {album.cover_art_url ? (
-                    <Image
-                      src={album.cover_art_url}
-                      alt={`${album.title} by ${album.artist}`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
-                      priority={slideIndex < 2}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
-                      <Music className="w-16 h-16 text-zinc-500" />
-                    </div>
-                  )}
-                  
-                  {/* Subtle Hover Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </div>
+                <Link href={`/albums/${album.id}`}>
+                  <div className="relative w-full aspect-square rounded-2xl overflow-hidden shadow-2xl group-hover:scale-105 transition-transform duration-700">
+                    {album.cover_art_url ? (
+                      <Image
+                        src={album.cover_art_url}
+                        alt={`${album.title} by ${album.artist}`}
+                        fill
+                        className="object-cover"
+                        priority={slideIndex < 2}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
+                        <Music className="w-16 h-16 text-zinc-500" />
+                      </div>
+                    )}
+                    
+                    {/* Desktop: Subtle Hover Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </div>
+                </Link>
               </div>
             </div>
 
-            {/* Album Information - Responsive Typography */}
+            {/* Album Information - Hidden on Mobile, Full Desktop */}
             <div 
-              className="flex-1 space-y-3 sm:space-y-4 lg:space-y-5 lg:order-2 max-w-lg lg:max-w-none"
+              className="hidden md:flex flex-1 flex-col space-y-3 lg:space-y-4 xl:space-y-5 xl:order-2 max-w-lg md:max-w-none"
               style={{
                 transform: isActive ? 'translateX(0) translateY(0)' : 'translateX(20px) translateY(15px)',
                 opacity: isActive ? 1 : 0.85,
@@ -305,37 +372,34 @@ function AlbumSlide({ album, isActive, slideIndex }: AlbumSlideProps) {
                 </div>
               </div>
 
-              {/* Title and Artist - Progressive Typography */}
-              <div className="space-y-1 sm:space-y-2">
-                <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold text-white leading-tight tracking-tight">
+              {/* Title and Artist */}
+              <div className="space-y-2">
+                <h1 className="text-4xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold text-white leading-tight tracking-tight">
                   {album.title}
                 </h1>
-                <p className="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-xl xl:text-2xl 2xl:text-3xl text-zinc-300 font-light">
+                <p className="text-xl lg:text-xl xl:text-2xl 2xl:text-3xl text-zinc-300 font-light">
                   by {album.artist}
                 </p>
               </div>
 
-              {/* Metadata Tags - Responsive Layout */}
+              {/* Metadata Tags */}
               <div className="flex flex-wrap items-center justify-start gap-2 text-zinc-400">
-                <span className="px-3 py-1.5 bg-zinc-800/60 rounded-full border border-zinc-700/60 text-sm font-medium backdrop-blur-sm">
-                  {album.year}
-                </span>
                 {primaryGenre && (
                   <span className="px-3 py-1.5 bg-zinc-800/60 rounded-full border border-zinc-700/60 text-sm font-medium backdrop-blur-sm">
                     {primaryGenre}
                   </span>
                 )}
                 {secondaryGenres.map((genre, idx) => (
-                  <span key={idx} className="px-2.5 py-1 bg-zinc-800/40 rounded-full border border-zinc-700/40 text-xs backdrop-blur-sm">
+                  <span key={idx} className="px-3 py-1.5 bg-zinc-800/60 rounded-full border border-zinc-700/60 text-sm font-medium backdrop-blur-sm">
                     {genre}
                   </span>
                 ))}
               </div>
 
-              {/* Thoughts - Responsive Text */}
+              {/* Thoughts */}
               {album.thoughts && (
                 <div className="pt-2">
-                  <p className="text-sm sm:text-base lg:text-base xl:text-lg text-zinc-300 leading-relaxed max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl">
+                  <p className="text-base lg:text-base xl:text-lg text-zinc-300 leading-relaxed max-w-lg xl:max-w-xl 2xl:max-w-2xl">
                     {album.thoughts.length > 140 
                       ? `${album.thoughts.substring(0, 140)}...` 
                       : album.thoughts
@@ -344,11 +408,11 @@ function AlbumSlide({ album, isActive, slideIndex }: AlbumSlideProps) {
                 </div>
               )}
 
-              {/* Action Button - Responsive Design */}
-              <div className="pt-3 sm:pt-4 flex justify-start">
+              {/* Action Button */}
+              <div className="pt-4 flex justify-start">
                 <Link
                   href={`/albums/${album.id}`}
-                  className="inline-flex items-center justify-center px-6 py-3 sm:px-8 sm:py-3.5 bg-white text-black rounded-xl font-semibold text-sm sm:text-base hover:bg-zinc-100 hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl group backdrop-blur-sm"
+                  className="inline-flex items-center justify-center px-8 py-3.5 bg-white text-black rounded-xl font-semibold text-base hover:bg-zinc-100 hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl group backdrop-blur-sm"
                 >
                   <span>Explore Album</span>
                   <ExternalLink className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-200" />
