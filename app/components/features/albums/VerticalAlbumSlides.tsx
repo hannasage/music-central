@@ -207,7 +207,7 @@ export default function VerticalAlbumSlides({ albums }: VerticalAlbumSlidesProps
       </div>
 
       {/* Slide Counter */}
-      <div className="fixed bottom-4 right-4 z-50 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-medium">
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-medium">
         {currentSlide + 1} / {albums.length}
       </div>
     </div>
