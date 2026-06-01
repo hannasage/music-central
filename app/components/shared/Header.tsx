@@ -73,10 +73,10 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
             <span style={{ fontSize: 22, lineHeight: 1 }}>💿</span>
-            <span style={{ fontFamily: 'var(--ui-font)', fontWeight: 600, fontSize: 14, color: C.text, letterSpacing: '0.04em' }} className="hidden md:inline">
+            <span style={{ fontFamily: 'var(--font-syne), Syne, sans-serif', fontWeight: 800, fontSize: 18, color: C.text, letterSpacing: '-0.01em' }} className="hidden md:inline">
               Music Central
             </span>
-            <span style={{ fontFamily: 'var(--ui-font)', fontWeight: 600, fontSize: 14, color: C.text, letterSpacing: '0.04em' }} className="md:hidden">
+            <span style={{ fontFamily: 'var(--font-syne), Syne, sans-serif', fontWeight: 800, fontSize: 18, color: C.text, letterSpacing: '-0.01em' }} className="md:hidden">
               MC
             </span>
           </Link>
