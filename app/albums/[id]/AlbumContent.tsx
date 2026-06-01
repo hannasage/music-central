@@ -12,6 +12,7 @@ import Header from '@/app/components/shared/Header'
 import ScrollToTop from '@/app/components/shared/ScrollToTop'
 import { Album } from '@/lib/types'
 import { Calendar, Tag, Heart, MessageSquare, Music, Camera, Edit } from 'lucide-react'
+import { Badge, Card } from '@hannasage/projection-ui'
 
 export default function AlbumContent({ id }: { id: string }) {
   const [album, setAlbum] = useState<Album | null>(null)
@@ -56,7 +57,7 @@ export default function AlbumContent({ id }: { id: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
       <ScrollToTop />
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
@@ -84,7 +85,16 @@ export default function AlbumContent({ id }: { id: string }) {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                   {/* Album Artwork */}
                   <div className="flex justify-center lg:justify-start lg:items-start">
-                    <div className="relative w-full aspect-square max-w-md mx-auto lg:mx-0 lg:max-w-sm rounded-xl overflow-hidden shadow-2xl group">
+                    <div className="relative w-full aspect-square max-w-md mx-auto lg:mx-0 lg:max-w-sm">
+                      {/* Accent glow behind art */}
+                      <div aria-hidden style={{
+                        position: 'absolute', inset: '-20%',
+                        background: 'radial-gradient(closest-side, var(--color-accent-soft), transparent)',
+                        filter: 'blur(40px)',
+                        pointerEvents: 'none',
+                        zIndex: 0,
+                      }} />
+                    <div className="relative rounded-xl overflow-hidden shadow-2xl group" style={{ zIndex: 1 }}>
                       {album.cover_art_url ? (
                         <Image
                           src={album.cover_art_url}
@@ -108,6 +118,7 @@ export default function AlbumContent({ id }: { id: string }) {
                         <Camera className="w-4 h-4" />
                       </button>
                     </div>
+                    </div> {/* closes glow wrapper */}
                   </div>
 
                   {/* Album Information */}
@@ -144,37 +155,25 @@ export default function AlbumContent({ id }: { id: string }) {
                     
                     {/* Descriptors */}
                     {album.descriptors && album.descriptors.length > 0 && (
-                      <div className="flex justify-start">
-                        <div className="flex flex-wrap gap-2 w-full">
-                          {album.descriptors.map((descriptor, index) => {
-                            const descriptorConfig = {
-                              'vinyl-exclusive': { 
-                                label: 'Vinyl Exclusive', 
-                                color: 'bg-purple-600/20 text-purple-400 border-purple-500/30' 
-                              },
-                              'alternate-cover': { 
-                                label: 'Alternate Cover', 
-                                color: 'bg-orange-600/20 text-orange-400 border-orange-500/30' 
-                              },
-                              'bonus-tracks': { 
-                                label: 'Bonus Tracks', 
-                                color: 'bg-green-600/20 text-green-400 border-green-500/30' 
-                              }
-                            }[descriptor] || { 
-                              label: descriptor, 
-                              color: 'bg-zinc-600/20 text-zinc-400 border-zinc-500/30' 
-                            }
-                            
-                            return (
-                              <span
-                                key={index}
-                                className={`${descriptorConfig.color} px-3 py-1 rounded-full text-sm border inline-flex items-center gap-2 font-medium`}
-                              >
-                                {descriptorConfig.label}
-                              </span>
-                            )
-                          })}
-                        </div>
+                      <div className="flex flex-wrap gap-2">
+                        {album.descriptors.map((descriptor, index) => {
+                          const config: Record<string, { label: string; dotColor: string; bg: string; border: string; color: string }> = {
+                            'vinyl-exclusive': { label: 'Vinyl Exclusive',  dotColor: '#c084fc', bg: 'rgba(168,85,247,0.12)',  border: 'rgba(168,85,247,0.3)',  color: '#c084fc' },
+                            'alternate-cover': { label: 'Alternate Cover',  dotColor: '#fb923c', bg: 'rgba(249,115,22,0.12)',  border: 'rgba(249,115,22,0.3)',  color: '#fb923c' },
+                            'bonus-tracks':    { label: 'Bonus Tracks',     dotColor: '#4ade80', bg: 'rgba(74,222,128,0.12)',  border: 'rgba(74,222,128,0.3)',  color: '#4ade80' },
+                          }
+                          const c = config[descriptor] ?? { label: descriptor, dotColor: 'var(--ui-muted)', bg: 'rgba(113,113,122,0.12)', border: 'rgba(113,113,122,0.3)', color: 'var(--ui-muted)' }
+                          return (
+                            <Badge
+                              key={index}
+                              dot
+                              dotColor={c.dotColor}
+                              style={{ background: c.bg, borderColor: c.border, color: c.color, borderRadius: 'var(--ui-radius-full)' }}
+                            >
+                              {c.label}
+                            </Badge>
+                          )
+                        })}
                       </div>
                     )}
                     
@@ -183,21 +182,16 @@ export default function AlbumContent({ id }: { id: string }) {
                         <Tag className="w-4 h-4" />
                         <span className="font-medium">Genres</span>
                       </div>
-                      <div className="flex justify-start">
-                        <div className="flex flex-wrap gap-2 w-full">
-                          {album.genres.length === 0 ? (
-                            <span className="text-zinc-500 italic">No genres assigned</span>
-                          ) : (
-                            album.genres.map((genre, index) => (
-                              <span
-                                key={index}
-                                className="bg-zinc-800/50 text-zinc-300 border-zinc-700/50 px-3 py-1 rounded-full text-sm border inline-flex items-center gap-2"
-                              >
-                                {genre.toLowerCase()}
-                              </span>
-                            ))
-                          )}
-                        </div>
+                      <div className="flex flex-wrap gap-2">
+                        {album.genres.length === 0 ? (
+                          <span className="text-zinc-500 italic">No genres assigned</span>
+                        ) : (
+                          album.genres.map((genre, index) => (
+                            <Badge key={index} dot={false} style={{ borderRadius: 'var(--ui-radius-full)' }}>
+                              {genre.toLowerCase()}
+                            </Badge>
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
@@ -208,21 +202,16 @@ export default function AlbumContent({ id }: { id: string }) {
                       <Heart className="w-4 h-4" />
                       <span className="font-medium">Personal Vibes</span>
                     </div>
-                    <div className="flex justify-start">
-                      <div className="flex flex-wrap gap-2 w-full">
-                        {album.personal_vibes.length === 0 ? (
-                          <span className="text-zinc-500 italic">No personal vibes assigned</span>
-                        ) : (
-                          album.personal_vibes.map((vibe, index) => (
-                            <span
-                              key={index}
-                              className="bg-blue-500/20 text-blue-400 border-blue-500/30 px-3 py-1 rounded-full text-sm border inline-flex items-center gap-2"
-                            >
-                              {vibe.toLowerCase()}
-                            </span>
-                          ))
-                        )}
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      {album.personal_vibes.length === 0 ? (
+                        <span className="text-zinc-500 italic">No personal vibes assigned</span>
+                      ) : (
+                        album.personal_vibes.map((vibe, index) => (
+                          <Badge key={index} filled style={{ borderRadius: 'var(--ui-radius-full)' }}>
+                            {vibe.toLowerCase()}
+                          </Badge>
+                        ))
+                      )}
                     </div>
                   </div>
 
@@ -254,9 +243,9 @@ export default function AlbumContent({ id }: { id: string }) {
 
             {/* Audio Features */}
             {album.audio_features && (
-              <div className="bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-zinc-800/50">
+              <Card padding="lg">
                 <AudioFeatures audioFeatures={album.audio_features} />
-              </div>
+              </Card>
             )}
         </div>
       </div>
@@ -281,7 +270,7 @@ export default function AlbumContent({ id }: { id: string }) {
 
 function AlbumPageSkeleton() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+    <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         {/* Back Button Skeleton */}
         <div className="h-6 w-32 bg-zinc-800 rounded mb-8 animate-pulse" />

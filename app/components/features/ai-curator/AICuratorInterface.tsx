@@ -165,7 +165,7 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
                   />
                   
                   <div className="flex items-center justify-center lg:hidden">
-                    <div className="text-4xl font-bold text-zinc-600">VS</div>
+                    <div className="text-4xl font-bold" style={{ color: 'var(--ui-border)', fontFamily: 'var(--ui-font)' }}>VS</div>
                   </div>
 
                   <AICuratorCard
@@ -179,8 +179,8 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
 
                 {/* VS indicator for desktop */}
                 <div className="hidden lg:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-                  <div className="w-12 h-12 bg-zinc-800/90 backdrop-blur-sm rounded-full border-2 border-zinc-700/50 flex items-center justify-center">
-                    <span className="text-lg font-bold text-zinc-300">VS</span>
+                  <div className="w-12 h-12 backdrop-blur-sm rounded-full flex items-center justify-center" style={{ background: 'var(--ui-surface)', border: '2px solid var(--ui-border)' }}>
+                    <span className="text-lg font-bold" style={{ color: 'var(--color-text)', fontFamily: 'var(--ui-font)' }}>VS</span>
                   </div>
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
                   <button
                     onClick={handleMobileSubmit}
                     disabled={isTransitioning}
-                    className="w-full py-4 bg-blue-500 hover:bg-blue-400 disabled:bg-zinc-700 disabled:opacity-50 text-white font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                    className="w-full py-4 font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 btn-cta disabled:opacity-50"
                   >
                     <span>Submit Choice</span>
                   </button>
@@ -246,15 +246,15 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
           {/* Battle History Grid */}
           {battleHistory.length > 0 && (
             <div className="max-w-4xl mx-auto">
-              <div className="bg-zinc-900/30 backdrop-blur-sm rounded-xl p-6 border border-zinc-800/30">
-                <h3 className="font-semibold text-white mb-6 flex items-center space-x-2">
-                  <TrendingUp className="w-5 h-5 text-blue-400" />
+              <div className="backdrop-blur-sm rounded-xl p-6" style={{ background: 'var(--ui-surface)', border: '1px solid var(--ui-border)' }}>
+                <h3 className="font-semibold mb-6 flex items-center space-x-2" style={{ color: 'var(--color-text)', fontFamily: 'var(--ui-font)' }}>
+                  <TrendingUp className="w-5 h-5" style={{ color: 'var(--color-accent)' }} />
                   <span>Your Choices ({battleHistory.length} rounds)</span>
                 </h3>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
                   {battleHistory.slice(-16).reverse().map((choice) => (
                     <div key={choice.round} className="group">
-                      <div className="relative aspect-square rounded-lg overflow-hidden mb-2">
+                      <div className="relative aspect-square rounded-lg overflow-hidden mb-2" style={{ background: 'var(--ui-border)' }}>
                         {choice.chosenAlbum.cover_art_url ? (
                           <Image
                             src={choice.chosenAlbum.cover_art_url}
@@ -263,20 +263,20 @@ export default function AICuratorInterface({ className = '' }: AICuratorInterfac
                             className="object-cover group-hover:scale-105 transition-transform duration-200"
                           />
                         ) : (
-                          <div className="w-full h-full bg-zinc-700 flex items-center justify-center">
-                            <Music className="w-6 h-6 text-zinc-500" />
+                          <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--ui-border)' }}>
+                            <Music className="w-6 h-6" style={{ color: 'var(--ui-muted)' }} />
                           </div>
                         )}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                        <div className="absolute top-1 right-1 bg-blue-500/90 text-white text-xs font-semibold px-1.5 py-0.5 rounded">
+                        <div className="absolute top-1 right-1 text-xs font-semibold px-1.5 py-0.5 rounded" style={{ background: 'var(--color-accent)', color: 'var(--color-accent-text)', fontFamily: 'var(--ui-font)' }}>
                           {choice.round}
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-white font-medium line-clamp-1 mb-1">
+                        <div className="text-xs font-medium line-clamp-1 mb-1" style={{ color: 'var(--color-text)', fontFamily: 'var(--ui-font)' }}>
                           {choice.chosenAlbum.title}
                         </div>
-                        <div className="text-xs text-zinc-400 line-clamp-1">
+                        <div className="text-xs line-clamp-1" style={{ color: 'var(--color-text-dim)', fontFamily: 'var(--ui-font)' }}>
                           {choice.chosenAlbum.artist}
                         </div>
                       </div>

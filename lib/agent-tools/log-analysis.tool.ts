@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { tool } from '@openai/agents'
+import { tool } from 'ai'
 import { z } from 'zod'
 import { createLogRepository } from '../repositories/log-repository'
 import { createServerComponentClient } from '../supabase'
@@ -15,9 +15,8 @@ type LogRepository = ReturnType<typeof createLogRepository>
  */
 export const createLogAnalysisTool = (context?: ToolContext) => {
   return tool({
-    name: 'analyze_error_patterns',
-    description: 'Perform advanced analysis on error logs to identify patterns, correlations, and debugging insights. Helps understand system health trends and root causes.',
-    parameters: z.object({
+    description: 'Perform advanced analysis on error logs to identify patterns, correlations, and debugging insights.',
+    inputSchema: z.object({
       analysis: z.enum([
         'trends', 
         'correlations', 

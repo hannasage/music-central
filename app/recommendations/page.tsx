@@ -20,12 +20,15 @@ export const metadata: Metadata = {
 
 export default function RecommendationsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+    <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       <Header />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <BetaBanner />
-        <AICuratorInterface />
-      </div>
+      <main id="main-content">
+        <h1 className="sr-only">AI Curator</h1>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+          <BetaBanner />
+          <AICuratorInterface />
+        </div>
+      </main>
     </div>
   )
 }

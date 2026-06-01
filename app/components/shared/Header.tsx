@@ -2,11 +2,13 @@
 
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Search, Menu, X, Disc3, Sparkles, LogOut, Plus } from 'lucide-react'
+import { Search, Menu, X, Sparkles, LogOut, Plus } from 'lucide-react'
 import { createClientSideClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
 import RandomButton from '../ui/buttons/RandomButton'
 import { useAddAlbumModal } from '@/app/contexts/AddAlbumModalContext'
+import ThemeSelector from './ThemeSelector'
+import { useTheme } from '@/app/context/ThemeContext'
 import type { User } from '@supabase/supabase-js'
 
 export default function Header() {
@@ -17,32 +19,23 @@ export default function Header() {
   const supabase = createClientSideClient()
   const router = useRouter()
   const { openModal } = useAddAlbumModal()
+  const { colors: C } = useTheme()
 
   useEffect(() => {
-    // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
     }
-
     getSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null)
-      }
-    )
-
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null)
+    })
     return () => subscription.unsubscribe()
   }, [supabase.auth])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      // Navigate to search results
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`
-    }
+    if (searchQuery.trim()) window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`
   }
 
   const handleLogout = async () => {
@@ -51,169 +44,218 @@ export default function Header() {
     router.refresh()
   }
 
+  // 50/50 mix of text + muted ensures ≥4.5:1 contrast on all themes (passes WCAG AA)
+  const navDefaultColor = `color-mix(in srgb, ${C.text} 50%, ${C.muted})`
+
+  const navLinkStyle = {
+    fontSize: 12,
+    color: navDefaultColor,
+    textDecoration: 'none',
+    letterSpacing: '0.06em',
+    transition: 'color 0.12s',
+    fontFamily: 'var(--ui-font)',
+    textTransform: 'uppercase' as const,
+  }
 
   return (
-    <header className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/50">
+    <header style={{
+      position: 'sticky',
+      top: 0,
+      zIndex: 50,
+      background: `${C.bg}cc`,
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      borderBottom: `1px solid ${C.border}`,
+    }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
+
           {/* Logo */}
-          <Link 
-            href="/" 
-            className="flex items-center space-x-2 text-white hover:text-blue-400 transition-colors duration-200"
-          >
-            <Disc3 className="w-8 h-8" />
-            <span className="font-bold text-xl hidden md:block">Music Central</span>
-            <span className="font-bold text-xl md:hidden">MC</span>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+            <span style={{ fontSize: 22, lineHeight: 1 }}>💿</span>
+            <span style={{ fontFamily: 'var(--ui-font)', fontWeight: 600, fontSize: 14, color: C.text, letterSpacing: '0.04em' }} className="hidden md:inline">
+              Music Central
+            </span>
+            <span style={{ fontFamily: 'var(--ui-font)', fontWeight: 600, fontSize: 14, color: C.text, letterSpacing: '0.04em' }} className="md:hidden">
+              MC
+            </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/" 
-              className="text-zinc-300 hover:text-white transition-colors duration-200"
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex" style={{ gap: 28 }}>
+            {[
+              { href: '/', label: 'Home' },
+              { href: '/albums', label: 'Albums' },
+            ].map(({ href, label }) => (
+              <Link key={href} href={href} style={navLinkStyle}
+                onMouseEnter={e => (e.currentTarget.style.color = C.accent)}
+                onMouseLeave={e => (e.currentTarget.style.color = navDefaultColor)}
+              >
+                {label}
+              </Link>
+            ))}
+            <Link href="/recommendations" style={{ ...navLinkStyle, display: 'inline-flex', alignItems: 'center', gap: 5 }}
+              onMouseEnter={e => (e.currentTarget.style.color = C.accent)}
+              onMouseLeave={e => (e.currentTarget.style.color = navDefaultColor)}
             >
-              Home
-            </Link>
-            <Link 
-              href="/albums" 
-              className="text-zinc-300 hover:text-white transition-colors duration-200"
-            >
-              Albums
-            </Link>
-            <Link 
-              href="/recommendations" 
-              className="text-zinc-300 hover:text-white transition-colors duration-200 flex items-center space-x-1"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>AI Curator</span>
+              <Sparkles size={13} />
+              AI Curator
             </Link>
           </nav>
 
-          {/* Search Bar & Actions */}
-          <div className="flex items-center space-x-4">
-            <form onSubmit={handleSearch} className="relative">
-              <div className={`flex items-center space-x-2 transition-all duration-300 ${
-                isSearchFocused ? 'w-64 md:w-80' : 'w-40 sm:w-48 md:w-64'
-              }`}>
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                  <input
-                    type="text"
-                    placeholder="Search albums, artists..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setIsSearchFocused(true)}
-                    onBlur={() => setIsSearchFocused(false)}
-                    className="w-full pl-10 pr-4 py-2 bg-zinc-800/50 border border-zinc-700/50 rounded-lg text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200"
-                  />
-                </div>
+          {/* Actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Search */}
+            <form onSubmit={handleSearch}>
+              <div style={{
+                position: 'relative',
+                width: isSearchFocused ? 280 : 180,
+                transition: 'width 0.2s',
+              }}>
+                <Search size={13} style={{
+                  position: 'absolute', left: 9, top: '50%',
+                  transform: 'translateY(-50%)', color: C.muted, pointerEvents: 'none',
+                }} />
+                <input
+                  type="text"
+                  placeholder="Search albums, artists…"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  style={{
+                    width: '100%',
+                    paddingLeft: 28,
+                    paddingRight: 10,
+                    paddingTop: 6,
+                    paddingBottom: 6,
+                    fontSize: 12,
+                    fontFamily: 'var(--ui-font)',
+                    background: C.surface,
+                    border: `1px solid ${isSearchFocused ? C.accent : C.border}`,
+                    borderRadius: 4,
+                    color: C.text,
+                    outline: 'none',
+                    transition: 'border-color 0.12s',
+                  }}
+                />
               </div>
             </form>
 
-            {/* Add Album Button - Desktop Only (when authenticated) */}
+            {/* Theme switcher */}
+            <div className="hidden md:block">
+              <ThemeSelector />
+            </div>
+
+            {/* Add album */}
             {user && (
               <button
                 onClick={openModal}
-                className="hidden md:flex items-center space-x-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200"
-                title="Add Album"
+                className="hidden md:inline-flex"
+                style={{
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '5px 10px',
+                  fontSize: 12,
+                  fontFamily: 'var(--ui-font)',
+                  background: C.accent,
+                  color: C.textOnAccent,
+                  border: 'none',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  transition: 'opacity 0.12s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
               >
-                <Plus className="w-4 h-4" />
-                <span>Add Album</span>
+                <Plus size={13} />
+                Add
               </button>
             )}
 
-            {/* Random Button - Desktop Only */}
+            {/* Random */}
             <div className="hidden md:block">
               <RandomButton />
             </div>
 
-            {/* Admin Logout Button - Only show when authenticated */}
+            {/* Logout */}
             {user && (
               <button
                 onClick={handleLogout}
-                className="hidden md:flex items-center space-x-2 px-3 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
+                className="hidden md:inline-flex"
+                style={{
+                  alignItems: 'center',
+                  padding: '5px 8px',
+                  background: 'transparent',
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 4,
+                  color: C.muted,
+                  cursor: 'pointer',
+                  transition: 'all 0.12s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = C.red; e.currentTarget.style.color = C.red }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted }}
                 title="Logout"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut size={13} />
               </button>
             )}
 
-            {/* Mobile Menu Button */}
+            {/* Mobile menu toggle */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-zinc-300 hover:text-white transition-colors duration-200"
+              className="md:hidden"
+              style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', padding: 4 }}
             >
-              {isMobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
-
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-zinc-800/50 py-4 space-y-2">
-            <Link 
-              href="/"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            >
-              Home
-            </Link>
-            <Link 
-              href="/albums"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="block px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            >
-              Albums
-            </Link>
-            <Link 
-              href="/recommendations"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center space-x-2 px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>AI Curator</span>
-            </Link>
-
-            {/* Mobile Add Album Button - Only show when authenticated */}
-            {user && (
-              <button
-                onClick={() => {
-                  openModal()
-                  setIsMobileMenuOpen(false)
+          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 12, paddingBottom: 16 }}>
+            {[
+              { href: '/', label: 'Home' },
+              { href: '/albums', label: 'Albums' },
+              { href: '/recommendations', label: 'AI Curator' },
+            ].map(({ href, label }) => (
+              <Link key={href} href={href} onClick={() => setIsMobileMenuOpen(false)}
+                style={{
+                  display: 'block',
+                  padding: '8px 4px',
+                  fontSize: 13,
+                  fontFamily: 'var(--ui-font)',
+                  color: C.muted,
+                  textDecoration: 'none',
+                  borderBottom: `1px solid ${C.border}33`,
                 }}
-                className="flex items-center space-x-2 px-4 py-2 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200 w-full text-left"
               >
-                <Plus className="w-4 h-4" />
-                <span>Add Album</span>
-              </button>
-            )}
-            
-            {/* Mobile Random Button */}
-            <div className="px-4 py-2">
-              <RandomButton 
-                variant="button" 
-                className="w-full justify-center"
-              />
+                {label}
+              </Link>
+            ))}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0' }}>
+              <ThemeSelector />
+              <RandomButton variant="button" />
             </div>
 
-            {/* Mobile Logout Button - Only show when authenticated */}
             {user && (
-              <button
-                onClick={handleLogout}
-                className="flex items-center justify-center space-x-2 mx-4 py-2 px-4 text-zinc-300 hover:text-white hover:bg-zinc-800/50 rounded-lg transition-all duration-200"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout (Admin)</span>
-              </button>
+              <>
+                <button onClick={() => { openModal(); setIsMobileMenuOpen(false) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 0', width: '100%', background: 'none', border: 'none', color: C.muted, fontSize: 13, fontFamily: 'var(--ui-font)', cursor: 'pointer' }}
+                >
+                  <Plus size={13} /> Add Album
+                </button>
+                <button onClick={handleLogout}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 0', background: 'none', border: 'none', color: C.red, fontSize: 13, fontFamily: 'var(--ui-font)', cursor: 'pointer' }}
+                >
+                  <LogOut size={13} /> Logout
+                </button>
+              </>
             )}
           </div>
         )}
-
       </div>
     </header>
   )

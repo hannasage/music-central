@@ -1,21 +1,161 @@
 @import "tailwindcss";
 
+/* ─── Projection theme defaults (overridden at runtime by ThemeContext) ─── */
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  /* Derived accent helpers — recomputed from --color-accent automatically */
+  --color-accent-soft:     color-mix(in srgb, var(--color-accent) 18%, transparent);
+  --color-cta-gradient:    linear-gradient(135deg, #C9F53A 0%, #5B9CF6 100%);
+  --color-cta-glow:        color-mix(in srgb, #5B9CF6 45%, transparent);
+  --color-accent-gradient: linear-gradient(135deg, #C9F53A, #8CB025);
+  --color-bg:                   #07090C;
+  --color-bg-elevated:          #0A0E14;
+  --color-panel:                #0D1117;
+  --color-border:               #1B2535;
+  --color-text:                 #DDE3EE;
+  --color-text-dim:             #8396AB;
+  --color-accent:               #C9F53A;
+  --color-accent-text:          #07090C;
+  --color-danger:               #F87171;
+
+  /* projection-ui bridge */
+  --ui-bg:         #07090C;
+  --ui-surface:    #0D1117;
+  --ui-border:     #1B2535;
+  --ui-text:       #DDE3EE;
+  --ui-muted:      #8396AB;
+  --ui-primary:    #C9F53A;
+  --ui-primary-fg: #07090C;
+  --ui-danger:     #F87171;
+  --ui-font:       var(--font-plex-mono), 'IBM Plex Mono', ui-monospace, monospace;
+  --ui-radius-sm:   4px;
+  --ui-radius-md:   6px;
+  --ui-radius-lg:   10px;
+  --ui-radius-full: 9999px;
+
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background:    var(--color-bg);
+  color:         var(--color-text);
+  font-family:   var(--ui-font);
+  letter-spacing: 0.01em;
+}
+
+/* ── Display headings: Syne (matches resume/projection tool) ── */
+h1, h2 {
+  font-family: var(--font-syne, 'Syne'), system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* ── Light-theme contrast helpers ─────────────────────────────────────
+   On light themes html.light is set by applyVisualPalette.
+   Many accent colors are mid-saturation and fail 4.5:1 on light surfaces;
+   darken them toward black to ensure WCAG AA compliance for any text usage.
+   ──────────────────────────────────────────────────────────────────── */
+.light {
+  --color-accent-text-safe: color-mix(in srgb, var(--color-accent) 60%, #000);
+  --color-text-dim-safe:    color-mix(in srgb, var(--color-text-dim) 70%, #000);
+}
+.dark {
+  --color-accent-text-safe: var(--color-accent);
+  --color-text-dim-safe:    var(--color-text-dim);
+}
+
+/* Apply safe contrast on light themes for eyebrow / accent text classes */
+.light .eyebrow {
+  color: var(--color-accent-text-safe) !important;
+}
+
+/* ── Design language utilities (matches resume/projection patterns) ── */
+
+/* Eyebrow / section label */
+.eyebrow {
+  font-size:      10px;
+  font-weight:    500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-family:    var(--ui-font);
+  color:          var(--color-accent);
+}
+
+/* Pip status indicator */
+.pip {
+  display:       inline-block;
+  width:         7px;
+  height:        7px;
+  border-radius: 9999px;
+  background:    var(--color-accent);
+  box-shadow:    0 0 8px var(--color-accent);
+  flex-shrink:   0;
+  animation:     pip-blink 1.6s ease-in-out infinite;
+}
+@keyframes pip-blink {
+  0%, 60%   { opacity: 1; }
+  61%, 100% { opacity: 0.25; }
+}
+
+/* Dot grid background (hero sections) */
+.dot-grid {
+  background-image: radial-gradient(circle at 1px 1px, var(--color-border) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Hairline divider */
+.hairline {
+  border-color: var(--color-border);
+}
+
+/* ─── Theme-aware utility classes ─── */
+.text-accent  { color:      var(--color-accent); }
+.bg-accent    { background: var(--color-accent); color: var(--color-accent-text); }
+.border-accent { border-color: var(--color-accent); }
+
+/* Album card hover glow — border + shadow track accent color */
+.album-card-glow {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.album-card-glow:hover {
+  box-shadow:   0 8px 36px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--ui-border)) !important;
+}
+
+/* Featured album card — accent border + top gradient wash, stronger glow */
+.album-card-featured {
+  border: 1px solid var(--color-accent) !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-accent) 9%, var(--ui-surface)) 0%,
+    var(--ui-surface) 55%
+  ) !important;
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--color-accent) 14%, transparent);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.album-card-featured:hover {
+  box-shadow: 0 10px 44px color-mix(in srgb, var(--color-accent) 30%, transparent) !important;
+  border-color: var(--color-accent) !important;
+}
+
+/* CTA gradient button */
+.btn-cta {
+  background-image: var(--color-cta-gradient);
+  color:            var(--color-accent-text);
+  box-shadow:       0 4px 20px var(--color-cta-glow);
+  border:           none;
+  border-radius:    var(--ui-radius-md, 6px);
+  cursor:           pointer;
+  font-family:      var(--ui-font);
+  font-weight:      600;
+  transition:       opacity 0.15s, box-shadow 0.15s;
+}
+.btn-cta:hover {
+  opacity:    0.9;
+  box-shadow: 0 6px 28px var(--color-cta-glow);
 }
 
 /* Music-focused styling */
@@ -40,17 +180,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(39, 39, 42, 0.3);
-  border-radius: 4px;
+  background: var(--color-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(113, 113, 122, 0.5);
+  background: var(--color-border);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(113, 113, 122, 0.7);
+  background: var(--color-accent);
 }
 
 /* Smooth focus transitions */

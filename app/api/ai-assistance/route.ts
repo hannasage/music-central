@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       const { AIBackfillService } = await import('@/lib/ai-backfill-service')
       const aiService = new AIBackfillService()
       
-      console.log(`🔍 Generating AI suggestions using Tavily + OpenAI...`)
+      console.log(`🔍 Generating AI suggestions using Tavily + Claude...`)
       const suggestions = await aiService.generateSuggestions(tempAlbum)
       console.log(`✨ AI suggestions generated with ${Math.round(suggestions.confidence * 100)}% confidence`)
 
