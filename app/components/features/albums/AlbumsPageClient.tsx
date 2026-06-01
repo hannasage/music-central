@@ -173,7 +173,7 @@ export default function AlbumsPageClient({ initialAlbums, initialPagination: _ }
   const { viewMode, setViewMode } = useViewMode()
   const [activeGenres, setActiveGenres] = useState<string[]>([])
   const [activeVibes,  setActiveVibes]  = useState<string[]>([])
-  const [filterMode,   setFilterMode]   = useState<'OR' | 'AND'>('OR')
+  const [filterMode,   setFilterMode]   = useState<'OR' | 'AND'>('AND')
   const { theme } = useTheme()
 
   const allGenres = useMemo(() => {
@@ -193,23 +193,52 @@ export default function AlbumsPageClient({ initialAlbums, initialPagination: _ }
   const toggle = (list: string[], setList: React.Dispatch<React.SetStateAction<string[]>>) =>
     (tag: string) => setList(prev => prev.includes(tag) ? prev.filter(f => f !== tag) : [...prev, tag])
 
+  const totalActive = activeGenres.length + activeVibes.length
+
+  // Reset to AND whenever the toggle is hidden (< 2 filters)
+  useEffect(() => {
+    if (totalActive < 2) setFilterMode('AND')
+  }, [totalActive])
+
   const filteredAlbums = useMemo(() => {
     const allActive = [...activeGenres, ...activeVibes]
     if (!allActive.length) return albums
+
+    // AND is the default; OR is only available (and meaningful) with 2+ active filters
+    const mode = activeGenres.length + activeVibes.length >= 2 ? filterMode : 'AND'
 
     return albums.filter(album => {
       const albumTags = [
         ...(album.genres?.map(g => g.toLowerCase()) ?? []),
         ...(album.personal_vibes?.map(v => v.toLowerCase()) ?? []),
       ]
-      return filterMode === 'AND'
-        ? allActive.every(f => albumTags.includes(f))
-        : activeGenres.some(f => album.genres?.some(g => g.toLowerCase() === f)) ||
-          activeVibes.some(f => album.personal_vibes?.some(v => v.toLowerCase() === f))
+      if (mode === 'AND') {
+        return allActive.every(f => albumTags.includes(f))
+      }
+      return activeGenres.some(f => album.genres?.some(g => g.toLowerCase() === f)) ||
+        activeVibes.some(f => album.personal_vibes?.some(v => v.toLowerCase() === f))
     })
   }, [albums, activeGenres, activeVibes, filterMode])
 
-  const totalActive = activeGenres.length + activeVibes.length
+  // In AND mode, narrow the dropdown options to what's present in the filtered set.
+  // Always include already-selected tags so users can still deselect them.
+  // In OR mode (2+ filters), show everything so users can freely combine.
+  const contextualGenres = useMemo(() => {
+    const mode = activeGenres.length + activeVibes.length >= 2 ? filterMode : 'AND'
+    if (mode === 'OR') return allGenres
+    const s = new Set<string>(activeGenres)
+    filteredAlbums.forEach(a => a.genres?.forEach(g => { if (g.trim()) s.add(g.toLowerCase()) }))
+    return Array.from(s).sort((a, b) => a.localeCompare(b))
+  }, [filteredAlbums, filterMode, allGenres, activeGenres, activeVibes])
+
+  const contextualVibes = useMemo(() => {
+    const mode = activeGenres.length + activeVibes.length >= 2 ? filterMode : 'AND'
+    if (mode === 'OR') return allVibes
+    const s = new Set<string>(activeVibes)
+    filteredAlbums.forEach(a => a.personal_vibes?.forEach(v => { if (v.trim()) s.add(v.toLowerCase()) }))
+    return Array.from(s).sort((a, b) => a.localeCompare(b))
+  }, [filteredAlbums, filterMode, allVibes, activeVibes, activeGenres])
+
   const clearAll = () => { setActiveGenres([]); setActiveVibes([]) }
 
   return (
@@ -218,7 +247,7 @@ export default function AlbumsPageClient({ initialAlbums, initialPagination: _ }
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
         <FilterDropdown
           label="Genres"
-          options={allGenres}
+          options={contextualGenres}
           selected={activeGenres}
           onToggle={toggle(activeGenres, setActiveGenres)}
           onClear={() => setActiveGenres([])}
@@ -226,7 +255,7 @@ export default function AlbumsPageClient({ initialAlbums, initialPagination: _ }
         />
         <FilterDropdown
           label="Vibes"
-          options={allVibes}
+          options={contextualVibes}
           selected={activeVibes}
           onToggle={toggle(activeVibes, setActiveVibes)}
           onClear={() => setActiveVibes([])}
