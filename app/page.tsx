@@ -29,10 +29,10 @@ async function FeaturedAlbumsSection() {
 
 export default function HomePage() {
   return (
-    <div className="h-screen overflow-hidden bg-black">
+    <div className="h-screen overflow-hidden" style={{ background: 'var(--color-bg)' }}>
       <Header />
       
-      <main className="h-full">
+      <main id="main-content" className="h-full dot-grid">
         <Suspense fallback={<FeaturedAlbumsSkeleton />}>
           <FeaturedAlbumsSection />
         </Suspense>

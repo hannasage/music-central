@@ -1,71 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { Agent, run } from '@openai/agents'
+import { generateText, stepCountIs } from 'ai'
+import { anthropic } from '@ai-sdk/anthropic'
 import { cookies } from 'next/headers'
-import { 
-  triggerVercelBuildTool, 
+import {
+  triggerVercelBuildTool,
   checkBuildStatusTool,
   searchAlbumsTool,
   updateAlbumTool,
   addAlbumTool,
   createErrorLogsTool,
   createLogAnalysisTool,
-  ToolContext 
+  ToolContext
 } from '@/lib/agent-tools'
 
-export async function POST(request: NextRequest) {
-  try {
-    // Check authentication
-    const cookieStore = await cookies()
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { messages } = await request.json()
-
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: 'Messages array is required' }, { status: 400 })
-    }
-
-    // Create tool context for context-dependent tools
-    const toolContext: ToolContext = {
-      supabase,
-      cookieStore: {
-        getAll: () => cookieStore.getAll(),
-        set: (name, value, options) => cookieStore.set(name, value, options)
-      }
-    }
-
-    // Initialize tools with context where needed
-    const searchTool = searchAlbumsTool(toolContext)
-    const updateTool = updateAlbumTool(toolContext)
-    const addTool = addAlbumTool(toolContext)
-    const errorLogsTool = createErrorLogsTool(toolContext)
-    const logAnalysisTool = createLogAnalysisTool(toolContext)
-
-    // Create the vinyl collection assistant agent
-    const musicAgent = new Agent({
-      name: 'Vinyl Collection Assistant',
-      instructions: `You are a personal vinyl collection assistant for the owner of Music Central. You help manage, organize, and enhance their vinyl record collection.
+const SYSTEM_PROMPT = `You are a personal vinyl collection assistant for the owner of Music Central. You help manage, organize, and enhance their vinyl record collection.
 
 Your primary role:
 - Help manage and organize their existing vinyl collection
@@ -98,124 +47,112 @@ Adding New Albums to Collection:
 - RESTORATION PROCESS for albums with Status "REMOVED (previously owned)":
   * Get the Database ID from the search results
   * Use update_album_field with albumId=Database_ID, field="removed", operation="set", value=false
-  * Tell user the album was restored with preserved data (genres, vibes, thoughts from when they originally owned it)
-- Example workflow:
-  * User: "Add In Waves by Jamie xx"
-  * You: Search with search_albums tool
-  * Results show: Status "REMOVED (previously owned)" with Database ID
-  * You: Use update_album_field to set removed=false and restore the album
-  * You: "Restored In Waves to your collection with all your original data!"
+  * Tell user the album was restored with preserved data
 - NEVER say an album "already exists" if the status shows "REMOVED" - restore it instead!
 
 Featured Album Management:
-- You can help manage which albums are featured in the collection showcase
 - When asked to feature an album, ALWAYS search for it first using search_albums to get the correct Database ID
 - The Database ID is a UUID (like: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) - use this exact ID with update_album_field
 - NEVER guess album IDs - always search first to get the correct Database ID
 - Use update_album_field with field="featured", operation="set", value=true/false to manage featured status
-- You can feature multiple albums or remove featured status from albums
-- Always confirm what you found in the search before making changes
 
 Album Information Management:
-- You can update existing album information using update_album_field tool
 - ALWAYS search for the album first using search_albums to get the correct Database ID
 - Supported operations:
-  * Add/remove genres: "add" or "remove" operation with genre names (e.g., "shoegaze", "indie rock")
-  * Add/remove personal vibes: "add" or "remove" operation with vibe terms (e.g., "melancholic", "energetic")
+  * Add/remove genres: "add" or "remove" operation with genre names
+  * Add/remove personal vibes: "add" or "remove" operation with vibe terms
   * Update thoughts: "set" operation with new thoughts about the album
   * Update basic info: "set" operation for title, artist, year, or cover art URL
   * Remove from collection: "set" operation with field="removed", value=true
   * Mark as featured: "set" operation with field="featured", value=true/false
-- All text fields will be normalized (genres and vibes converted to lowercase)
-- For arrays (genres, vibes): you can "set" (replace all), "add" (append new), or "remove" (delete existing)
-- For strings/numbers (thoughts, title, artist, year): only "set" operation is allowed
-- For booleans (removed, featured): only "set" operation is allowed
-- Examples:
-  * "Add shoegaze to Census Designated's genres" → search for album, then update_album_field with field="genres", operation="add", value="shoegaze"
-  * "Update thoughts for In Colour" → search for album, then update_album_field with field="thoughts", operation="set", value="new thoughts"
-  * "Delete Pet Sounds from my collection" → search for album, then update_album_field with field="removed", operation="set", value=true
-  * "Feature The Cure's Disintegration" → search for album, then update_album_field with field="featured", operation="set", value=true
 
-Removing Albums from Collection (Soft Delete):
+Removing Albums (Soft Delete):
 - When users ask to "delete", "remove", "sold", or "traded" an album, use the update_album_field tool
-- ALWAYS search for the album first using search_albums to get the correct Database ID
-- Set the "removed" field to true using: field="removed", operation="set", value=true (boolean true)
-- This preserves all album data while hiding it from normal collection views
-- Examples of delete commands:
-  * "Delete [album name]" → search + update_album_field with field="removed", operation="set", value=true
-  * "Remove [album name] from my collection" → search + update_album_field with field="removed", operation="set", value=true
-  * "I sold [album name]" → search + update_album_field with field="removed", operation="set", value=true
-  * "I traded [album name]" → search + update_album_field with field="removed", operation="set", value=true
-- You can also restore albums by setting field="removed", operation="set", value=false if the user asks to bring them back
+- Set the "removed" field to true — this preserves all data while hiding it from normal views
+- You can restore albums by setting field="removed", operation="set", value=false
 
 Build and Deployment Management:
-- You can trigger production builds of the Music Central website when content changes are made
-- Use trigger_vercel_build when the user makes significant changes to their collection data and wants to update the live site
-- Always explain what the build will do before triggering it (regenerate static pages, deploy new content, etc.)
-- Use check_build_status when the user wants to check on a deployment's progress
-- Provide clear status updates and deployment URLs when builds complete
-- If a build fails, help interpret the error and suggest next steps
-- Common reasons to trigger builds: featured album changes, bulk collection updates, new content additions
+- Use trigger_vercel_build when the user makes significant collection changes and wants to update the live site
+- Use check_build_status when the user wants to check deployment progress
 
 System Debugging and Error Analysis:
-- You have comprehensive access to system error logs and debugging tools to help maintain the Music Central platform
 - Use search_error_logs to investigate specific issues, search for patterns, or analyze recent problems
-- Available log search actions: search (by text), recent (last N hours), by_type (specific error types), by_fingerprint (all occurrences of same error), stats (system health overview), get_by_id (detailed log analysis)
-- Use analyze_error_patterns for advanced debugging: trends, correlations, spike_detection, error_cascade, health_report, debugging_insights
-- When users report issues or you notice problems, proactively check error logs to understand what's happening
-- Provide clear explanations of technical issues and actionable solutions
-- Help interpret error messages, suggest debugging steps, and identify root causes
-- Monitor system health and alert to potential issues before they become critical
-- Use error fingerprints to track recurring issues and their resolution status
+- Use analyze_error_patterns for advanced debugging: trends, correlations, spike_detection, health_report
+- When users report issues, proactively check error logs to understand what's happening
 
 Your personality:
 - Knowledgeable about vinyl records, pressings, and music history
 - Enthusiastic but respectful of their personal taste
 - Focused on practical collection management
-- Helpful with organizing, discovering, and adding music to their collection
 - Proactive about suggesting and adding albums that fit their taste
 - Conversational and friendly, like a knowledgeable record store owner
 
-Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, suggest additions that make sense for their specific taste and collection goals, and don't hesitate to add albums they express interest in.`,
-      tools: [searchTool, updateTool, addTool, triggerVercelBuildTool, checkBuildStatusTool, errorLogsTool, logAnalysisTool]
-    })
+Always remember: This is THEIR personal collection. Ask questions about their preferences, help them organize what they have, and don't hesitate to add albums they express interest in.`
 
-    // Get the latest user message
+export async function POST(request: NextRequest) {
+  try {
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll() },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { messages } = await request.json()
+    if (!messages || !Array.isArray(messages)) {
+      return NextResponse.json({ error: 'Messages array is required' }, { status: 400 })
+    }
+
     const latestMessage = messages[messages.length - 1]
     if (!latestMessage || latestMessage.role !== 'user') {
       return NextResponse.json({ error: 'Latest message must be from user' }, { status: 400 })
     }
 
-    // For now, we'll pass the conversation context as part of the input
-    // This is a simplified approach - the Agents SDK handles conversation state differently
-    let contextualInput = latestMessage.content
-    
-    if (messages.length > 1) {
-      const conversationHistory = messages.slice(0, -1)
-        .map(msg => `${msg.role}: ${msg.content}`)
-        .join('\n')
-      
-      contextualInput = `Previous conversation:\n${conversationHistory}\n\nCurrent message: ${latestMessage.content}`
+    const toolContext: ToolContext = {
+      supabase,
+      cookieStore: {
+        getAll: () => cookieStore.getAll(),
+        set: (name, value, options) => cookieStore.set(name, value, options)
+      }
     }
-    
 
-    // Run the agent
-    const result = await run(musicAgent, contextualInput)
-
-    console.log('Agent final output:', result.finalOutput)
+    const result = await generateText({
+      model: anthropic('claude-sonnet-4-6'),
+      system: SYSTEM_PROMPT,
+      messages,
+      tools: {
+        search_albums:         searchAlbumsTool(toolContext),
+        update_album_field:    updateAlbumTool(toolContext),
+        add_album:             addAlbumTool(toolContext),
+        trigger_vercel_build:  triggerVercelBuildTool,
+        check_build_status:    checkBuildStatusTool,
+        search_error_logs:     createErrorLogsTool(toolContext),
+        analyze_error_patterns: createLogAnalysisTool(toolContext),
+      },
+      stopWhen: stepCountIs(10),
+    })
 
     return NextResponse.json({
       message: {
         role: 'assistant',
-        content: result.finalOutput
+        content: result.text
       }
     })
 
   } catch (error) {
     console.error('Chat API error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

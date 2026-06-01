@@ -1,4 +1,4 @@
-import { tool } from '@openai/agents'
+import { tool } from 'ai'
 import { z } from 'zod'
 import { ToolContext } from './types'
 
@@ -8,9 +8,8 @@ import { ToolContext } from './types'
  */
 export const createSearchAlbumsTool = (context: ToolContext) => {
   return tool({
-    name: 'search_albums',
     description: 'Search for albums in the collection by title, artist, or other criteria',
-    parameters: z.object({
+    inputSchema: z.object({
       query: z.string().describe('Search query - can be album title, artist name, or other search terms'),
       limit: z.number().optional().default(10).describe('Maximum number of results to return')
     }),

@@ -2,6 +2,7 @@
 
 import { Album } from '@/lib/types'
 import { Lightbulb } from 'lucide-react'
+import { useTheme } from '@/app/context/ThemeContext'
 
 interface AboutThisPairProps {
   albumPair: [Album, Album]
@@ -10,25 +11,37 @@ interface AboutThisPairProps {
 }
 
 export default function AboutThisPair({ albumPair, reasoning, className = '' }: AboutThisPairProps) {
-  if (!albumPair || !reasoning) {
-    return null
-  }
+  const { theme } = useTheme()
+  const iconColor = theme.planColors[1]?.value ?? 'var(--color-accent)'
+
+  if (!albumPair || !reasoning) return null
 
   return (
-    <div className={`bg-zinc-900/40 backdrop-blur-sm rounded-xl p-4 border border-zinc-800/40 ${className}`}>
-      <div className="flex items-start space-x-3">
-        <div className="flex-shrink-0 mt-0.5">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
-            <Lightbulb className="w-4 h-4 text-blue-400" />
-          </div>
+    <div
+      className={className}
+      style={{
+        background:   'var(--ui-surface)',
+        border:       '1px solid var(--ui-border)',
+        borderRadius: 'var(--ui-radius-lg)',
+        padding:      '14px 16px',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+        <div style={{
+          width: 30, height: 30, flexShrink: 0,
+          borderRadius: 'var(--ui-radius-sm)',
+          background: `color-mix(in srgb, ${iconColor} 15%, var(--ui-bg))`,
+          border: `1px solid color-mix(in srgb, ${iconColor} 30%, var(--ui-border))`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <Lightbulb size={14} style={{ color: iconColor }} />
         </div>
-        
-        <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-white mb-2 flex items-center space-x-2">
-            <span>About This Pair</span>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h4 style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text)', fontFamily: 'var(--ui-font)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6 }}>
+            About This Pair
           </h4>
-          
-          <p className="text-zinc-300 text-sm leading-relaxed">
+          <p style={{ fontSize: 13, color: 'var(--color-text-dim)', fontFamily: 'var(--ui-font)', lineHeight: 1.55, margin: 0 }}>
             {reasoning}
           </p>
         </div>

@@ -8,12 +8,7 @@ export default function AccessibilityProvider() {
     initializeAccessibility()
   }, [])
 
-  return (
-    <>
-      {/* Skip to content link will be added by accessibility.ts */}
-      <div id="main-content" className="sr-only">
-        Main content starts here
-      </div>
-    </>
-  )
+  // Skip link is injected by initializeAccessibility() and targets #main-content
+  // which lives on each page's <main id="main-content"> element.
+  return null
 }

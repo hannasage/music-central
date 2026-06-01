@@ -1,4 +1,4 @@
-import { tool } from '@openai/agents'
+import { tool } from 'ai'
 import { z } from 'zod'
 import { createLogRepository } from '../repositories/log-repository'
 import { createServerComponentClient } from '../supabase'
@@ -11,9 +11,8 @@ import type { ErrorLog } from '../types'
  */
 export const createErrorLogsTool = (context?: ToolContext) => {
   return tool({
-    name: 'search_error_logs',
-    description: 'Search and analyze error and warning logs to help debug system issues. Provides filtering, search, and analysis capabilities for comprehensive debugging assistance.',
-    parameters: z.object({
+    description: 'Search and analyze error and warning logs to help debug system issues. Provides filtering, search, and analysis capabilities.',
+    inputSchema: z.object({
       action: z.enum(['search', 'recent', 'by_type', 'by_fingerprint', 'stats', 'get_by_id']).describe('The type of log query to perform'),
       
       // Search parameters

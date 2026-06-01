@@ -3,7 +3,7 @@ import { ArrowLeft, Music, Search } from 'lucide-react'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Icon */}
         <div className="mb-8">

@@ -3,11 +3,9 @@
 import { useState } from 'react'
 import { Brain, Zap, Music, TrendingUp, RotateCcw } from 'lucide-react'
 import ConfirmationModal from '../../ui/feedback/ConfirmationModal'
+import { useTheme } from '@/app/context/ThemeContext'
 
-interface PreferenceInsight {
-  summary: string
-  confidence: number
-}
+interface PreferenceInsight { summary: string; confidence: number }
 
 interface MusicTastePanelProps {
   insights: PreferenceInsight[]
@@ -18,113 +16,131 @@ interface MusicTastePanelProps {
 
 export default function MusicTastePanel({ insights, round, className = '', onStartOver }: MusicTastePanelProps) {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const { theme } = useTheme()
+  const p = theme.planColors
 
-  const handleStartOverClick = () => {
-    setShowConfirmModal(true)
-  }
+  // Pick three distinct palette colors for the how-it-works icons
+  const iconColors = [
+    p[0]?.value  ?? 'var(--color-accent)',
+    p[3]?.value  ?? 'var(--color-accent)',
+    p[1]?.value  ?? 'var(--color-accent)',
+  ]
 
-  const handleConfirmStartOver = () => {
-    setShowConfirmModal(false)
-    if (onStartOver) {
-      onStartOver()
-    }
-  }
+  const HOW_IT_WORKS = [
+    { icon: Music,       color: iconColors[0], title: 'Listen & Compare',  body: 'Preview albums on streaming platforms before choosing' },
+    { icon: Brain,       color: iconColors[1], title: 'AI Learning',        body: 'Each choice teaches me about your taste in genres, eras, and vibes' },
+    { icon: TrendingUp,  color: iconColors[2], title: 'Get Smarter',        body: 'Recommendations improve as I understand you better' },
+  ]
+
   return (
-    <div className={`bg-zinc-900/50 backdrop-blur-sm rounded-xl p-4 border border-zinc-800/50 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <Brain className="w-4 h-4 text-purple-400" />
-          <h3 className="font-semibold text-white text-sm">Your Music Taste</h3>
+    <div
+      className={className}
+      style={{
+        background:   'var(--ui-surface)',
+        border:       '1px solid var(--ui-border)',
+        borderRadius: 'var(--ui-radius-lg)',
+        padding:      16,
+      }}
+    >
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <Brain size={14} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', fontFamily: 'var(--ui-font)', margin: 0 }}>
+            Your Music Taste
+          </h3>
         </div>
         {onStartOver && (
           <button
-            onClick={handleStartOverClick}
-            className="flex items-center space-x-1 px-2 py-1 text-xs text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-700/50 rounded-md transition-colors duration-200"
-            title={round === 1 ? "Get a new first pair" : "Start Over (clears all saved progress)"}
+            onClick={() => setShowConfirmModal(true)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5,
+              padding: '4px 8px', fontSize: 11, fontFamily: 'var(--ui-font)',
+              color: 'var(--color-text-dim)', background: 'var(--ui-bg)',
+              border: '1px solid var(--ui-border)', borderRadius: 'var(--ui-radius-sm)',
+              cursor: 'pointer', transition: 'all 0.12s',
+            }}
+            title={round === 1 ? 'Get a new first pair' : 'Start Over (clears all saved progress)'}
           >
-            <RotateCcw className="w-3 h-3" />
-            <span>{round === 1 ? "New First Pair" : "Start Over"}</span>
+            <RotateCcw size={10} />
+            <span>{round === 1 ? 'New First Pair' : 'Start Over'}</span>
           </button>
         )}
       </div>
-      
+
+      {/* Content */}
       {insights.length > 0 ? (
-        <div className="bg-zinc-800/50 rounded-lg p-4">
-          <p className="text-white text-sm leading-relaxed">
+        <div style={{ background: 'var(--ui-bg)', borderRadius: 'var(--ui-radius-md)', padding: '12px 14px', border: '1px solid var(--ui-border)' }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text)', fontFamily: 'var(--ui-font)', lineHeight: 1.55, margin: 0 }}>
             {insights[0].summary}
           </p>
         </div>
       ) : round === 1 ? (
-        <div className="space-y-4">
-          {/* Welcome message */}
-          <div className="text-center mb-6">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full flex items-center justify-center">
-              <Zap className="w-6 h-6 text-blue-400" />
+        <div>
+          {/* Welcome */}
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{
+              width: 44, height: 44, margin: '0 auto 10px',
+              borderRadius: '50%',
+              background: `color-mix(in srgb, var(--color-accent) 15%, var(--ui-bg))`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Zap size={20} style={{ color: 'var(--color-accent)' }} />
             </div>
-            <h4 className="font-semibold text-white text-sm mb-2">Discover Your Music Taste</h4>
-            <p className="text-zinc-400 text-xs leading-relaxed">
+            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', fontFamily: 'var(--ui-font)', marginBottom: 4 }}>
+              Discover Your Music Taste
+            </h4>
+            <p style={{ fontSize: 11, color: 'var(--color-text-dim)', fontFamily: 'var(--ui-font)', lineHeight: 1.5 }}>
               Choose between albums and I&apos;ll learn your preferences!
             </p>
           </div>
 
-          {/* How it works cards */}
-          <div className="space-y-3">
-            <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/30">
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Music className="w-4 h-4 text-green-400" />
+          {/* How it works */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {HOW_IT_WORKS.map(({ icon: Icon, color, title, body }) => (
+              <div
+                key={title}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10, padding: 10,
+                  background: 'var(--ui-bg)', borderRadius: 'var(--ui-radius-md)',
+                  border: '1px solid var(--ui-border)',
+                }}
+              >
+                <div style={{
+                  width: 30, height: 30, flexShrink: 0,
+                  borderRadius: 'var(--ui-radius-sm)',
+                  background: `color-mix(in srgb, ${color} 15%, var(--ui-surface))`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon size={14} style={{ color }} />
                 </div>
                 <div>
-                  <h5 className="font-medium text-white text-xs mb-1">Listen & Compare</h5>
-                  <p className="text-zinc-400 text-xs leading-relaxed">
-                    Preview albums on streaming platforms before choosing
-                  </p>
+                  <h5 style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text)', fontFamily: 'var(--ui-font)', marginBottom: 2 }}>{title}</h5>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-dim)', fontFamily: 'var(--ui-font)', lineHeight: 1.45 }}>{body}</p>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/30">
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Brain className="w-4 h-4 text-purple-400" />
-                </div>
-                <div>
-                  <h5 className="font-medium text-white text-xs mb-1">AI Learning</h5>
-                  <p className="text-zinc-400 text-xs leading-relaxed">
-                    Each choice teaches me about your taste in genres, eras, and vibes
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/30">
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <TrendingUp className="w-4 h-4 text-blue-400" />
-                </div>
-                <div>
-                  <h5 className="font-medium text-white text-xs mb-1">Get Smarter</h5>
-                  <p className="text-zinc-400 text-xs leading-relaxed">
-                    Recommendations improve as I understand you better
-                  </p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       ) : (
-        <div className="text-center py-8">
-          <div className="w-16 h-16 mx-auto mb-4 bg-zinc-800/50 rounded-full flex items-center justify-center">
-            <Brain className="w-6 h-6 text-zinc-500" />
+        <div style={{ textAlign: 'center', padding: '24px 0' }}>
+          <div style={{
+            width: 44, height: 44, margin: '0 auto 12px',
+            borderRadius: '50%', background: 'var(--ui-bg)', border: '1px solid var(--ui-border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Brain size={18} style={{ color: 'var(--color-text-dim)' }} />
           </div>
-          <h4 className="font-medium text-zinc-300 mb-2 text-sm">Learning Your Taste</h4>
-          <p className="text-zinc-400 text-xs leading-relaxed">
-            Keep choosing albums - insights will appear as I learn your taste patterns.
+          <h4 style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-text)', fontFamily: 'var(--ui-font)', marginBottom: 6 }}>
+            Learning Your Taste
+          </h4>
+          <p style={{ fontSize: 11, color: 'var(--color-text-dim)', fontFamily: 'var(--ui-font)', lineHeight: 1.5 }}>
+            Keep choosing albums — insights will appear as I learn your patterns.
           </p>
-          <div className="mt-4 flex items-center justify-center space-x-1">
-            <div className="w-1.5 h-1.5 bg-purple-500/50 rounded-full animate-pulse" />
-            <div className="w-1.5 h-1.5 bg-purple-500/50 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
-            <div className="w-1.5 h-1.5 bg-purple-500/50 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 12 }}>
+            {[0, 0.2, 0.4].map((delay, i) => (
+              <span key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-accent)', opacity: 0.6, animation: 'pulse 1.5s ease-in-out infinite', animationDelay: `${delay}s` }} />
+            ))}
           </div>
         </div>
       )}
@@ -132,14 +148,13 @@ export default function MusicTastePanel({ insights, round, className = '', onSta
       <ConfirmationModal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        onConfirm={handleConfirmStartOver}
-        title={round === 1 ? "Get New First Pair?" : "Start Over?"}
-        message={round === 1 
-          ? "This will give you a different starting album pair to choose from."
-          : "This will permanently delete all your battle history, insights, and progress. This action cannot be undone."
-        }
-        confirmText={round === 1 ? "Get New Pair" : "Yes, Start Over"}
-        cancelText={round === 1 ? "Keep Current Pair" : "Keep My Progress"}
+        onConfirm={() => { setShowConfirmModal(false); onStartOver?.() }}
+        title={round === 1 ? 'Get New First Pair?' : 'Start Over?'}
+        message={round === 1
+          ? 'This will give you a different starting album pair to choose from.'
+          : 'This will permanently delete all your battle history, insights, and progress. This action cannot be undone.'}
+        confirmText={round === 1 ? 'Get New Pair' : 'Yes, Start Over'}
+        cancelText={round === 1 ? 'Keep Current Pair' : 'Keep My Progress'}
         isDangerous={round > 1}
       />
     </div>

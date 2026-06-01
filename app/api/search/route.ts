@@ -60,13 +60,13 @@ export async function POST(request: NextRequest) {
 
     const supabase = createClient()
     
-    // Get suggestions from titles and artists (exclude removed albums)
+    // Get suggestions from titles, artists, and genres (exclude removed albums)
     const { data: albums } = await supabase
       .from('albums')
-      .select('title, artist')
+      .select('title, artist, genres')
       .eq('removed', false)
-      .or(`title.ilike.%${query}%,artist.ilike.%${query}%`)
-      .limit(10)
+      .or(`title.ilike.%${query}%,artist.ilike.%${query}%,genres.cs.{${query}}`)
+      .limit(15)
 
     const suggestions = new Set<string>()
     
@@ -76,6 +76,15 @@ export async function POST(request: NextRequest) {
       
       if (titleMatch) suggestions.add(album.title)
       if (artistMatch) suggestions.add(album.artist)
+      
+      // Add matching genres
+      if (album.genres) {
+        album.genres.forEach((genre: string) => {
+          if (genre.toLowerCase().includes(query.toLowerCase())) {
+            suggestions.add(genre)
+          }
+        })
+      }
     })
 
     return createSuccessResponse({

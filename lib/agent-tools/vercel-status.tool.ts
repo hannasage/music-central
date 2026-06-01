@@ -1,4 +1,4 @@
-import { tool } from '@openai/agents'
+import { tool } from 'ai'
 import { z } from 'zod'
 import { VercelService } from '../services/vercel.service'
 
@@ -8,9 +8,8 @@ import { VercelService } from '../services/vercel.service'
  */
 export const createCheckBuildStatusTool = () => {
   return tool({
-    name: 'check_build_status',
     description: 'Check the current status of a Vercel deployment by its ID',
-    parameters: z.object({
+    inputSchema: z.object({
       deploymentId: z.string().describe('The deployment ID to check (from trigger_vercel_build)')
     }),
     execute: async (input) => {
