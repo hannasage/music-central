@@ -4,7 +4,7 @@ import { Home, Shuffle } from 'lucide-react'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+    <div className="min-h-screen ">
       <Header />
       
       <div className="flex items-center justify-center min-h-[80vh] p-4">

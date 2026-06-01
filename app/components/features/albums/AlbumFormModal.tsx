@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { X, Save, Sparkles } from 'lucide-react'
+import { X, Sparkles } from 'lucide-react'
 import { Album, AlbumCreateData } from '@/lib/types'
 import ImageUpload from '@/app/components/shared/ImageUpload'
+import { Button, Input, Textarea, Toggle } from '@hannasage/projection-ui'
 
 interface AlbumFormModalProps {
   isOpen: boolean
@@ -261,14 +262,15 @@ export default function AlbumFormModal({
           <div className="flex items-center gap-2">
             {showAIAssistance && (
               <div className="relative" ref={aiMenuRef}>
-                <button
+                <Button
+                  variant="icon"
                   onClick={handleAIAssistance}
-                  className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
                   disabled={isLoading}
                   title="AI Assistance"
+                  style={{ background: 'rgba(147,51,234,0.2)', color: '#c084fc', border: '1px solid rgba(147,51,234,0.4)' }}
                 >
-                  <Sparkles className="w-4 h-4" />
-                </button>
+                  <Sparkles size={16} />
+                </Button>
                 
                 {isAIMenuOpen && (
                   <div className="absolute top-full right-0 mt-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg p-4 w-48 z-10">
@@ -327,28 +329,24 @@ export default function AlbumFormModal({
                         </div>
                       )}
                       
-                      <button
+                      <Button
+                        variant="primary"
+                        block
+                        size="sm"
                         onClick={handleAIHelp}
                         disabled={!Object.values(aiHelpOptions).some(Boolean) || isAILoading}
-                        className="w-full text-left text-sm text-purple-400 hover:text-purple-300 disabled:text-zinc-500 disabled:cursor-not-allowed mt-3 pt-2 border-t border-zinc-700 flex items-center justify-between"
+                        style={{ marginTop: 12, background: 'rgba(147,51,234,0.8)', borderColor: 'rgba(147,51,234,0.8)' }}
                       >
-                        <span>{isAILoading ? 'Getting AI help...' : 'Help'}</span>
-                        {isAILoading && (
-                          <div className="w-3 h-3 border border-purple-400 border-t-transparent rounded-full animate-spin" />
-                        )}
-                      </button>
+                        {isAILoading ? 'Getting AI help…' : 'Help'}
+                      </Button>
                     </div>
                   </div>
                 )}
               </div>
             )}
-            <button
-              onClick={handleCancel}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-              disabled={isLoading}
-            >
-              <X className="w-5 h-5 text-zinc-400" />
-            </button>
+            <Button variant="icon" onClick={handleCancel} disabled={isLoading}>
+              <X size={18} />
+            </Button>
           </div>
         </div>
 
@@ -359,48 +357,31 @@ export default function AlbumFormModal({
             <h3 className="text-lg font-medium text-white">Basic Information</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={isLoading}
-                  placeholder="Album title"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Artist *
-                </label>
-                <input
-                  type="text"
-                  value={formData.artist}
-                  onChange={(e) => handleInputChange('artist', e.target.value)}
-                  className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={isLoading}
-                  placeholder="Artist name"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                Year *
-              </label>
-              <input
-                type="number"
-                value={formData.year}
-                onChange={(e) => handleInputChange('year', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <Input
+                label="Title *"
+                value={formData.title}
+                onChange={(e) => handleInputChange('title', e.target.value)}
                 disabled={isLoading}
-                min="1900"
-                max={new Date().getFullYear() + 1}
+                placeholder="Album title"
+              />
+              <Input
+                label="Artist *"
+                value={formData.artist}
+                onChange={(e) => handleInputChange('artist', e.target.value)}
+                disabled={isLoading}
+                placeholder="Artist name"
               />
             </div>
+
+            <Input
+              label="Year *"
+              type="number"
+              value={formData.year}
+              onChange={(e) => handleInputChange('year', Number(e.target.value))}
+              disabled={isLoading}
+              min="1900"
+              max={new Date().getFullYear() + 1}
+            />
           </div>
 
           {/* Album Artwork - Only show if enabled */}
@@ -419,33 +400,22 @@ export default function AlbumFormModal({
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-white">Tags</h3>
             
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                Genres (comma-separated)
-              </label>
-              <input
-                type="text"
-                value={formData.genres}
-                onChange={(e) => handleInputChange('genres', e.target.value)}
-                placeholder="rock, alternative, indie"
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                Personal Vibes (comma-separated)
-              </label>
-              <input
-                type="text"
-                value={formData.personal_vibes}
-                onChange={(e) => handleInputChange('personal_vibes', e.target.value)}
-                placeholder="energetic, nostalgic, uplifting"
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="Genres"
+              hint="comma-separated"
+              value={formData.genres}
+              onChange={(e) => handleInputChange('genres', e.target.value)}
+              placeholder="rock, alternative, indie"
+              disabled={isLoading}
+            />
+            <Input
+              label="Personal Vibes"
+              hint="comma-separated"
+              value={formData.personal_vibes}
+              onChange={(e) => handleInputChange('personal_vibes', e.target.value)}
+              placeholder="energetic, nostalgic, uplifting"
+              disabled={isLoading}
+            />
           </div>
 
           {/* Descriptors */}
@@ -459,103 +429,72 @@ export default function AlbumFormModal({
                 { value: 'alternate-cover', label: 'Alternate Cover', description: 'Different artwork from standard release' },
                 { value: 'bonus-tracks', label: 'Bonus Tracks', description: 'Includes additional unreleased content' }
               ].map((descriptor) => (
-                <label key={descriptor.value} className="flex items-start space-x-3 p-3 bg-zinc-800/50 rounded-lg hover:bg-zinc-800/70 transition-colors">
-                  <input
-                    type="checkbox"
+                <div key={descriptor.value} className="p-3 bg-zinc-800/30 rounded-lg">
+                  <Toggle
                     checked={formData.descriptors.includes(descriptor.value)}
-                    onChange={(e) => {
-                      const newDescriptors = e.target.checked
+                    onChange={(checked) => {
+                      const newDescriptors = checked
                         ? [...formData.descriptors, descriptor.value]
                         : formData.descriptors.filter(d => d !== descriptor.value)
                       handleInputChange('descriptors', newDescriptors)
                     }}
-                    className="w-4 h-4 text-blue-600 bg-zinc-700 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
+                    label={descriptor.label}
+                    hint={descriptor.description}
                     disabled={isLoading}
+                    size="sm"
                   />
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-zinc-200">{descriptor.label}</span>
-                    <p className="text-xs text-zinc-400 mt-1">{descriptor.description}</p>
-                  </div>
-                </label>
+                </div>
               ))}
             </div>
           </div>
 
           {/* Personal Thoughts */}
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">
-              Personal Thoughts
-            </label>
-            <textarea
-              value={formData.thoughts}
-              onChange={(e) => handleInputChange('thoughts', e.target.value)}
-              placeholder="Your thoughts about this album..."
-              rows={4}
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              disabled={isLoading}
-            />
-          </div>
+          <Textarea
+            label="Personal Thoughts"
+            value={formData.thoughts}
+            onChange={(e) => handleInputChange('thoughts', e.target.value)}
+            placeholder="Your thoughts about this album..."
+            rows={4}
+            disabled={isLoading}
+          />
 
           {/* Streaming Links */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-white">Streaming Links</h3>
             
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                Spotify URL
-              </label>
-              <input
-                type="url"
-                value={formData.spotify_link}
-                onChange={(e) => handleInputChange('spotify_link', e.target.value)}
-                placeholder="https://open.spotify.com/album/..."
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                Apple Music URL
-              </label>
-              <input
-                type="url"
-                value={formData.apple_music_link}
-                onChange={(e) => handleInputChange('apple_music_link', e.target.value)}
-                placeholder="https://music.apple.com/album/..."
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">
-                YouTube Music URL
-              </label>
-              <input
-                type="url"
-                value={formData.youtube_music_link}
-                onChange={(e) => handleInputChange('youtube_music_link', e.target.value)}
-                placeholder="https://music.youtube.com/playlist?list=..."
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isLoading}
-              />
-            </div>
+            <Input
+              label="Spotify URL"
+              type="url"
+              value={formData.spotify_link}
+              onChange={(e) => handleInputChange('spotify_link', e.target.value)}
+              placeholder="https://open.spotify.com/album/..."
+              disabled={isLoading}
+            />
+            <Input
+              label="Apple Music URL"
+              type="url"
+              value={formData.apple_music_link}
+              onChange={(e) => handleInputChange('apple_music_link', e.target.value)}
+              placeholder="https://music.apple.com/album/..."
+              disabled={isLoading}
+            />
+            <Input
+              label="YouTube Music URL"
+              type="url"
+              value={formData.youtube_music_link}
+              onChange={(e) => handleInputChange('youtube_music_link', e.target.value)}
+              placeholder="https://music.youtube.com/playlist?list=..."
+              disabled={isLoading}
+            />
           </div>
 
           {/* Featured Toggle */}
-          <div>
-            <label className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={formData.featured}
-                onChange={(e) => handleInputChange('featured', e.target.checked)}
-                className="w-4 h-4 text-blue-600 bg-zinc-800 border-zinc-600 rounded focus:ring-blue-500 focus:ring-2"
-                disabled={isLoading}
-              />
-              <span className="text-sm font-medium text-zinc-300">Feature this album in collection showcase</span>
-            </label>
-          </div>
+          <Toggle
+            checked={formData.featured}
+            onChange={(checked) => handleInputChange('featured', checked)}
+            label="Feature this album in collection showcase"
+            disabled={isLoading}
+          />
 
           {error && (
             <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
@@ -566,25 +505,12 @@ export default function AlbumFormModal({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-zinc-800 flex-shrink-0">
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
-            disabled={isLoading}
-          >
+          <Button variant="ghost" onClick={handleCancel} disabled={isLoading}>
             Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-lg transition-colors"
-          >
-            {isLoading ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            {isLoading ? 'Saving...' : submitButtonText}
-          </button>
+          </Button>
+          <Button variant="primary" onClick={handleSave} disabled={isLoading}>
+            {isLoading ? 'Saving…' : submitButtonText}
+          </Button>
         </div>
       </div>
     </div>

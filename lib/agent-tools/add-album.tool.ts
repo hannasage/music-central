@@ -1,4 +1,4 @@
-import { tool } from '@openai/agents'
+import { tool } from 'ai'
 import { z } from 'zod'
 import { ToolContext } from './types'
 
@@ -8,9 +8,8 @@ import { ToolContext } from './types'
  */
 export const createAddAlbumTool = (context: ToolContext) => {
   return tool({
-    name: 'add_album',
     description: 'Add a new album to the collection by searching Spotify and enriching with AI-generated metadata',
-    parameters: z.object({
+    inputSchema: z.object({
       albumName: z.string().describe('The name/title of the album to add'),
       artistName: z.string().describe('The name of the artist/band who created the album')
     }),

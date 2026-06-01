@@ -1,4 +1,4 @@
-import { tool } from '@openai/agents'
+import { tool } from 'ai'
 import { z } from 'zod'
 import { VercelService } from '../services/vercel.service'
 
@@ -8,9 +8,8 @@ import { VercelService } from '../services/vercel.service'
  */
 export const createTriggerVercelBuildTool = () => {
   return tool({
-    name: 'trigger_vercel_build',
     description: 'Trigger a secure production build and deployment of the Music Central app via Vercel SDK',
-    parameters: z.object({
+    inputSchema: z.object({
       reason: z.string().nullable().optional().describe('Optional reason for triggering this build')
     }),
     execute: async (input) => {

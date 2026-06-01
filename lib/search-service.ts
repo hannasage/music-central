@@ -57,17 +57,17 @@ export async function searchAlbums(
     const words = searchTerm.split(' ').filter(word => word.length > 0)
     
     if (words.length === 1) {
-      // Single word: search in title or artist
-      dbQuery = dbQuery.or(`title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%`)
+      // Single word: search in title, artist, or genres
+      dbQuery = dbQuery.or(`title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%,genres.cs.{${searchTerm}}`)
     } else if (words.length === 2) {
       // Two words: try exact phrase OR cross-field matching (word1 in title, word2 in artist OR vice versa)
       const [word1, word2] = words
-      const searchPattern = `or(title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%,and(title.ilike.%${word1}%,artist.ilike.%${word2}%),and(title.ilike.%${word2}%,artist.ilike.%${word1}%))`
+      const searchPattern = `or(title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%,genres.cs.{${searchTerm}},and(title.ilike.%${word1}%,artist.ilike.%${word2}%),and(title.ilike.%${word2}%,artist.ilike.%${word1}%))`
       dbQuery = dbQuery.or(searchPattern)
     } else {
       // Multiple words: try exact phrase match first, then all-words-must-appear approach
-      const allWordsPattern = words.map(word => `or(title.ilike.%${word}%,artist.ilike.%${word}%)`).join(',')
-      const searchPattern = `or(title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%,and(${allWordsPattern}))`
+      const allWordsPattern = words.map(word => `or(title.ilike.%${word}%,artist.ilike.%${word}%,genres.cs.{${word}})`).join(',')
+      const searchPattern = `or(title.ilike.%${searchTerm}%,artist.ilike.%${searchTerm}%,genres.cs.{${searchTerm}},and(${allWordsPattern}))`
       dbQuery = dbQuery.or(searchPattern)
     }
   }

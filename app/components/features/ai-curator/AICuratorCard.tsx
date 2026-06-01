@@ -6,6 +6,7 @@ import { Album } from '@/lib/types'
 import { StreamingIcon, StreamingService } from '../../ui/icons'
 import { Music, Play } from 'lucide-react'
 import { useStreamingPreference } from '@/app/contexts/StreamingPreferenceContext'
+import { useTheme } from '@/app/context/ThemeContext'
 
 interface AICuratorCardProps {
   album: Album
@@ -16,305 +17,233 @@ interface AICuratorCardProps {
   mobile?: boolean
 }
 
-const AICuratorCard = React.memo(function AICuratorCard({ 
-  album, 
-  onChoose, 
-  isChosen = false, 
-  isDisabled = false,
-  side,
-  mobile = false
+function genreColor(genre: string, palette: { value: string }[]): string {
+  if (!palette?.length || !genre) return 'var(--color-accent)'
+  let h = 0
+  for (const ch of genre.toLowerCase()) h = (h * 31 + ch.charCodeAt(0)) % palette.length
+  return palette[h].value
+}
+
+const AICuratorCard = React.memo(function AICuratorCard({
+  album, onChoose, isChosen = false, isDisabled = false, side, mobile = false,
 }: AICuratorCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const { preferredService } = useStreamingPreference()
+  const { theme } = useTheme()
+  const palette = theme.planColors
+  const primaryGenre = album.genres?.[0] ?? ''
+  const gColor = genreColor(primaryGenre, palette)
 
-  const generateStreamingLinks = (album: Album) => {
-    const searchQuery = encodeURIComponent(`${album.artist} ${album.title}`)
-    
+  const generateStreamingLinks = (a: Album) => {
+    const q = encodeURIComponent(`${a.artist} ${a.title}`)
     return {
-      spotify: album.streaming_links?.spotify || 
-               (album.spotify_id ? `https://open.spotify.com/album/${album.spotify_id}` : 
-                `https://open.spotify.com/search/${searchQuery}`),
-      apple_music: album.streaming_links?.apple_music || 
-                   `https://music.apple.com/search?term=${searchQuery}`,
-      youtube_music: album.streaming_links?.youtube_music || 
-                     `https://music.youtube.com/search?q=${searchQuery}`
+      spotify:       a.streaming_links?.spotify       || (a.spotify_id ? `https://open.spotify.com/album/${a.spotify_id}` : `https://open.spotify.com/search/${q}`),
+      apple_music:   a.streaming_links?.apple_music   || `https://music.apple.com/search?term=${q}`,
+      youtube_music: a.streaming_links?.youtube_music || `https://music.youtube.com/search?q=${q}`,
     }
   }
 
-  const streamingLinks = generateStreamingLinks(album)
-  const primaryGenre = album.genres && album.genres.length > 0 ? album.genres[0] : ''
+  const links = generateStreamingLinks(album)
+  const ytSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${album.artist} ${album.title}`)}`
 
-  // Generate YouTube search URL as default fallback
-  const generateYouTubeSearchUrl = (album: Album): string => {
-    const searchQuery = encodeURIComponent(`${album.artist} ${album.title}`)
-    return `https://www.youtube.com/results?search_query=${searchQuery}`
+  // Outlined style: brand tint background + border, text uses --color-text (always accessible)
+  const STREAM_STYLE: Record<StreamingService, React.CSSProperties> = {
+    spotify:       { background: 'color-mix(in srgb, #1DB954 15%, var(--ui-surface))', border: '1px solid #1DB954', color: 'var(--color-text)' },
+    apple_music:   { background: 'color-mix(in srgb, #fc3c44 12%, var(--ui-surface))', border: '1px solid #fc3c44', color: 'var(--color-text)' },
+    youtube_music: { background: 'color-mix(in srgb, #ff0000 10%, var(--ui-surface))', border: '1px solid #ff4444', color: 'var(--color-text)' },
   }
+  const STREAM_ICON_COLOR: Record<StreamingService, string> = {
+    spotify: '#1DB954', apple_music: '#fc3c44', youtube_music: '#ff4444',
+  }
+  const SERVICE_CONFIG = {
+    spotify:       { url: links.spotify,       title: 'Listen on Spotify' },
+    apple_music:   { url: links.apple_music,   title: 'Listen on Apple Music' },
+    youtube_music: { url: links.youtube_music, title: 'Listen on YouTube Music' },
+  }
+  const SERVICE_LABELS: Record<StreamingService, string> = { spotify: 'Spotify', apple_music: 'Apple Music', youtube_music: 'YouTube' }
 
-  // Helper function to get the appropriate streaming service data
-  const getStreamingServiceData = (service: StreamingService) => {
-    const serviceConfigs = {
-      spotify: {
-        url: streamingLinks.spotify,
-        className: "bg-green-500 hover:bg-green-400",
-        title: "Listen on Spotify"
-      },
-      apple_music: {
-        url: streamingLinks.apple_music,
-        className: "bg-gradient-to-r from-[#fa5a72] to-[#fa253e] hover:from-[#fb6b7f] hover:to-[#fb3651]",
-        title: "Listen on Apple Music"
-      },
-      youtube_music: {
-        url: streamingLinks.youtube_music,
-        className: "bg-red-500 hover:bg-red-400",
-        title: "Listen on YouTube Music"
-      }
+  const StreamingBtn = ({ size = 'md', isMobile = false }: { size?: 'sm' | 'md'; isMobile?: boolean }) => {
+    const btnBase: React.CSSProperties = {
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      padding: isMobile ? '6px 10px' : '5px 10px',
+      borderRadius: 'var(--ui-radius-sm)',
+      fontFamily: 'var(--ui-font)', fontWeight: 500, fontSize: 12,
+      textDecoration: 'none', cursor: 'pointer',
+      transition: 'opacity 0.12s',
     }
-    return serviceConfigs[service]
-  }
 
-  // Helper function to render streaming links based on preference
-  const renderStreamingLinks = (size: 'sm' | 'md' = 'md', isMobile = false) => {
     if (preferredService && preferredService !== 'all') {
-      // Show full button with label for single service preference
-      const serviceData = getStreamingServiceData(preferredService)
-      const serviceLabels: Record<StreamingService, string> = {
-        spotify: 'Spotify',
-        apple_music: 'Apple Music', 
-        youtube_music: 'YouTube'
-      }
-      
+      const svc = preferredService
       return (
-        <a
-          href={serviceData.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`
-            inline-flex items-center space-x-2 px-3 py-2 rounded-lg font-medium text-white
-            transition-all duration-200 shadow-md hover:shadow-lg
-            ${serviceData.className}
-          `}
-          title={serviceData.title}
-          onClick={(e) => e.stopPropagation()}
+        <a href={SERVICE_CONFIG[svc].url} target="_blank" rel="noopener noreferrer"
+          title={SERVICE_CONFIG[svc].title}
+          style={{ ...btnBase, ...STREAM_STYLE[svc] }}
+          onClick={e => e.stopPropagation()}
+          aria-label={`${SERVICE_LABELS[svc]} — opens in new tab`}
         >
-          <StreamingIcon service={preferredService} size={size} />
-          <span className="text-sm">{serviceLabels[preferredService]}</span>
+          <span style={{ color: STREAM_ICON_COLOR[svc], display: 'flex' }}><StreamingIcon service={svc} size={size} /></span>
+          <span>{SERVICE_LABELS[svc]}</span>
         </a>
       )
     }
-
     if (!preferredService) {
-      // Show YouTube search as default when no preference set (full button)
       return (
-        <a
-          href={generateYouTubeSearchUrl(album)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`
-            inline-flex items-center space-x-2 px-3 py-2 rounded-lg font-medium text-white
-            transition-all duration-200 shadow-md hover:shadow-lg
-            bg-red-500 hover:bg-red-400
-          `}
-          title="Search on YouTube"
-          onClick={(e) => e.stopPropagation()}
+        <a href={ytSearch} target="_blank" rel="noopener noreferrer"
+          style={{ ...btnBase, ...STREAM_STYLE.youtube_music }}
+          aria-label="Search on YouTube — opens in new tab"
+          onClick={e => e.stopPropagation()}
         >
-          <StreamingIcon service="youtube_music" size={size} />
-          <span className="text-sm">YouTube</span>
+          <span style={{ color: STREAM_ICON_COLOR.youtube_music, display: 'flex' }}><StreamingIcon service="youtube_music" size={size} /></span>
+          <span>YouTube</span>
         </a>
       )
     }
-
-    // Show all services ('all' preference)
     return (
-      <div className={`flex items-center ${isMobile ? 'space-x-2' : 'space-x-1'}`}>
-        <a
-          href={streamingLinks.spotify}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`${isMobile ? 'p-2' : 'p-1.5'} bg-green-500 hover:bg-green-400 rounded-md transition-colors duration-200`}
-          title="Listen on Spotify"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <StreamingIcon service="spotify" size={size} />
-        </a>
-        <a
-          href={streamingLinks.apple_music}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`${isMobile ? 'p-2' : 'p-1.5'} bg-gradient-to-r from-[#fa5a72] to-[#fa253e] hover:from-[#fb6b7f] hover:to-[#fb3651] rounded-md transition-colors duration-200`}
-          title="Listen on Apple Music"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <StreamingIcon service="apple_music" size={size} />
-        </a>
-        <a
-          href={streamingLinks.youtube_music}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`${isMobile ? 'p-2' : 'p-1.5'} bg-red-500 hover:bg-red-400 rounded-md transition-colors duration-200`}
-          title="Listen on YouTube Music"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <StreamingIcon service="youtube_music" size={size} />
-        </a>
+      <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 4 }}>
+        {(['spotify', 'apple_music', 'youtube_music'] as StreamingService[]).map(svc => (
+          <a key={svc} href={SERVICE_CONFIG[svc].url} target="_blank" rel="noopener noreferrer"
+            title={SERVICE_CONFIG[svc].title}
+            aria-label={`${SERVICE_LABELS[svc]} — opens in new tab`}
+            style={{ ...btnBase, ...STREAM_STYLE[svc], padding: isMobile ? '6px 8px' : '4px 7px' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <span style={{ color: STREAM_ICON_COLOR[svc], display: 'flex' }}><StreamingIcon service={svc} size={size} /></span>
+          </a>
+        ))}
       </div>
     )
   }
 
-  // Mobile layout - horizontal card with checkbox
+  const artworkPlaceholder = (sz: string) => (
+    <div className={`w-full h-full flex items-center justify-center ${sz}`} style={{ background: 'var(--ui-border)' }}>
+      <Music style={{ color: 'var(--ui-muted)' }} />
+    </div>
+  )
+
+  // ── Mobile ─────────────────────────────────────────────────────────────────
   if (mobile) {
     return (
-      <div className={`relative transition-all duration-300 ${
-        isChosen ? 'scale-[1.02]' : ''
-      } ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
-        
-        <div className={`flex items-center space-x-3 p-3 bg-zinc-900/50 backdrop-blur-sm rounded-lg border-2 transition-all duration-300 ${
-          isChosen ? 'border-blue-500 bg-blue-500/10' : 'border-zinc-800/50 hover:border-zinc-700/50'
-        }`}>
-          
-          {/* Album Artwork - Clickable */}
-          <button 
-            onClick={onChoose}
-            disabled={isDisabled}
-            className="w-24 h-24 flex-shrink-0 relative rounded overflow-hidden bg-zinc-700 hover:opacity-80 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      <div className={`relative transition-all duration-300 ${isChosen ? 'scale-[1.02]' : ''} ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12, padding: 12,
+          background: isChosen ? `color-mix(in srgb, var(--color-accent) 10%, var(--ui-surface))` : 'var(--ui-surface)',
+          border: `2px solid ${isChosen ? 'var(--color-accent)' : 'var(--ui-border)'}`,
+          borderRadius: 'var(--ui-radius-lg)',
+          transition: 'all 0.25s',
+        }}>
+          <button
+            onClick={onChoose} disabled={isDisabled}
+            className="flex-shrink-0 relative rounded overflow-hidden hover:opacity-80 transition-opacity duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ width: 96, height: 96, background: 'var(--ui-border)' }}
           >
-            {album.cover_art_url ? (
-              <Image
-                src={album.cover_art_url}
-                alt={`${album.title} by ${album.artist}`}
-                fill
-                className={`object-cover transition-all duration-500 ${
-                  imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-                }`}
-                onLoadingComplete={() => setImageLoaded(true)}
-                priority
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
-                <Music className="w-6 h-6 text-zinc-500" />
-              </div>
-            )}
+            {album.cover_art_url
+              ? <Image src={album.cover_art_url} alt={`${album.title} by ${album.artist}`} fill className={`object-cover transition-all duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`} onLoadingComplete={() => setImageLoaded(true)} priority />
+              : artworkPlaceholder('w-6 h-6')
+            }
           </button>
 
-          {/* Album Info */}
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-white text-sm truncate">
+            <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', fontFamily: 'var(--ui-font)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
               {album.title}
             </h4>
-            <p className="text-zinc-400 text-xs truncate">
+            <p style={{ fontSize: 11, color: 'var(--color-text-dim)', fontFamily: 'var(--ui-font)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>
               by {album.artist}
             </p>
-            <div className="flex items-center space-x-2 text-xs text-zinc-500 mt-1">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--color-text-dim)', fontFamily: 'var(--ui-font)', marginBottom: 8 }}>
               <span>{album.year}</span>
-              {primaryGenre && (
-                <>
-                  <span>•</span>
-                  <span className="truncate">{primaryGenre.toLowerCase()}</span>
-                </>
-              )}
+              {primaryGenre && <>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: gColor, display: 'inline-block', flexShrink: 0 }} />
+                <span>{primaryGenre.toLowerCase()}</span>
+              </>}
             </div>
-            
-            {/* Streaming Links - Moved below song info */}
-            <div className="flex items-center justify-start mt-2">
-              {renderStreamingLinks('sm', true)}
-            </div>
+            <StreamingBtn size="sm" isMobile />
           </div>
         </div>
       </div>
     )
   }
 
-  // Desktop layout - original card design
+  // ── Desktop ────────────────────────────────────────────────────────────────
   return (
-    <div className={`relative group transition-all duration-500 ${
-      isChosen ? 'scale-105 ring-4 ring-blue-500' : ''
-    } ${isDisabled ? 'opacity-50 pointer-events-none' : 'hover:scale-[1.02]'}`}>
-      
-      {/* Main Card */}
-      <div className={`bg-zinc-900/50 backdrop-blur-sm rounded-2xl border-2 transition-all duration-300 ${
-        isChosen ? 'border-blue-500 bg-blue-500/10' : 'border-zinc-800/50 hover:border-zinc-700/50'
-      } overflow-hidden`}>
-        
-        {/* Album Cover */}
+    <div
+      className={`relative group transition-all duration-500 ${isDisabled ? 'opacity-50 pointer-events-none' : 'hover:scale-[1.02]'}`}
+      style={isChosen ? { transform: 'scale(1.05)', boxShadow: `0 0 0 3px var(--color-accent), 0 12px 40px color-mix(in srgb, var(--color-accent) 25%, transparent)`, borderRadius: 'var(--ui-radius-lg)' } : undefined}
+    >
+      <div style={{
+        background: isChosen ? `color-mix(in srgb, var(--color-accent) 8%, var(--ui-surface))` : 'var(--ui-surface)',
+        border: `2px solid ${isChosen ? 'var(--color-accent)' : 'var(--ui-border)'}`,
+        borderRadius: 'var(--ui-radius-lg)',
+        overflow: 'hidden',
+        transition: 'all 0.25s',
+      }}>
+        {/* Cover */}
         <div className="relative aspect-square">
-          {album.cover_art_url ? (
-            <Image
-              src={album.cover_art_url}
-              alt={`${album.title} by ${album.artist}`}
-              fill
-              className={`object-cover transition-all duration-500 ${
-                imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-              }`}
-              onLoadingComplete={() => setImageLoaded(true)}
-              priority
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center">
-              <Music className="w-12 h-12 text-zinc-500" />
-            </div>
-          )}
-          
-          {/* Overlay gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          
-          {/* Choose button overlay */}
+          {album.cover_art_url
+            ? <Image src={album.cover_art_url} alt={`${album.title} by ${album.artist}`} fill className={`object-cover transition-all duration-500 ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`} onLoadingComplete={() => setImageLoaded(true)} priority />
+            : artworkPlaceholder('w-12 h-12')
+          }
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)' }} />
+
+          {/* Choose overlay */}
           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <button
-              onClick={onChoose}
-              disabled={isDisabled}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 ${
-                isChosen 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-white/95 text-black hover:bg-white hover:scale-105'
-              } shadow-2xl backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+              onClick={onChoose} disabled={isDisabled}
+              style={{
+                padding: '10px 24px', borderRadius: 'var(--ui-radius-md)',
+                fontWeight: 600, fontSize: 14, fontFamily: 'var(--ui-font)',
+                background: isChosen ? 'var(--color-accent)' : 'rgba(255,255,255,0.95)',
+                color: isChosen ? 'var(--color-accent-text)' : '#000',
+                border: 'none', cursor: 'pointer',
+                transform: 'translateY(8px)', transition: 'all 0.25s',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+              }}
+              className="group-hover:!translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isChosen ? '✓ Chosen' : 'Choose This'}
             </button>
           </div>
         </div>
 
-        {/* Album Info */}
-        <div className="p-4">
-          <div className="flex items-start justify-between">
-            {/* Left side: Album details */}
-            <div className="flex-1 space-y-1">
-              <h3 className="text-lg font-bold text-white line-clamp-2 leading-tight pr-2">
+        {/* Info */}
+        <div style={{ padding: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', fontFamily: 'var(--ui-font)', lineHeight: 1.3, marginBottom: 4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                 {album.title}
-              </h3>
-              <p className="text-base text-zinc-300 line-clamp-1">
+              </h2>
+              <p style={{ fontSize: 13, color: 'var(--color-text-dim)', fontFamily: 'var(--ui-font)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 by {album.artist}
               </p>
-              <div className="flex items-center space-x-2 text-xs text-zinc-400">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--color-text-dim)', fontFamily: 'var(--ui-font)' }}>
                 <span>{album.year}</span>
                 {primaryGenre && (
-                  <>
-                    <span>•</span>
-                    <span className="bg-zinc-800/50 px-2 py-1 rounded-full border border-zinc-700/50">
-                      {primaryGenre}
-                    </span>
-                  </>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 'var(--ui-radius-full)', border: `1px solid color-mix(in srgb, ${gColor} 40%, var(--ui-border))`, background: `color-mix(in srgb, ${gColor} 10%, var(--ui-bg))`, color: gColor }}>
+                    {primaryGenre}
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Right side: Streaming Links */}
-            <div className="flex flex-col items-end space-y-2 ml-3">
-              <div className="flex items-center space-x-1 text-zinc-400">
-                <Play className="w-3 h-3" />
-                <span className="text-xs font-medium">Listen</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0, marginLeft: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--color-text-dim)', fontSize: 11, fontFamily: 'var(--ui-font)' }}>
+                <Play size={11} />
+                <span>Listen</span>
               </div>
-              
-              <div className="flex items-center justify-end">
-                {renderStreamingLinks('sm', false)}
-              </div>
+              <StreamingBtn size="sm" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Side indicator */}
-      <div className={`absolute top-3 ${side === 'left' ? 'left-3' : 'right-3'}`}>
-        <div className="w-6 h-6 bg-zinc-800/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-zinc-700/50">
-          <span className="text-zinc-300 font-semibold text-xs">
+      <div style={{ position: 'absolute', top: 10, [side === 'left' ? 'left' : 'right']: 10 }}>
+        <div style={{
+          width: 24, height: 24, borderRadius: '50%',
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', fontFamily: 'var(--ui-font)' }}>
             {side === 'left' ? 'A' : 'B'}
           </span>
         </div>

@@ -1,4 +1,4 @@
-import { tool } from '@openai/agents'
+import { tool } from 'ai'
 import { z } from 'zod'
 import { ToolContext } from './types'
 
@@ -8,9 +8,8 @@ import { ToolContext } from './types'
  */
 export const createUpdateAlbumTool = (context: ToolContext) => {
   return tool({
-    name: 'update_album_field',
     description: 'Update specific fields of an album with fine-grained control over operations',
-    parameters: z.object({
+    inputSchema: z.object({
       albumId: z.string().describe('The UUID of the album to update'),
       field: z.enum([
         'genres', 

@@ -63,7 +63,7 @@ interface AlbumPageProps {
 
 function AlbumPageSkeleton() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950">
+    <div className="min-h-screen ">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         {/* Back Button Skeleton */}
         <div className="h-6 w-32 bg-zinc-800 rounded mb-8 animate-pulse" />
